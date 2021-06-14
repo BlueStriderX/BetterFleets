@@ -1,7 +1,7 @@
 {
   "name": "BetterFleets",
   "author": "TheDerpGamer",
-  "description": "Improves on StarMade's fleets and expands upon their functionality.",
+  "description": "Improves vanilla fleet mechanics and expands upon their functionality.",
   "version": "0.1.0",
   "starmade_version": "0.202.110",
   "client_mod": false,
