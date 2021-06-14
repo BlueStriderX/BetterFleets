@@ -1,0 +1,11 @@
+<component name="ArtifactManager">
+  <artifact name="BetterFleets:jar">
+    <output-path>$PROJECT_DIR$/../../Game Files/StarMade Modded/StarMade/mods</output-path>
+    <root id="root">
+      <element id="archive" name="BetterFleets.jar">
+        <element id="module-output" name="BetterFleets" />
+        <element id="file-copy" path="$PROJECT_DIR$/src/mod.json" />
+      </element>
+    </root>
+  </artifact>
+</component>
