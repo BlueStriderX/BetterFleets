@@ -34,11 +34,15 @@ public class SelectedFleetList extends GUIAncor {
     @Override
     public void draw() {
         if(FleetGUIManager.selectedFleets.isEmpty() || !GameClient.getClientState().getWorldDrawer().getGameMapDrawer().isMapActive()) cleanUp();
-        else elementList.draw();
+        else {
+            FleetGUIManager.getPanel().fleetBox.draw();
+            elementList.draw();
+        }
     }
 
     @Override
     public void cleanUp() {
+        FleetGUIManager.getPanel().fleetBox.cleanUp();
         elementList.cleanUp();
     }
 
@@ -53,7 +57,7 @@ public class SelectedFleetList extends GUIAncor {
                 selectedFleetOverlay.setTextSimple(selectedFleet.getName().trim());
                 elementList.add(new GUIListElement(selectedFleetOverlay, getState()));
             }
-            elementList.draw();
+            draw();
         }
     }
 }

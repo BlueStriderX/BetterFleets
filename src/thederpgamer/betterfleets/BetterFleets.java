@@ -10,10 +10,18 @@ import org.lwjgl.input.Keyboard;
 import org.schema.common.util.linAlg.Vector3i;
 import org.schema.game.client.view.gamemap.GameMapDrawer;
 import org.schema.game.common.data.fleet.Fleet;
+import org.schema.game.common.data.fleet.FleetCommandTypes;
+import org.schema.schine.graphicsengine.core.MouseEvent;
+import org.schema.schine.graphicsengine.forms.gui.GUIActivationCallback;
+import org.schema.schine.graphicsengine.forms.gui.GUICallback;
+import org.schema.schine.graphicsengine.forms.gui.GUIElement;
+import org.schema.schine.graphicsengine.forms.gui.newgui.GUIHorizontalArea;
+import org.schema.schine.input.InputState;
 import thederpgamer.betterfleets.manager.ConfigManager;
 import thederpgamer.betterfleets.manager.FleetGUIManager;
 import thederpgamer.betterfleets.manager.LogManager;
 import thederpgamer.betterfleets.utils.MessageType;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.ProtectionDomain;
@@ -83,17 +91,22 @@ public class BetterFleets extends StarMod {
                                     if(FleetGUIManager.selectedFleets.contains(fleet)) {
                                         FleetGUIManager.selectedFleets.remove(fleet);
                                         LogManager.logDebug("Client removed fleet " + fleet.getName().trim() + " from selection.");
+                                        GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - back");
                                     } else {
                                         FleetGUIManager.selectedFleets.add(fleet);
                                         LogManager.logDebug("Client added fleet " + fleet.getName().trim() + " to selection.");
+                                        GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - select 2");
                                     }
                                 }
                             } else {
                                 if(!sectorFleets.isEmpty()) {
+                                    FleetGUIManager.selectedFleets.clear();
                                     FleetGUIManager.selectedFleets.add(sectorFleets.get(0));
                                     LogManager.logDebug("Client added fleet " + sectorFleets.get(0).getName().trim() + " to selection.");
+                                    GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - select 1");
                                 }
                             }
+                            FleetGUIManager.getPanel().updateFleetList();
                         } else if(event.getRawEvent().pressedRightMouse()) {
                             StringBuilder builder = new StringBuilder();
                             for(int i = 0; i < FleetGUIManager.selectedFleets.size(); i ++) {
@@ -101,8 +114,288 @@ public class BetterFleets extends StarMod {
                                 if(i < FleetGUIManager.selectedFleets.size() - 1) builder.append(", ");
                             }
                             LogManager.logDebug("Client right-clicked on fleet map GUI with the following fleets selected:\n" + builder.toString());
+
+                            if(!FleetGUIManager.selectedFleets.isEmpty()) {
+                                FleetGUIManager.getPanel().fleetActionsList.onInit();
+
+                                FleetGUIManager.getPanel().fleetActionsList.addButton(0, 0, "TOGGLE FORMATION", GUIHorizontalArea.HButtonColor.BLUE, new GUICallback() {
+                                    @Override
+                                    public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
+                                        if(mouseEvent.pressedLeftMouse()) {
+                                            GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
+                                            FleetGUIManager.orderFormation();
+                                        }
+                                    }
+
+                                    @Override
+                                    public boolean isOccluded() {
+                                        return false;
+                                    }
+                                }, new GUIActivationCallback() {
+                                    @Override
+                                    public boolean isVisible(InputState inputState) {
+                                        return true;
+                                    }
+
+                                    @Override
+                                    public boolean isActive(InputState inputState) {
+                                        return true;
+                                    }
+                                });
+
+                                FleetGUIManager.getPanel().fleetActionsList.addButton(0, 1, "IDLE", GUIHorizontalArea.HButtonColor.BLUE, new GUICallback() {
+                                    @Override
+                                    public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
+                                        if(mouseEvent.pressedLeftMouse()) {
+                                            GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
+                                            FleetGUIManager.orderFleets(FleetCommandTypes.IDLE);
+                                        }
+                                    }
+
+                                    @Override
+                                    public boolean isOccluded() {
+                                        return false;
+                                    }
+                                }, new GUIActivationCallback() {
+                                    @Override
+                                    public boolean isVisible(InputState inputState) {
+                                        return true;
+                                    }
+
+                                    @Override
+                                    public boolean isActive(InputState inputState) {
+                                        return true;
+                                    }
+                                });
+
+                                FleetGUIManager.getPanel().fleetActionsList.addButton(0, 2, "MOVE", GUIHorizontalArea.HButtonColor.PINK, new GUICallback() {
+                                    @Override
+                                    public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
+                                        if(mouseEvent.pressedLeftMouse()) {
+                                            GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
+                                            FleetGUIManager.orderFleets(FleetCommandTypes.MOVE_FLEET);
+                                        }
+                                    }
+
+                                    @Override
+                                    public boolean isOccluded() {
+                                        return false;
+                                    }
+                                }, new GUIActivationCallback() {
+                                    @Override
+                                    public boolean isVisible(InputState inputState) {
+                                        return true;
+                                    }
+
+                                    @Override
+                                    public boolean isActive(InputState inputState) {
+                                        return true;
+                                    }
+                                });
+
+                                FleetGUIManager.getPanel().fleetActionsList.addButton(0, 3, "RECALL TO CARRIER", GUIHorizontalArea.HButtonColor.PINK, new GUICallback() {
+                                    @Override
+                                    public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
+                                        if(mouseEvent.pressedLeftMouse()) {
+                                            GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
+                                            FleetGUIManager.orderFleets(FleetCommandTypes.IDLE);
+                                        }
+                                    }
+
+                                    @Override
+                                    public boolean isOccluded() {
+                                        return false;
+                                    }
+                                }, new GUIActivationCallback() {
+                                    @Override
+                                    public boolean isVisible(InputState inputState) {
+                                        return true;
+                                    }
+
+                                    @Override
+                                    public boolean isActive(InputState inputState) {
+                                        return true;
+                                    }
+                                });
+
+                                FleetGUIManager.getPanel().fleetActionsList.addButton(0, 4, "PATROL", GUIHorizontalArea.HButtonColor.PINK, new GUICallback() {
+                                    @Override
+                                    public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
+                                        if(mouseEvent.pressedLeftMouse()) {
+                                            GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
+                                            FleetGUIManager.orderFleets(FleetCommandTypes.PATROL_FLEET);
+                                        }
+                                    }
+
+                                    @Override
+                                    public boolean isOccluded() {
+                                        return false;
+                                    }
+                                }, new GUIActivationCallback() {
+                                    @Override
+                                    public boolean isVisible(InputState inputState) {
+                                        return true;
+                                    }
+
+                                    @Override
+                                    public boolean isActive(InputState inputState) {
+                                        return true;
+                                    }
+                                });
+
+                                FleetGUIManager.getPanel().fleetActionsList.addButton(0, 5, "ATTACK", GUIHorizontalArea.HButtonColor.RED, new GUICallback() {
+                                    @Override
+                                    public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
+                                        if(mouseEvent.pressedLeftMouse()) {
+                                            GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
+                                            FleetGUIManager.orderFleets(FleetCommandTypes.FLEET_ATTACK);
+                                        }
+                                    }
+
+                                    @Override
+                                    public boolean isOccluded() {
+                                        return false;
+                                    }
+                                }, new GUIActivationCallback() {
+                                    @Override
+                                    public boolean isVisible(InputState inputState) {
+                                        return true;
+                                    }
+
+                                    @Override
+                                    public boolean isActive(InputState inputState) {
+                                        return true;
+                                    }
+                                });
+
+                                FleetGUIManager.getPanel().fleetActionsList.addButton(0, 6, "DEFEND", GUIHorizontalArea.HButtonColor.GREEN, new GUICallback() {
+                                    @Override
+                                    public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
+                                        if(mouseEvent.pressedLeftMouse()) {
+                                            GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
+                                            FleetGUIManager.orderFleets(FleetCommandTypes.FLEET_DEFEND);
+                                        }
+                                    }
+
+                                    @Override
+                                    public boolean isOccluded() {
+                                        return false;
+                                    }
+                                }, new GUIActivationCallback() {
+                                    @Override
+                                    public boolean isVisible(InputState inputState) {
+                                        return true;
+                                    }
+
+                                    @Override
+                                    public boolean isActive(InputState inputState) {
+                                        return true;
+                                    }
+                                });
+
+                                FleetGUIManager.getPanel().fleetActionsList.addButton(0, 7, "SENTRY", GUIHorizontalArea.HButtonColor.ORANGE, new GUICallback() {
+                                    @Override
+                                    public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
+                                        if(mouseEvent.pressedLeftMouse()) {
+                                            GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
+                                            FleetGUIManager.orderFleets(FleetCommandTypes.SENTRY);
+                                        }
+                                    }
+
+                                    @Override
+                                    public boolean isOccluded() {
+                                        return false;
+                                    }
+                                }, new GUIActivationCallback() {
+                                    @Override
+                                    public boolean isVisible(InputState inputState) {
+                                        return true;
+                                    }
+
+                                    @Override
+                                    public boolean isActive(InputState inputState) {
+                                        return true;
+                                    }
+                                });
+
+                                FleetGUIManager.getPanel().fleetActionsList.addButton(0, 8, "MINE", GUIHorizontalArea.HButtonColor.ORANGE, new GUICallback() {
+                                    @Override
+                                    public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
+                                        if(mouseEvent.pressedLeftMouse()) {
+                                            GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
+                                            FleetGUIManager.orderFleets(FleetCommandTypes.MINE_IN_SECTOR);
+                                        }
+                                    }
+
+                                    @Override
+                                    public boolean isOccluded() {
+                                        return false;
+                                    }
+                                }, new GUIActivationCallback() {
+                                    @Override
+                                    public boolean isVisible(InputState inputState) {
+                                        return true;
+                                    }
+
+                                    @Override
+                                    public boolean isActive(InputState inputState) {
+                                        return true;
+                                    }
+                                });
+
+                                FleetGUIManager.getPanel().fleetActionsList.addButton(0, 9, "TOGGLE JAMMING", GUIHorizontalArea.HButtonColor.YELLOW, new GUICallback() {
+                                    @Override
+                                    public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
+                                        if(mouseEvent.pressedLeftMouse()) {
+                                            GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
+                                            FleetGUIManager.orderJamming();
+                                        }
+                                    }
+
+                                    @Override
+                                    public boolean isOccluded() {
+                                        return false;
+                                    }
+                                }, new GUIActivationCallback() {
+                                    @Override
+                                    public boolean isVisible(InputState inputState) {
+                                        return true;
+                                    }
+
+                                    @Override
+                                    public boolean isActive(InputState inputState) {
+                                        return true;
+                                    }
+                                });
+
+                                FleetGUIManager.getPanel().fleetActionsList.addButton(0, 10, "TOGGLE CLOAK", GUIHorizontalArea.HButtonColor.YELLOW, new GUICallback() {
+                                    @Override
+                                    public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
+                                        if(mouseEvent.pressedLeftMouse()) {
+                                            GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
+                                            FleetGUIManager.orderCloak();
+                                        }
+                                    }
+
+                                    @Override
+                                    public boolean isOccluded() {
+                                        return false;
+                                    }
+                                }, new GUIActivationCallback() {
+                                    @Override
+                                    public boolean isVisible(InputState inputState) {
+                                        return true;
+                                    }
+
+                                    @Override
+                                    public boolean isActive(InputState inputState) {
+                                        return true;
+                                    }
+                                });
+
+                                FleetGUIManager.getPanel().fleetActionsList.draw();
+                            } else FleetGUIManager.getPanel().updateFleetList();
                         }
-                        FleetGUIManager.getPanel().updateFleetList();
                     }
                 } catch(Exception exception) {
                     LogManager.logWarning("Encountered an exception while trying to add/remove fleets from the map fleet selection", exception);
