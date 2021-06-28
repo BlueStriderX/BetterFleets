@@ -60,6 +60,10 @@ public class LogManager {
         logMessage(MessageType.ERROR, message + ":\n" + exception.getMessage());
     }
 
+    public static void logDebug(String message) {
+        if(ConfigManager.getMainConfig().getBoolean("debug-mode")) logMessage(MessageType.DEBUG, message);
+    }
+
     public static void logMessage(MessageType messageType, String message) {
         String prefix = "[" + DateUtils.getTimeFormatted() + "] [BetterFleets] " + messageType.prefix;
         try {

@@ -8,6 +8,7 @@ package thederpgamer.betterfleets.utils;
  * @since 06/09/2021
  */
 public enum MessageType {
+    DEBUG("[DEBUG]: "),
     INFO("[INFO]: "),
     WARNING("[WARNING]: "),
     ERROR("[ERROR]: "),
