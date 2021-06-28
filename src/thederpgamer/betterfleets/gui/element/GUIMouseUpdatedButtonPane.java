@@ -20,6 +20,10 @@ public class GUIMouseUpdatedButtonPane extends GUIHorizontalButtonTablePane {
     @Override
     public void draw() {
         super.draw();
-        setPos(Mouse.getX() + 50.0f, Mouse.getY() + 50.0f, 0.0f);
+        try {
+            setPos(Mouse.getX() + 15.0f, Mouse.getY() - 15.0f, 0.0f);
+        } catch(Exception ignored) {
+            cleanUp();
+        }
     }
 }

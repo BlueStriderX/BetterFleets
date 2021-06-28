@@ -397,7 +397,7 @@ public class BetterFleets extends StarMod {
                             } else FleetGUIManager.getPanel().updateFleetList();
                         }
                     }
-                } catch(Exception exception) {
+                } catch(ArrayIndexOutOfBoundsException exception) {
                     LogManager.logWarning("Encountered an exception while trying to add/remove fleets from the map fleet selection", exception);
                 }
             }

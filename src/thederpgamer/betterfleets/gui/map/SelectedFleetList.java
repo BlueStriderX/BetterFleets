@@ -42,13 +42,12 @@ public class SelectedFleetList extends GUIAncor {
 
     @Override
     public void cleanUp() {
-        FleetGUIManager.getPanel().fleetBox.cleanUp();
         elementList.cleanUp();
+        FleetGUIManager.getPanel().fleetBox.cleanUp();
     }
 
     public void updateList() {
         elementList.clear();
-        elementList.cleanUp();
         if(FleetGUIManager.selectedFleets.isEmpty() || !GameClient.getClientState().getWorldDrawer().getGameMapDrawer().isMapActive()) cleanUp();
         else {
             for(Fleet selectedFleet : FleetGUIManager.selectedFleets) {
