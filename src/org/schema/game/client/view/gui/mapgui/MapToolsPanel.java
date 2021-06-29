@@ -17,7 +17,7 @@ import org.schema.schine.graphicsengine.core.settings.StateParameterNotFoundExce
 import org.schema.schine.graphicsengine.forms.font.FontLibrary;
 import org.schema.schine.graphicsengine.forms.gui.*;
 import org.schema.schine.input.InputState;
-import thederpgamer.betterfleets.gui.element.GUIMouseUpdatedButtonPane;
+import thederpgamer.betterfleets.gui.element.GUIRightClickButtonPane;
 import thederpgamer.betterfleets.gui.map.SelectedFleetList;
 import thederpgamer.betterfleets.manager.FleetGUIManager;
 import javax.vecmath.Vector4f;
@@ -34,7 +34,7 @@ public class MapToolsPanel extends GUIAncor {
 
     //INSERTED CODE
     private SelectedFleetList selectedFleetList;
-    public GUIMouseUpdatedButtonPane fleetActionsList;
+    public GUIRightClickButtonPane fleetActionsList;
     public GUIColoredRectangle fleetBox;
     //
 
@@ -391,7 +391,7 @@ public class MapToolsPanel extends GUIAncor {
         fleetBox = new GUIColoredRectangle(getState(), 500.0f, 500.0f, new Vector4f(0.1f, 0.3f, 0.1f, 0.5f));
         fleetBox.rounded = 6.0f;
         fleetBox.onInit();
-        fleetBox.setPos(0.0f, 300.0f, 0.0f);
+        fleetBox.setPos(100.0f, 300.0f, 0.0f);
 
         GUITextOverlay fleetBoxOverlay = new GUITextOverlay(120, 20, getState());
         fleetBoxOverlay.onInit();
@@ -401,12 +401,12 @@ public class MapToolsPanel extends GUIAncor {
         fleetBox.attach(fleetBoxOverlay);
 
         (selectedFleetList = new SelectedFleetList(getState())).onInit();
-        selectedFleetList.setPos(50.0f, 250.0f, 0.0f);
+        selectedFleetList.setPos(130.0f, 250.0f, 0.0f);
         fleetBox.attach(selectedFleetList);
         attach(fleetBox);
 
-        GUIAncor fleetActionsAnchor = new GUIAncor(getState(), 50.0f, 100.0f);
-        (fleetActionsList = new GUIMouseUpdatedButtonPane(getState(), 1, 1, fleetActionsAnchor)).onInit();
+        GUIAncor fleetActionsAnchor = new GUIAncor(getState(), 180.0f, 100.0f);
+        (fleetActionsList = new GUIRightClickButtonPane(getState(), 1, 1, fleetActionsAnchor)).onInit();
         fleetActionsAnchor.attach(fleetActionsList);
         attach(fleetActionsAnchor);
         fleetActionsList.cleanUp();

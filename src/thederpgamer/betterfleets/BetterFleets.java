@@ -6,7 +6,6 @@ import api.listener.events.input.MousePressEvent;
 import api.mod.StarLoader;
 import api.mod.StarMod;
 import org.apache.commons.io.IOUtils;
-import org.lwjgl.input.Keyboard;
 import org.schema.common.util.linAlg.Vector3i;
 import org.schema.game.client.view.gamemap.GameMapDrawer;
 import org.schema.game.common.data.fleet.Fleet;
@@ -51,6 +50,7 @@ public class BetterFleets extends StarMod {
 
     //Data
     private final String[] overwriteClasses = new String[] {
+            "MapControllerManager",
             "MapToolsPanel"
     };
 
@@ -80,14 +80,14 @@ public class BetterFleets extends StarMod {
                     GameMapDrawer mapDrawer = GameClient.getClientState().getWorldDrawer().getGameMapDrawer();
                     if(mapDrawer.isMapActive()) { //Check if the map is currently open
                         Vector3i selectedPos = mapDrawer.getGameMapPosition().get(new Vector3i());
-                        //Sector sector = GameServer.getUniverse().getSector(selectedPos, true);
                         ArrayList<Fleet> clientFleets = new ArrayList<>(GameClient.getClientState().getFleetManager().getAvailableFleetsClient());
                         ArrayList<Fleet> sectorFleets = new ArrayList<>();
                         for(Fleet fleet : clientFleets) if(fleet.getFlagShip().getSector().equals(selectedPos)) sectorFleets.add(fleet);
 
+                        /*
                         if(event.getRawEvent().pressedLeftMouse()) {
                             if(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
-                                for(Fleet fleet : sectorFleets) { //Todo: Highlight icons or display list of selected fleets
+                                for(Fleet fleet : sectorFleets) {
                                     if(FleetGUIManager.selectedFleets.contains(fleet)) {
                                         FleetGUIManager.selectedFleets.remove(fleet);
                                         LogManager.logDebug("Client removed fleet " + fleet.getName().trim() + " from selection.");
@@ -108,6 +108,8 @@ public class BetterFleets extends StarMod {
                             }
                             FleetGUIManager.getPanel().updateFleetList();
                         } else if(event.getRawEvent().pressedRightMouse()) {
+                         */
+                        if(event.getRawEvent().pressedRightMouse()) {
                             StringBuilder builder = new StringBuilder();
                             for(int i = 0; i < FleetGUIManager.selectedFleets.size(); i ++) {
                                 builder.append(FleetGUIManager.selectedFleets.get(i));
@@ -117,6 +119,7 @@ public class BetterFleets extends StarMod {
 
                             if(!FleetGUIManager.selectedFleets.isEmpty()) {
                                 FleetGUIManager.getPanel().fleetActionsList.onInit();
+                                FleetGUIManager.getPanel().fleetActionsList.moveToMouse();
 
                                 FleetGUIManager.getPanel().fleetActionsList.addButton(0, 0, "TOGGLE FORMATION", GUIHorizontalArea.HButtonColor.BLUE, new GUICallback() {
                                     @Override
@@ -394,6 +397,7 @@ public class BetterFleets extends StarMod {
                                 });
 
                                 FleetGUIManager.getPanel().fleetActionsList.draw();
+                                FleetGUIManager.getPanel().fleetBox.draw();
                             } else FleetGUIManager.getPanel().updateFleetList();
                         }
                     }

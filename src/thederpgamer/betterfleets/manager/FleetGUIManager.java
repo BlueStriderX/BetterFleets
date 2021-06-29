@@ -2,11 +2,11 @@ package thederpgamer.betterfleets.manager;
 
 import api.common.GameCommon;
 import com.bulletphysics.util.ObjectArrayList;
+import org.schema.common.util.linAlg.Vector3i;
 import org.schema.game.client.view.gui.mapgui.MapToolsPanel;
 import org.schema.game.common.data.fleet.Fleet;
 import org.schema.game.common.data.fleet.FleetCommandTypes;
 import org.schema.game.common.data.player.faction.FactionRelation;
-
 import java.util.List;
 
 /**
@@ -18,7 +18,6 @@ import java.util.List;
 public class FleetGUIManager  {
 
     public static final List<Fleet> selectedFleets = new ObjectArrayList<>();
-    public static FleetCommandTypes currentCommandType = FleetCommandTypes.IDLE;
     private static MapToolsPanel mapToolsPanel;
 
     public static void initializePanel(MapToolsPanel toolsPanel) {
@@ -35,7 +34,7 @@ public class FleetGUIManager  {
 
     public static void orderFleets(FleetCommandTypes commandType) {
         for(Fleet fleet : selectedFleets) {
-            if(commandType.args.length == 1) fleet.sendFleetCommand(commandType, mapToolsPanel.getMapPosition());
+            if(commandType.args.length == 1) fleet.sendFleetCommand(commandType, mapToolsPanel.getMapPosition().get(new Vector3i()));
             else fleet.sendFleetCommand(commandType);
         }
         selectedFleets.clear();
