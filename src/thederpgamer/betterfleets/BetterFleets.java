@@ -20,10 +20,8 @@ import thederpgamer.betterfleets.manager.ConfigManager;
 import thederpgamer.betterfleets.manager.FleetGUIManager;
 import thederpgamer.betterfleets.manager.LogManager;
 import thederpgamer.betterfleets.utils.MessageType;
-
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -64,12 +62,9 @@ public class BetterFleets extends StarMod {
     }
 
     @Override
-    public byte[] onClassTransform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain, byte[] byteCode) {
-        for(String name : overwriteClasses) {
-            if(className.endsWith(name)) return overwriteClass(className, byteCode);
-        }
-
-        return super.onClassTransform(loader, className, classBeingRedefined, protectionDomain, byteCode);
+    public byte[] onClassTransform(String className, byte[] byteCode) {
+        for(String name : overwriteClasses) if(className.endsWith(name)) return overwriteClass(className, byteCode);
+        return super.onClassTransform(className, byteCode);
     }
 
     private void registerListeners() {
@@ -119,7 +114,6 @@ public class BetterFleets extends StarMod {
 
                             if(!FleetGUIManager.selectedFleets.isEmpty()) {
                                 FleetGUIManager.getPanel().fleetActionsList.onInit();
-                                FleetGUIManager.getPanel().fleetActionsList.moveToMouse();
 
                                 FleetGUIManager.getPanel().fleetActionsList.addButton(0, 0, "TOGGLE FORMATION", GUIHorizontalArea.HButtonColor.BLUE, new GUICallback() {
                                     @Override
@@ -395,14 +389,14 @@ public class BetterFleets extends StarMod {
                                         return true;
                                     }
                                 });
-
+                                FleetGUIManager.getPanel().fleetActionsList.moveToMouse();
                                 FleetGUIManager.getPanel().fleetActionsList.draw();
                                 FleetGUIManager.getPanel().fleetBox.draw();
                             } else FleetGUIManager.getPanel().updateFleetList();
                         }
                     }
                 } catch(ArrayIndexOutOfBoundsException exception) {
-                    LogManager.logWarning("Encountered an exception while trying to add/remove fleets from the map fleet selection", exception);
+                    //LogManager.logWarning("Encountered an exception while trying to add/remove fleets from the map fleet selection", exception);
                 }
             }
         }, this);

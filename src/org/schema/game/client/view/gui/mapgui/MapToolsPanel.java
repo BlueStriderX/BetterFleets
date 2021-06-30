@@ -1,6 +1,5 @@
 package org.schema.game.client.view.gui.mapgui;
 
-import org.schema.common.util.StringTools;
 import org.schema.common.util.linAlg.Vector3i;
 import org.schema.game.client.controller.manager.ingame.map.MapFilterEditDialog;
 import org.schema.game.client.data.GameClientState;
@@ -26,7 +25,7 @@ import javax.vecmath.Vector4f;
  * Modified version of MapToolsPanel.
  *
  * @author Schema, TheDerpGamer
- * @since 06/28/2021
+ * @since 06/29/2021
  */
 public class MapToolsPanel extends GUIAncor {
 
@@ -34,379 +33,499 @@ public class MapToolsPanel extends GUIAncor {
 
     //INSERTED CODE
     private SelectedFleetList selectedFleetList;
+    private GUIAncor fleetActionsAnchor;
     public GUIRightClickButtonPane fleetActionsList;
     public GUIColoredRectangle fleetBox;
     //
 
-    public MapToolsPanel(InputState var1) {
-        super(var1, 800.0F, 128.0F);
+    public MapToolsPanel(InputState state) {
+        super(state, 800, 128);
         //INSERTED CODE
         FleetGUIManager.initializePanel(this);
         //
-        this.init();
+        init();
     }
 
+    /* (non-Javadoc)
+     * @see org.schema.schine.graphicsengine.forms.gui.GUIElement#getState()
+     */
+    @Override
     public GameClientState getState() {
-        return (GameClientState)super.getState();
+        return (GameClientState) super.getState();
     }
 
-    public void update(Timer var1) {
-        super.update(var1);
+    /* (non-Javadoc)
+     * @see org.schema.schine.graphicsengine.forms.AbstractSceneNode#update(org.schema.schine.graphicsengine.core.Timer)
+     */
+    @Override
+    public void update(Timer timer) {
+        super.update(timer);
     }
 
     public GameMapPosition getMapPosition() {
-        return this.getState().getWorldDrawer().getGameMapDrawer().getGameMapPosition();
+        return getState().getWorldDrawer().getGameMapDrawer().getGameMapPosition();
     }
 
     public GameMapDrawer getMapDrawer() {
-        return this.getState().getWorldDrawer().getGameMapDrawer();
+        return getState().getWorldDrawer().getGameMapDrawer();
     }
 
-    public String getSystemInfo(VoidSystem var1) {
-        String var4;
-        if (var1 != null) {
-            String var2;
-            if (var1.getOwnerFaction() != 0 && var1.getOwnerUID() != null && this.getState().getFactionManager().existsFaction(var1.getOwnerFaction())) {
-                Faction var3 = this.getState().getFactionManager().getFaction(var1.getOwnerFaction());
-                var2 = " " + StringTools.format(Lng.ORG_SCHEMA_GAME_CLIENT_VIEW_GUI_MAPGUI_MAPTOOLSPANEL_17, new Object[]{var3.getName()});
+    public String getSystemInfo(VoidSystem sys) {
+        String sysTxt;
+        if (sys != null) {
+            String facTxt;
+
+            if (sys.getOwnerFaction() != 0 && sys.getOwnerUID() != null && getState().getFactionManager().existsFaction(sys.getOwnerFaction())) {
+                Faction f = getState().getFactionManager().getFaction(sys.getOwnerFaction());
+                facTxt = " " + Lng.str("Owner: %s", f.getName());
             } else {
-                var2 = "";
+                facTxt = "";
             }
-
-            Vector3i var5 = Galaxy.getLocalCoordinatesFromSystem(var1.getPos(), this.relPosTmp);
-            var4 = this.getState().getCurrentGalaxy().getName(var5) + " " + var1.getPos() + var2;
+            Vector3i relPos = Galaxy.getLocalCoordinatesFromSystem(sys.getPos(), relPosTmp);
+            sysTxt = getState().getCurrentGalaxy().getName(relPos) + " " + sys.getPos() + facTxt;
         } else {
-            var4 = Lng.ORG_SCHEMA_GAME_CLIENT_VIEW_GUI_MAPGUI_MAPTOOLSPANEL_18;
+            sysTxt = Lng.str("Calculating...");
         }
-
-        return var4;
+        return sysTxt;
     }
 
     private void init() {
-        GUIColoredRectangle var1;
-        (var1 = new GUIColoredRectangle(this.getState(), this.getWidth(), this.getHeight(), new Vector4f(0.1F, 0.1F, 0.3F, 0.5F))).rounded = 6.0F;
-        this.attach(var1);
-        GUITextOverlay var2;
-        (var2 = new GUITextOverlay(120, 20, this.getState())).setTextSimple(Lng.ORG_SCHEMA_GAME_CLIENT_VIEW_GUI_MAPGUI_MAPTOOLSPANEL_0);
-        GUITextOverlay var3;
-        (var3 = new GUITextOverlay(120, 20, this.getState())).setTextSimple(new Object() {
+
+        GUIColoredRectangle bg = new GUIColoredRectangle(getState(), getWidth(), getHeight(), new Vector4f(0.1f, 0.1f, 0.3f, 0.5f));
+        bg.rounded = 6;
+
+        attach(bg);
+
+        GUITextOverlay help = new GUITextOverlay(120, 20, getState());
+        help.setTextSimple(Lng.str("Hold right mouse button to rotate, and use mouse wheel to zoom. Use your move keys to move. Hold shift to move a system instead of a sector."));
+
+        GUITextOverlay ownPos = new GUITextOverlay(120, 20, getState());
+
+        ownPos.setTextSimple(new Object() {
+            @Override
             public String toString() {
-                VoidSystem var1 = MapToolsPanel.this.getState().getCurrentClientSystem();
-                if (MapToolsPanel.this.getState().getPlayer().isInTutorial()) {
-                    return "Own Position: [System Tutorial] [Sector: Tutorial]";
-                } else if (MapToolsPanel.this.getState().getPlayer().isInPersonalSector()) {
-                    return Lng.ORG_SCHEMA_GAME_CLIENT_VIEW_GUI_MAPGUI_MAPTOOLSPANEL_1;
-                } else {
-                    return MapToolsPanel.this.getState().getPlayer().isInTestSector() ? Lng.ORG_SCHEMA_GAME_CLIENT_VIEW_GUI_MAPGUI_MAPTOOLSPANEL_2 : StringTools.format(Lng.ORG_SCHEMA_GAME_CLIENT_VIEW_GUI_MAPGUI_MAPTOOLSPANEL_3, new Object[]{MapToolsPanel.this.getSystemInfo(var1), MapToolsPanel.this.getState().getPlayer().getCurrentSector().toString()});
+
+                VoidSystem sys = getState().getCurrentClientSystem();
+
+                if(MapToolsPanel.this.getState().getPlayer().isInTutorial()){
+                    return "Own Position: [System " + "Tutorial" + "] [Sector: " + "Tutorial"  + "]";
+                }else if(MapToolsPanel.this.getState().getPlayer().isInPersonalSector()){
+                    return Lng.str("Own Position: [System Personal] [Sector: Personal]");
+                }else if(MapToolsPanel.this.getState().getPlayer().isInTestSector()){
+                    return Lng.str("Own Position: [System Test System] [Sector: Test Sector]");
+                }else{
+                    return Lng.str("Own Position: [System %s] [Sector: %s]", getSystemInfo(sys), getState().getPlayer().getCurrentSector().toString());
                 }
+
             }
+
         });
-        GUITextButton var4;
-        (var4 = new GUITextButton(this.getState(), 140, 18, Lng.ORG_SCHEMA_GAME_CLIENT_VIEW_GUI_MAPGUI_MAPTOOLSPANEL_4, new GUICallback() {
-            public void callback(GUIElement var1, MouseEvent var2) {
-                if (var2.pressedLeftMouse()) {
-                    Vector3i var3 = MapToolsPanel.this.getState().getPlayer().getCurrentSector();
-                    MapToolsPanel.this.getMapPosition().set(var3.x, var3.y, var3.z, false);
+
+        GUITextButton goHome = new GUITextButton(getState(), 140, 18, Lng.str("Center on own pos"), new GUICallback() {
+
+            @Override
+            public void callback(GUIElement callingGuiElement, MouseEvent event) {
+                if (event.pressedLeftMouse()) {
+                    Vector3i c = getState().getPlayer().getCurrentSector();
+                    getMapPosition().set(c.x, c.y, c.z, false);
                 }
-
-            }
-
+            }			@Override
             public boolean isOccluded() {
                 return false;
             }
-        })).setTextPos(3, 0);
-        GUITextOverlay var5;
-        (var5 = new GUITextOverlay(120, 20, this.getState())).setTextSimple(new Object() {
+
+
+        });
+        goHome.setTextPos(3, 0);
+
+        GUITextOverlay curSelPos = new GUITextOverlay(120, 20, getState());
+
+        curSelPos.setTextSimple(new Object() {
             final Vector3i tmpPos = new Vector3i();
 
+            @Override
             public String toString() {
-                if (MapToolsPanel.this.getState().getController() != null && MapToolsPanel.this.getState().getController().getClientChannel() != null) {
-                    VoidSystem var1;
-                    return (var1 = MapToolsPanel.this.getState().getController().getClientChannel().getGalaxyManagerClient().getSystemOnClient(MapToolsPanel.this.getMapPosition().get(this.tmpPos))) != null ? StringTools.format(Lng.ORG_SCHEMA_GAME_CLIENT_VIEW_GUI_MAPGUI_MAPTOOLSPANEL_5, new Object[]{MapToolsPanel.this.getSystemInfo(var1), this.tmpPos.toString()}) : Lng.ORG_SCHEMA_GAME_CLIENT_VIEW_GUI_MAPGUI_MAPTOOLSPANEL_20;
-                } else {
-                    return Lng.ORG_SCHEMA_GAME_CLIENT_VIEW_GUI_MAPGUI_MAPTOOLSPANEL_21;
+
+                String sysTxt;
+                if(getState().getController() != null && getState().getController().getClientChannel() != null){
+                    VoidSystem sys = getState().getController().getClientChannel().getGalaxyManagerClient().getSystemOnClient(getMapPosition().get(tmpPos));
+                    if(sys != null){
+                        return Lng.str("Selected: [System %s] [Sector: %s]", getSystemInfo(sys), tmpPos.toString());
+                    }else{
+                        return Lng.str("n/a");
+                    }
+                }else{
+                    return Lng.str("n/a");
                 }
+
             }
+
         });
-        GUITextButton var6;
-        (var6 = new GUITextButton(this.getState(), 140, 18, Lng.ORG_SCHEMA_GAME_CLIENT_VIEW_GUI_MAPGUI_MAPTOOLSPANEL_6, new GUICallback() {
+
+        GUITextButton plotPath = new GUITextButton(getState(), 140, 18, Lng.str("Plot path to current"), new GUICallback() {
+
+            @Override
             public boolean isOccluded() {
                 return false;
             }
 
-            public void callback(GUIElement var1, MouseEvent var2) {
-                if (var2.pressedLeftMouse()) {
-                    MapToolsPanel.this.getState().getPlayer().getCurrentSector();
-                    MapToolsPanel.this.getState().getController().getClientGameData().setWaypoint(MapToolsPanel.this.getMapPosition().get(new Vector3i()));
-                }
+            @Override
+            public void callback(GUIElement callingGuiElement, MouseEvent event) {
+                if (event.pressedLeftMouse()) {
+                    Vector3i c = getState().getPlayer().getCurrentSector();
 
+                    getState().getController().getClientGameData().setWaypoint(getMapPosition().get(new Vector3i()));
+                }
             }
-        })).setTextPos(3, 0);
-        GUITextButton var7 = new GUITextButton(this.getState(), 140, 18, Lng.ORG_SCHEMA_GAME_CLIENT_VIEW_GUI_MAPGUI_MAPTOOLSPANEL_7, new GUICallback() {
+        });
+        plotPath.setTextPos(3, 0);
+
+        GUITextButton filter = new GUITextButton(getState(), 140, 18, Lng.str("Filter"), new GUICallback() {
+
+            @Override
             public boolean isOccluded() {
                 return false;
             }
 
-            public void callback(GUIElement var1, MouseEvent var2) {
-                if (var2.pressedLeftMouse()) {
-                    (new MapFilterEditDialog(MapToolsPanel.this.getState(), GameMapDrawer.filter, false)).activate();
-                }
+            @Override
+            public void callback(GUIElement callingGuiElement, MouseEvent event) {
+                if (event.pressedLeftMouse()) {
+                    MapFilterEditDialog a = new MapFilterEditDialog(getState(), GameMapDrawer.filter, false);
+                    a.activate();
 
+                }
             }
         });
-        var6.setTextPos(3, 0);
-        GUITextButton var8 = new GUITextButton(this.getState(), 139, 18, new Object() {
+        plotPath.setTextPos(3, 0);
+
+        GUITextButton moveToNavDest = new GUITextButton(getState(), 139, 18, new Object() {
+            @Override
             public String toString() {
-                return StringTools.format(Lng.ORG_SCHEMA_GAME_CLIENT_VIEW_GUI_MAPGUI_MAPTOOLSPANEL_19, new Object[]{MapToolsPanel.this.getState().getController().getClientGameData().getWaypoint().toString()});
+                return Lng.str("Select %s", getState().getController().getClientGameData().getWaypoint().toString());
             }
         }, new GUICallback() {
+
+            @Override
             public boolean isOccluded() {
                 return false;
             }
 
-            public void callback(GUIElement var1, MouseEvent var2) {
-                Vector3i var3;
-                if (var2.pressedLeftMouse() && (var3 = MapToolsPanel.this.getState().getController().getClientGameData().getWaypoint()) != null) {
-                    MapToolsPanel.this.getMapPosition().set(var3.x, var3.y, var3.z, false);
-                }
+            @Override
+            public void callback(GUIElement callingGuiElement, MouseEvent event) {
+                if (event.pressedLeftMouse()) {
 
+                    Vector3i waypoint = getState().getController().getClientGameData().getWaypoint();
+                    if (waypoint != null) {
+                        getMapPosition().set(waypoint.x, waypoint.y, waypoint.z, false);
+                    }
+                }
             }
         }) {
+
+            /* (non-Javadoc)
+             * @see org.schema.schine.graphicsengine.forms.gui.GUITextButton#draw()
+             */
+            @Override
             public void draw() {
                 if (MapToolsPanel.this.getState().getController().getClientGameData().getWaypoint() != null) {
                     super.draw();
                 }
-
             }
+
         };
-        GUITextButton var9 = new GUITextButton(this.getState(), 300, 18, new Object() {
+        GUITextButton adminWarp = new GUITextButton(getState(), 300, 18, new Object() {
+            @Override
             public String toString() {
-                return StringTools.format(Lng.ORG_SCHEMA_GAME_CLIENT_VIEW_GUI_MAPGUI_MAPTOOLSPANEL_8, new Object[]{MapToolsPanel.this.getMapPosition().get(new Vector3i()).toString()});
+                return Lng.str("Admin Warp %s", getMapPosition().get(new Vector3i()).toString());
             }
         }, new GUICallback() {
+
+            @Override
             public boolean isOccluded() {
                 return false;
             }
 
-            public void callback(GUIElement var1, MouseEvent var2) {
-                if (var2.pressedLeftMouse()) {
-                    Vector3i var3 = MapToolsPanel.this.getMapPosition().get(new Vector3i());
-                    MapToolsPanel.this.getState().getController().sendAdminCommand(AdminCommands.CHANGE_SECTOR, new Object[]{var3.x, var3.y, var3.z});
-                }
+            @Override
+            public void callback(GUIElement callingGuiElement, MouseEvent event) {
+                if (event.pressedLeftMouse()) {
 
+                    Vector3i to = getMapPosition().get(new Vector3i());
+
+                    MapToolsPanel.this.getState().getController().sendAdminCommand(AdminCommands.CHANGE_SECTOR, to.x, to.y, to.z);
+                }
             }
         }) {
+
+            /* (non-Javadoc)
+             * @see org.schema.schine.graphicsengine.forms.gui.GUITextButton#draw()
+             */
+            @Override
             public void draw() {
                 if (MapToolsPanel.this.getState().getPlayer().getNetworkObject().isAdminClient.get() && !MapToolsPanel.this.getState().getPlayer().isInTutorial()) {
                     super.draw();
                 }
-
             }
+
         };
-        GUITextButton var10 = new GUITextButton(this.getState(), 300, 18, new Object() {
+        GUITextButton adminScan = new GUITextButton(getState(), 300, 18, new Object() {
+            @Override
             public String toString() {
-                return StringTools.format(Lng.ORG_SCHEMA_GAME_CLIENT_VIEW_GUI_MAPGUI_MAPTOOLSPANEL_9, new Object[]{MapToolsPanel.this.getMapPosition().get(new Vector3i()).toString()});
+                return Lng.str("Admin Scan %s", getMapPosition().get(new Vector3i()).toString());
             }
         }, new GUICallback() {
+
+            @Override
             public boolean isOccluded() {
                 return false;
             }
 
-            public void callback(GUIElement var1, MouseEvent var2) {
-                if (var2.pressedLeftMouse()) {
-                    Vector3i var3 = MapToolsPanel.this.getMapPosition().getCurrentSysPos();
-                    MapToolsPanel.this.getState().getController().sendAdminCommand(AdminCommands.SCAN, new Object[]{var3.x, var3.y, var3.z});
-                }
+            @Override
+            public void callback(GUIElement callingGuiElement, MouseEvent event) {
+                if (event.pressedLeftMouse()) {
 
+                    Vector3i to = getMapPosition().getCurrentSysPos();
+
+                    MapToolsPanel.this.getState().getController().sendAdminCommand(AdminCommands.SCAN, to.x, to.y, to.z);
+                }
             }
         }) {
+
+            /* (non-Javadoc)
+             * @see org.schema.schine.graphicsengine.forms.gui.GUITextButton#draw()
+             */
+            @Override
             public void draw() {
                 if (MapToolsPanel.this.getState().getPlayer().getNetworkObject().isAdminClient.get() && !MapToolsPanel.this.getState().getPlayer().isInTutorial()) {
                     super.draw();
                 }
-
             }
+
         };
-        GUICheckBox var11 = new GUICheckBox(this.getState()) {
+
+        GUICheckBox drawPlanetOrbits = new GUICheckBox(getState()) {
+            @Override
             protected void activate() throws StateParameterNotFoundException {
                 GameMapDrawer.drawPlanetOrbits = true;
-            }
-
+            }			@Override
             protected boolean isActivated() {
                 return GameMapDrawer.drawPlanetOrbits;
             }
 
+            @Override
             protected void deactivate() throws StateParameterNotFoundException {
                 GameMapDrawer.drawPlanetOrbits = false;
             }
+
+
         };
-        GUITextOverlay var12;
-        (var12 = new GUITextOverlay(120, 20, this.getState())).setTextSimple(Lng.ORG_SCHEMA_GAME_CLIENT_VIEW_GUI_MAPGUI_MAPTOOLSPANEL_10);
-        GUICheckBox var13 = new GUICheckBox(this.getState()) {
+        GUITextOverlay drawPlanetOrbitsText = new GUITextOverlay(120, 20, getState());
+        drawPlanetOrbitsText.setTextSimple(Lng.str("Planet Orbits"));
+
+        GUICheckBox drawAsteroidBeltOrbits = new GUICheckBox(getState()) {
+            @Override
             protected boolean isActivated() {
                 return GameMapDrawer.drawAsteroidBeltOrbits;
             }
 
+            @Override
             protected void deactivate() throws StateParameterNotFoundException {
                 GameMapDrawer.drawAsteroidBeltOrbits = false;
             }
 
+            @Override
             protected void activate() throws StateParameterNotFoundException {
                 GameMapDrawer.drawAsteroidBeltOrbits = true;
             }
         };
-        GUITextOverlay var14;
-        (var14 = new GUITextOverlay(120, 20, this.getState())).setTextSimple(Lng.ORG_SCHEMA_GAME_CLIENT_VIEW_GUI_MAPGUI_MAPTOOLSPANEL_11);
-        GUICheckBox var15 = new GUICheckBox(this.getState()) {
+        GUITextOverlay drawAsteroidBeltOrbitsText = new GUITextOverlay(120, 20, getState());
+        drawAsteroidBeltOrbitsText.setTextSimple(Lng.str("Asteroid Belt Orbits"));
+
+        GUICheckBox highlightOrbitSectors = new GUICheckBox(getState()) {
+            @Override
             protected boolean isActivated() {
                 return GameMapDrawer.highlightOrbitSectors;
             }
 
+            @Override
             protected void deactivate() throws StateParameterNotFoundException {
                 GameMapDrawer.highlightOrbitSectors = false;
             }
 
+            @Override
             protected void activate() throws StateParameterNotFoundException {
                 GameMapDrawer.highlightOrbitSectors = true;
             }
         };
-        GUITextOverlay var16;
-        (var16 = new GUITextOverlay(120, 20, this.getState())).setTextSimple(Lng.ORG_SCHEMA_GAME_CLIENT_VIEW_GUI_MAPGUI_MAPTOOLSPANEL_12);
-        GUICheckBox var17 = new GUICheckBox(this.getState()) {
+        GUITextOverlay highlightOrbitSectorsText = new GUITextOverlay(120, 20, getState());
+        highlightOrbitSectorsText.setTextSimple(Lng.str("Orbital Sectors"));
+
+        GUICheckBox drawFactionByRelation = new GUICheckBox(getState()) {
+            @Override
             protected boolean isActivated() {
                 return GameMapDrawer.drawFactionByRelation;
             }
 
+            @Override
             protected void deactivate() throws StateParameterNotFoundException {
                 GameMapDrawer.drawFactionByRelation = false;
             }
 
+            @Override
             protected void activate() throws StateParameterNotFoundException {
                 GameMapDrawer.drawFactionByRelation = true;
             }
         };
-        GUITextOverlay var18;
-        (var18 = new GUITextOverlay(120, 20, this.getState())).setTextSimple(Lng.ORG_SCHEMA_GAME_CLIENT_VIEW_GUI_MAPGUI_MAPTOOLSPANEL_13);
-        GUICheckBox var19 = new GUICheckBox(this.getState()) {
+        GUITextOverlay drawFactionByRelationText = new GUITextOverlay(120, 20, getState());
+        drawFactionByRelationText.setTextSimple(Lng.str("Faction Territory by Relation"));
+
+        GUICheckBox drawFactionTerritory = new GUICheckBox(getState()) {
+            @Override
             protected boolean isActivated() {
                 return GameMapDrawer.drawFactionTerritory;
             }
 
+            @Override
             protected void deactivate() throws StateParameterNotFoundException {
                 GameMapDrawer.drawFactionTerritory = false;
             }
 
+            @Override
             protected void activate() throws StateParameterNotFoundException {
                 GameMapDrawer.drawFactionTerritory = true;
             }
         };
-        GUITextOverlay var20;
-        (var20 = new GUITextOverlay(120, 20, this.getState())).setTextSimple(Lng.ORG_SCHEMA_GAME_CLIENT_VIEW_GUI_MAPGUI_MAPTOOLSPANEL_14);
-        GUICheckBox var21 = new GUICheckBox(this.getState()) {
+        GUITextOverlay drawFactionTerritoryText = new GUITextOverlay(120, 20, getState());
+        drawFactionTerritoryText.setTextSimple(Lng.str("Faction Territory"));
+
+        GUICheckBox drawWormHoles = new GUICheckBox(getState()) {
+            @Override
             protected boolean isActivated() {
                 return GameMapDrawer.drawWormHoles;
             }
 
+            @Override
             protected void deactivate() throws StateParameterNotFoundException {
                 GameMapDrawer.drawWormHoles = false;
             }
 
+            @Override
             protected void activate() throws StateParameterNotFoundException {
                 GameMapDrawer.drawWormHoles = true;
             }
         };
-        GUITextOverlay var22;
-        (var22 = new GUITextOverlay(120, 20, this.getState())).setTextSimple(Lng.ORG_SCHEMA_GAME_CLIENT_VIEW_GUI_MAPGUI_MAPTOOLSPANEL_15);
-        GUICheckBox var23 = new GUICheckBox(this.getState()) {
+        GUITextOverlay drawWormHolesText = new GUITextOverlay(120, 20, getState());
+        drawWormHolesText.setTextSimple(Lng.str("Worm Holes"));
+
+        GUICheckBox drawWarpGates = new GUICheckBox(getState()) {
+            @Override
             protected boolean isActivated() {
                 return GameMapDrawer.drawWarpGates;
             }
 
+            @Override
             protected void deactivate() throws StateParameterNotFoundException {
                 GameMapDrawer.drawWarpGates = false;
             }
 
+            @Override
             protected void activate() throws StateParameterNotFoundException {
                 GameMapDrawer.drawWarpGates = true;
             }
         };
-        GUITextOverlay var24;
-        (var24 = new GUITextOverlay(120, 20, this.getState())).setTextSimple(Lng.ORG_SCHEMA_GAME_CLIENT_VIEW_GUI_MAPGUI_MAPTOOLSPANEL_16);
-        var11.setScale(0.5F, 0.5F, 0.5F);
-        var13.setScale(0.5F, 0.5F, 0.5F);
-        var15.setScale(0.5F, 0.5F, 0.5F);
-        var17.setScale(0.5F, 0.5F, 0.5F);
-        var19.setScale(0.5F, 0.5F, 0.5F);
-        var23.setScale(0.5F, 0.5F, 0.5F);
-        var21.setScale(0.5F, 0.5F, 0.5F);
-        var8.setTextPos(7, 0);
-        var9.setPos(1.0F, -20.0F, 0.0F);
-        var1.attach(var9);
-        var10.setPos(1.0F + var9.getWidth() + 10.0F, -20.0F, 0.0F);
-        var1.attach(var10);
-        var2.setPos(1.0F, 0.0F, 0.0F);
-        var1.attach(var2);
-        var3.setPos(1.0F, 20.0F, 0.0F);
-        var1.attach(var3);
-        var4.setPos(521.0F, 20.0F, 0.0F);
-        var1.attach(var4);
-        var5.setPos(1.0F, 40.0F, 0.0F);
-        var1.attach(var5);
-        var6.setPos(521.0F, 40.0F, 0.0F);
-        var1.attach(var6);
-        var8.setPos(521.0F + var6.getWidth(), 40.0F, 0.0F);
-        var1.attach(var8);
-        var7.setPos(521.0F, 60.0F, 0.0F);
-        var1.attach(var7);
-        var11.setPos(1.0F, 60.0F, 0.0F);
-        var1.attach(var11);
-        var12.setPos(17.0F, 60.0F, 0.0F);
-        var1.attach(var12);
-        var13.setPos(1.0F, 80.0F, 0.0F);
-        var1.attach(var13);
-        var14.setPos(17.0F, 80.0F, 0.0F);
-        var1.attach(var14);
-        var15.setPos(1.0F, 100.0F, 0.0F);
-        var1.attach(var15);
-        var16.setPos(17.0F, 100.0F, 0.0F);
-        var1.attach(var16);
-        var19.setPos(301.0F, 60.0F, 0.0F);
-        var1.attach(var19);
-        var20.setPos(317.0F, 60.0F, 0.0F);
-        var1.attach(var20);
-        var17.setPos(301.0F, 80.0F, 0.0F);
-        var1.attach(var17);
-        var18.setPos(317.0F, 80.0F, 0.0F);
-        var1.attach(var18);
-        var21.setPos(301.0F, 100.0F, 0.0F);
-        var1.attach(var21);
-        var22.setPos(317.0F, 100.0F, 0.0F);
-        var1.attach(var22);
-        var23.setPos(601.0F, 100.0F, 0.0F);
-        var1.attach(var23);
-        var24.setPos(617.0F, 100.0F, 0.0F);
-        var1.attach(var24);
+        GUITextOverlay drawWarpGatesText = new GUITextOverlay(120, 20, getState());
+        drawWarpGatesText.setTextSimple(Lng.str("Warp Gates"));
+
+        drawPlanetOrbits.setScale(0.5f, 0.5f, 0.5f);
+        drawAsteroidBeltOrbits.setScale(0.5f, 0.5f, 0.5f);
+        highlightOrbitSectors.setScale(0.5f, 0.5f, 0.5f);
+        drawFactionByRelation.setScale(0.5f, 0.5f, 0.5f);
+        drawFactionTerritory.setScale(0.5f, 0.5f, 0.5f);
+        drawWarpGates.setScale(0.5f, 0.5f, 0.5f);
+        drawWormHoles.setScale(0.5f, 0.5f, 0.5f);
+
+        moveToNavDest.setTextPos(7, 0);
+
+        int xStart = 1;
+        int bPos = 520;
+        int ySpacing = 20;
+        adminWarp.setPos(xStart + 0, -1 * ySpacing, 0);
+        bg.attach(adminWarp);
+        adminScan.setPos(xStart + 0 + adminWarp.getWidth() + 10, -1 * ySpacing, 0);
+        bg.attach(adminScan);
+
+        help.setPos(xStart + 0, 0 * ySpacing, 0);
+        bg.attach(help);
+
+        ownPos.setPos(xStart + 0, 1 * ySpacing, 0);
+        bg.attach(ownPos);
+        goHome.setPos(xStart + bPos, 1 * ySpacing, 0);
+        bg.attach(goHome);
+
+        curSelPos.setPos(xStart + 0, 2 * ySpacing, 0);
+        bg.attach(curSelPos);
+        plotPath.setPos(xStart + bPos, 2 * ySpacing, 0);
+        bg.attach(plotPath);
+        moveToNavDest.setPos(xStart + bPos + plotPath.getWidth(), 2 * ySpacing, 0);
+        bg.attach(moveToNavDest);
+
+        filter.setPos(xStart + bPos, 3 * ySpacing, 0);
+        bg.attach(filter);
+
+        drawPlanetOrbits.setPos(xStart + 0, 3 * ySpacing, 0);
+        bg.attach(drawPlanetOrbits);
+        drawPlanetOrbitsText.setPos(xStart + 16, 3 * ySpacing, 0);
+        bg.attach(drawPlanetOrbitsText);
+
+        drawAsteroidBeltOrbits.setPos(xStart + 0, 4 * ySpacing, 0);
+        bg.attach(drawAsteroidBeltOrbits);
+        drawAsteroidBeltOrbitsText.setPos(xStart + 16, 4 * ySpacing, 0);
+        bg.attach(drawAsteroidBeltOrbitsText);
+
+        highlightOrbitSectors.setPos(xStart + 0, 5 * ySpacing, 0);
+        bg.attach(highlightOrbitSectors);
+        highlightOrbitSectorsText.setPos(xStart + 16, 5 * ySpacing, 0);
+        bg.attach(highlightOrbitSectorsText);
+
+        drawFactionTerritory.setPos(xStart + 0 + 300, 3 * ySpacing, 0);
+        bg.attach(drawFactionTerritory);
+        drawFactionTerritoryText.setPos(xStart + 16 + 300, 3 * ySpacing, 0);
+        bg.attach(drawFactionTerritoryText);
+
+        drawFactionByRelation.setPos(xStart + 0 + 300, 4 * ySpacing, 0);
+        bg.attach(drawFactionByRelation);
+        drawFactionByRelationText.setPos(xStart + 16 + 300, 4 * ySpacing, 0);
+        bg.attach(drawFactionByRelationText);
+
+        drawWormHoles.setPos(xStart + 0 + 300, 5 * ySpacing, 0);
+        bg.attach(drawWormHoles);
+        drawWormHolesText.setPos(xStart + 16 + 300, 5 * ySpacing, 0);
+        bg.attach(drawWormHolesText);
+
+        drawWarpGates.setPos(xStart + 0 + 600, 5 * ySpacing, 0);
+        bg.attach(drawWarpGates);
+        drawWarpGatesText.setPos(xStart + 16 + 600, 5 * ySpacing, 0);
+        bg.attach(drawWarpGatesText);
 
         //INSERTED CODE
-        fleetBox = new GUIColoredRectangle(getState(), 500.0f, 500.0f, new Vector4f(0.1f, 0.3f, 0.1f, 0.5f));
+        fleetBox = new GUIColoredRectangle(getState(), 100.0f, 100.0f, new Vector4f(0.1f, 0.3f, 0.1f, 0.5f));
         fleetBox.rounded = 6.0f;
         fleetBox.onInit();
-        fleetBox.setPos(100.0f, 300.0f, 0.0f);
+        fleetBox.setPos(-200.0f, -480.0f, 0.0f);
 
         GUITextOverlay fleetBoxOverlay = new GUITextOverlay(120, 20, getState());
         fleetBoxOverlay.onInit();
         fleetBoxOverlay.setFont(FontLibrary.FontSize.BIG.getFont());
         fleetBoxOverlay.setTextSimple("Selected Fleets:");
-        fleetBoxOverlay.setPos(50.0f, 280.0f, 0.0f);
+        fleetBoxOverlay.setPos(-190.0f, -450.0f, 0.0f);
         fleetBox.attach(fleetBoxOverlay);
 
         (selectedFleetList = new SelectedFleetList(getState())).onInit();
-        selectedFleetList.setPos(130.0f, 250.0f, 0.0f);
+        selectedFleetList.setPos(-190.0f, -430.0f, 0.0f);
         fleetBox.attach(selectedFleetList);
         attach(fleetBox);
 
-        GUIAncor fleetActionsAnchor = new GUIAncor(getState(), 180.0f, 100.0f);
-        (fleetActionsList = new GUIRightClickButtonPane(getState(), 1, 1, fleetActionsAnchor)).onInit();
+        fleetActionsAnchor = new GUIAncor(getState(), 180.0f, 500.0f);
+        (fleetActionsList = new GUIRightClickButtonPane(getState(), 1, 11, fleetActionsAnchor)).onInit();
         fleetActionsAnchor.attach(fleetActionsList);
         attach(fleetActionsAnchor);
         fleetActionsList.cleanUp();
@@ -416,6 +535,7 @@ public class MapToolsPanel extends GUIAncor {
     //INSERTED CODE
     public void updateFleetList() {
         selectedFleetList.updateList();
+        fleetActionsAnchor.cleanUp();
         fleetActionsList.cleanUp();
     }
     //

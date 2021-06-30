@@ -63,7 +63,7 @@ public class FleetGUIManager  {
 
     public static void orderFormation() {
         for(Fleet fleet : selectedFleets) {
-            FleetCommandTypes command = FleetCommandTypes.valueOf(fleet.getMissionName().toUpperCase());
+            FleetCommandTypes command = FleetCommandTypes.valueOf(fleet.getFlagShip().command.toUpperCase());
             if(command.equals(FleetCommandTypes.SENTRY)) fleet.sendFleetCommand(FleetCommandTypes.SENTRY_FORMATION);
             else if(command.equals(FleetCommandTypes.SENTRY_FORMATION)) fleet.sendFleetCommand(FleetCommandTypes.SENTRY);
             else if(command.equals(FleetCommandTypes.FLEET_IDLE_FORMATION)) fleet.sendFleetCommand(FleetCommandTypes.IDLE);
