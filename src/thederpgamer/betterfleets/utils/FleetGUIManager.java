@@ -1,4 +1,4 @@
-package thederpgamer.betterfleets.manager;
+package thederpgamer.betterfleets.utils;
 
 import api.common.GameCommon;
 import com.bulletphysics.util.ObjectArrayList;

@@ -18,8 +18,8 @@ import org.schema.schine.graphicsengine.core.Timer;
 import org.schema.schine.input.KeyEventInterface;
 import org.schema.schine.input.KeyboardMappings;
 import org.schema.schine.input.Mouse;
-import thederpgamer.betterfleets.manager.FleetGUIManager;
-import thederpgamer.betterfleets.manager.LogManager;
+import thederpgamer.betterfleets.utils.FleetGUIManager;
+import thederpgamer.betterfleets.utils.LogManager;
 
 import java.util.ArrayList;
 import java.util.HashSet;

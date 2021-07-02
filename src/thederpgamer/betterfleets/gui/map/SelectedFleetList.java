@@ -7,7 +7,7 @@ import org.schema.schine.graphicsengine.forms.gui.GUIElementList;
 import org.schema.schine.graphicsengine.forms.gui.GUIListElement;
 import org.schema.schine.graphicsengine.forms.gui.GUITextOverlay;
 import org.schema.schine.input.InputState;
-import thederpgamer.betterfleets.manager.FleetGUIManager;
+import thederpgamer.betterfleets.utils.FleetGUIManager;
 
 /**
  * Selected fleet list GUI element.

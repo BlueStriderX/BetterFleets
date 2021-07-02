@@ -1,4 +1,4 @@
-package thederpgamer.betterfleets.manager;
+package thederpgamer.betterfleets.utils;
 
 import api.mod.config.FileConfiguration;
 import thederpgamer.betterfleets.BetterFleets;

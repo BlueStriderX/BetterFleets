@@ -1,8 +1,5 @@
-package thederpgamer.betterfleets.manager;
+package thederpgamer.betterfleets.utils;
 
-import thederpgamer.betterfleets.utils.DataUtils;
-import thederpgamer.betterfleets.utils.DateUtils;
-import thederpgamer.betterfleets.utils.MessageType;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileWriter;

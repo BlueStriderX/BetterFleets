@@ -1,6 +1,7 @@
 package thederpgamer.betterfleets;
 
 import api.common.GameClient;
+import api.config.BlockConfig;
 import api.listener.Listener;
 import api.listener.events.input.MousePressEvent;
 import api.mod.StarLoader;
@@ -16,10 +17,9 @@ import org.schema.schine.graphicsengine.forms.gui.GUICallback;
 import org.schema.schine.graphicsengine.forms.gui.GUIElement;
 import org.schema.schine.graphicsengine.forms.gui.newgui.GUIHorizontalArea;
 import org.schema.schine.input.InputState;
-import thederpgamer.betterfleets.manager.ConfigManager;
-import thederpgamer.betterfleets.manager.FleetGUIManager;
-import thederpgamer.betterfleets.manager.LogManager;
-import thederpgamer.betterfleets.utils.MessageType;
+import org.schema.schine.resource.ResourceLoader;
+import thederpgamer.betterfleets.element.ElementManager;
+import thederpgamer.betterfleets.utils.*;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -65,6 +65,18 @@ public class BetterFleets extends StarMod {
     public byte[] onClassTransform(String className, byte[] byteCode) {
         for(String name : overwriteClasses) if(className.endsWith(name)) return overwriteClass(className, byteCode);
         return super.onClassTransform(className, byteCode);
+    }
+
+    @Override
+    public void onResourceLoad(ResourceLoader loader) {
+        ResourceManager.loadResources(this, loader);
+    }
+
+    @Override
+    public void onBlockConfigLoad(BlockConfig blockConfig) {
+
+
+        ElementManager.initialize();
     }
 
     private void registerListeners() {
