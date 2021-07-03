@@ -17,7 +17,8 @@ import java.util.HashMap;
 public class ResourceManager {
 
     private static final String[] textureNames = {
-
+            "repair-paste-fabricator-caps",
+            "repair-paste-fabricator-sides"
     };
 
     private static final String[] spriteNames = {

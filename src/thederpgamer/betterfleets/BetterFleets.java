@@ -4,6 +4,7 @@ import api.common.GameClient;
 import api.config.BlockConfig;
 import api.listener.Listener;
 import api.listener.events.input.MousePressEvent;
+import api.listener.events.register.ManagerContainerRegisterEvent;
 import api.mod.StarLoader;
 import api.mod.StarMod;
 import org.apache.commons.io.IOUtils;
@@ -19,6 +20,8 @@ import org.schema.schine.graphicsengine.forms.gui.newgui.GUIHorizontalArea;
 import org.schema.schine.input.InputState;
 import org.schema.schine.resource.ResourceLoader;
 import thederpgamer.betterfleets.element.ElementManager;
+import thederpgamer.betterfleets.element.blocks.systems.RepairPasteFabricator;
+import thederpgamer.betterfleets.systems.repairpastefabricator.RepairPasteFabricatorModuleContainer;
 import thederpgamer.betterfleets.utils.*;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -49,7 +52,8 @@ public class BetterFleets extends StarMod {
     //Data
     private final String[] overwriteClasses = new String[] {
             "MapControllerManager",
-            "MapToolsPanel"
+            "MapToolsPanel",
+            "RepairBeamHandler"
     };
 
     @Override
@@ -74,12 +78,20 @@ public class BetterFleets extends StarMod {
 
     @Override
     public void onBlockConfigLoad(BlockConfig blockConfig) {
-
+        //Systems
+        ElementManager.addBlock(new RepairPasteFabricator());
 
         ElementManager.initialize();
     }
 
     private void registerListeners() {
+        StarLoader.registerListener(ManagerContainerRegisterEvent.class, new Listener<ManagerContainerRegisterEvent>() {
+            @Override
+            public void onEvent(ManagerContainerRegisterEvent event) {
+                event.addModMCModule(new RepairPasteFabricatorModuleContainer(event.getSegmentController(), event.getContainer()));
+            }
+        }, this);
+
         StarLoader.registerListener(MousePressEvent.class, new Listener<MousePressEvent>() {
             @Override
             public void onEvent(MousePressEvent event) {
