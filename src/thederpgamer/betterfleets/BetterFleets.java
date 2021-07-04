@@ -3,6 +3,7 @@ package thederpgamer.betterfleets;
 import api.common.GameClient;
 import api.config.BlockConfig;
 import api.listener.Listener;
+import api.listener.events.gui.HudCreateEvent;
 import api.listener.events.input.MousePressEvent;
 import api.listener.events.register.ManagerContainerRegisterEvent;
 import api.mod.StarLoader;
@@ -21,7 +22,8 @@ import org.schema.schine.input.InputState;
 import org.schema.schine.resource.ResourceLoader;
 import thederpgamer.betterfleets.element.ElementManager;
 import thederpgamer.betterfleets.element.blocks.systems.RepairPasteFabricator;
-import thederpgamer.betterfleets.systems.repairpastefabricator.RepairPasteFabricatorModuleContainer;
+import thederpgamer.betterfleets.gui.hud.RepairPasteFabricatorHudOverlay;
+import thederpgamer.betterfleets.systems.RepairPasteFabricatorSystem;
 import thederpgamer.betterfleets.utils.*;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -53,8 +55,12 @@ public class BetterFleets extends StarMod {
     private final String[] overwriteClasses = new String[] {
             "MapControllerManager",
             "MapToolsPanel",
-            "RepairBeamHandler"
+            "RepairBeamHandler",
+            "HudContextHelpManager"
     };
+
+    //Hud Elements
+    public RepairPasteFabricatorHudOverlay repairPasteHudOverlay;
 
     @Override
     public void onEnable() {
@@ -88,7 +94,14 @@ public class BetterFleets extends StarMod {
         StarLoader.registerListener(ManagerContainerRegisterEvent.class, new Listener<ManagerContainerRegisterEvent>() {
             @Override
             public void onEvent(ManagerContainerRegisterEvent event) {
-                event.addModMCModule(new RepairPasteFabricatorModuleContainer(event.getSegmentController(), event.getContainer()));
+                event.addModMCModule(new RepairPasteFabricatorSystem(event.getSegmentController(), event.getContainer()));
+            }
+        }, this);
+
+        StarLoader.registerListener(HudCreateEvent.class, new Listener<HudCreateEvent>() {
+            @Override
+            public void onEvent(HudCreateEvent event) {
+                event.addElement(repairPasteHudOverlay = new RepairPasteFabricatorHudOverlay(event.getInputState()));
             }
         }, this);
 

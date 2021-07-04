@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.shorts.Short2IntOpenHashMap;
 import it.unimi.dsi.fastutil.shorts.Short2ObjectOpenHashMap;
+import org.schema.common.util.StringTools;
 import org.schema.common.util.linAlg.Vector3i;
 import org.schema.game.client.controller.manager.ingame.BlockBuffer;
 import org.schema.game.client.controller.manager.ingame.BuildCallback;
@@ -29,8 +30,7 @@ import org.schema.schine.common.language.Lng;
 import org.schema.schine.graphicsengine.core.Timer;
 import org.schema.schine.network.server.ServerMessage;
 import thederpgamer.betterfleets.element.ElementManager;
-import thederpgamer.betterfleets.systems.repairpastefabricator.RepairPasteFabricatorModuleContainer;
-
+import thederpgamer.betterfleets.systems.RepairPasteFabricatorSystem;
 import javax.vecmath.Vector3f;
 import javax.vecmath.Vector4f;
 import java.util.Collection;
@@ -120,35 +120,35 @@ public class RepairBeamHandler extends BeamHandler {
             //		}
             for (int i = 0; i < Math.min(amount, blockRemoveBuffer.size()); i++) {
                 //INSERTED CODE
-                boolean hasPaste = false;
+                boolean hasEnoughPaste = false;
+                boolean hasAnyPaste = false;
                 if(!consumeResource(blockRemoveBuffer.peakNextType())) {
-                    Short2ObjectOpenHashMap<FastCopyLongOpenHashSet> cm = getBeamShooter().getControlElementMap().getControllingMap().get(ElementCollection.getIndex(controllerPos));
-                    if(cm != null) {
-                        short nextType = blockRemoveBuffer.peakNextType();
-                        ElementInformation elementInfo = ElementKeyMap.getInfo(nextType);
-                        float pasteNeeded = elementInfo.getMaxHitPointsFull() + elementInfo.getArmorValue();
-                        if(((ManagedSegmentController) getBeamShooter()).getManagerContainer() instanceof ShipManagerContainer) {
-                            ShipManagerContainer managerContainer = (ShipManagerContainer) ((ManagedSegmentController) getBeamShooter()).getManagerContainer();
-                            RepairPasteFabricatorModuleContainer moduleContainer = (RepairPasteFabricatorModuleContainer) managerContainer.getModMCModule(ElementManager.getBlock("Repair Paste Fabricator").getId());
-                            if(moduleContainer.getRepairPasteCapacityMax() > 0) {
-                                float currentPaste = moduleContainer.getRepairPasteCapacity();
-                                if(currentPaste >= pasteNeeded) {
-                                    moduleContainer.setRepairPasteCapacity(currentPaste - pasteNeeded);
-                                    hasPaste = true;
-                                } else hasPaste = false;
-                            }
+                    short nextType = blockRemoveBuffer.peakNextType();
+                    ElementInformation elementInfo = ElementKeyMap.getInfo(nextType);
+                    float pasteNeeded = elementInfo.getMaxHitPointsFull() + elementInfo.getArmorValue();
+                    float currentPaste = 0f;
+                    if(((ManagedSegmentController) getBeamShooter()).getManagerContainer() instanceof ShipManagerContainer) {
+                        ShipManagerContainer managerContainer = (ShipManagerContainer) ((ManagedSegmentController) getBeamShooter()).getManagerContainer();
+                        RepairPasteFabricatorSystem moduleContainer = (RepairPasteFabricatorSystem) managerContainer.getModMCModule(ElementManager.getBlock("Repair Paste Fabricator").getId());
+                        if(moduleContainer.getRepairPasteCapacityMax() > 0) {
+                            hasAnyPaste = true;
+                            currentPaste = moduleContainer.getRepairPasteCapacity();
+                            if(currentPaste >= pasteNeeded) {
+                                moduleContainer.setRepairPasteCapacity(currentPaste - pasteNeeded);
+                                hasEnoughPaste = true;
+                            } else hasEnoughPaste = false;
                         }
                     }
 
-                    if(getBeamShooter().getState().getUpdateTime() - lastSentMsg > 1000 && !hasPaste) {
-                        short nextType = blockRemoveBuffer.peakNextType();
+                    if(getBeamShooter().getState().getUpdateTime() - lastSentMsg > 1000) {
                         short sourceType = (short) ElementKeyMap.getInfo(nextType).getSourceReference();
 
                         short consType = sourceType != 0 ? sourceType : nextType;
-                        getBeamShooter().sendServerMessage(Lng.astr("Not enough resources in connected or player inventory to repair!\nNeed %s",ElementKeyMap.getInfo(consType).getName()), ServerMessage.MESSAGE_TYPE_ERROR);
+                        if(!hasAnyPaste) getBeamShooter().sendServerMessage(Lng.astr("Not enough resources in connected or player inventory to repair!\nNeed %s",ElementKeyMap.getInfo(consType).getName()), ServerMessage.MESSAGE_TYPE_WARNING);
+                        else if(!hasEnoughPaste) getBeamShooter().sendServerMessage("Not enough repair paste: " + StringTools.formatPointZero(currentPaste) + " / " + pasteNeeded + ".0", ServerMessage.MESSAGE_TYPE_WARNING);
                         lastSentMsg = getBeamShooter().getState().getUpdateTime();
                     }
-                    if(!hasPaste) return;
+                    if(!hasEnoughPaste) return;
                 }
                 //
                 blockRemoveBuffer.createInstruction(c, r);
@@ -179,7 +179,7 @@ public class RepairBeamHandler extends BeamHandler {
 
                 c.build(pos.x, pos.y, pos.z, p.getType(), p.getOrientation(), p.isActive(), b, absOnOut, new int[]{0, 1}, null, null);
                 //INSERTED CODE
-                if (r.connectedFromThis != null && !hasPaste) {
+                if (r.connectedFromThis != null && !hasEnoughPaste) {
                 //
                     for (long l : r.connectedFromThis) {
                         c.getControlElementMap().removeControlledFromAll(ElementCollection.getPosIndexFrom4(l), (short) ElementCollection.getType(l), true);
