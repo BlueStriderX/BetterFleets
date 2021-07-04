@@ -5,12 +5,15 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.shorts.Short2IntOpenHashMap;
 import it.unimi.dsi.fastutil.shorts.Short2ObjectOpenHashMap;
+import org.schema.common.util.StringTools;
 import org.schema.common.util.linAlg.Vector3i;
 import org.schema.game.client.controller.manager.ingame.BlockBuffer;
 import org.schema.game.client.controller.manager.ingame.BuildCallback;
 import org.schema.game.client.controller.manager.ingame.BuildInstruction.Remove;
 import org.schema.game.client.data.GameClientState;
+import org.schema.game.client.data.PlayerControllable;
 import org.schema.game.client.view.beam.BeamColors;
+import org.schema.game.client.view.gui.shiphud.newhud.HudContextHelperContainer;
 import org.schema.game.common.controller.*;
 import org.schema.game.common.controller.elements.BeamState;
 import org.schema.game.common.controller.elements.ShipManagerContainer;
@@ -27,6 +30,7 @@ import org.schema.game.common.data.world.Segment;
 import org.schema.game.common.util.FastCopyLongOpenHashSet;
 import org.schema.schine.common.language.Lng;
 import org.schema.schine.graphicsengine.core.Timer;
+import org.schema.schine.graphicsengine.core.settings.ContextFilter;
 import org.schema.schine.network.server.ServerMessage;
 import thederpgamer.betterfleets.element.ElementManager;
 import thederpgamer.betterfleets.systems.repairpastefabricator.RepairPasteFabricatorModuleContainer;
@@ -136,11 +140,16 @@ public class RepairBeamHandler extends BeamHandler {
                                     moduleContainer.setRepairPasteCapacity(currentPaste - pasteNeeded);
                                     hasPaste = true;
                                 } else hasPaste = false;
+
+                                if(getBeamShooter().isConrolledByActivePlayer()) {
+                                    GameClientState shooterState = (GameClientState) ((PlayerControllable) getBeamShooter()).getAttachedPlayers().get(0).getState();
+                                    shooterState.getWorldDrawer().getGuiDrawer().getHud().getHelpManager().addInfo(HudContextHelperContainer.Hos.MOUSE, ContextFilter.NORMAL, StringTools.formatPointZero(moduleContainer.getRepairPasteCapacity()) + " / " + StringTools.formatPointZero(moduleContainer.getRepairPasteCapacityMax()));
+                                }
                             }
                         }
                     }
 
-                    if(getBeamShooter().getState().getUpdateTime() - lastSentMsg > 1000) {
+                    if(getBeamShooter().getState().getUpdateTime() - lastSentMsg > 1000 && !hasPaste) {
                         short nextType = blockRemoveBuffer.peakNextType();
                         short sourceType = (short) ElementKeyMap.getInfo(nextType).getSourceReference();
 

@@ -1,14 +1,20 @@
 package thederpgamer.betterfleets.systems.repairpastefabricator;
 
+import api.common.GameClient;
 import api.network.PacketReadBuffer;
 import api.network.PacketWriteBuffer;
 import api.utils.game.module.ModManagerContainerModule;
+import org.schema.common.util.StringTools;
+import org.schema.game.client.view.BuildModeDrawer;
+import org.schema.game.client.view.gui.shiphud.newhud.HudContextHelperContainer;
 import org.schema.game.common.controller.SegmentController;
 import org.schema.game.common.controller.elements.ManagerContainer;
 import org.schema.schine.graphicsengine.core.Timer;
+import org.schema.schine.graphicsengine.core.settings.ContextFilter;
 import thederpgamer.betterfleets.BetterFleets;
 import thederpgamer.betterfleets.element.ElementManager;
 import thederpgamer.betterfleets.utils.ConfigManager;
+
 import java.io.IOException;
 
 /**
@@ -21,7 +27,6 @@ public class RepairPasteFabricatorModuleContainer extends ModManagerContainerMod
 
     private float repairPasteCapacity = 0f;
     private float repairPasteCapacityMax = 0f;
-
     private float timer;
 
     public RepairPasteFabricatorModuleContainer(SegmentController ship, ManagerContainer<?> managerContainer) {
@@ -36,6 +41,7 @@ public class RepairPasteFabricatorModuleContainer extends ModManagerContainerMod
             setRepairPasteCapacity(repairPasteCapacity + (ConfigManager.getSystemConfig().getInt("repair-paste-regen-per-block") * getSize()));
             this.timer = 1000f;
         }
+        updateGUI();
     }
 
     @Override
@@ -80,13 +86,16 @@ public class RepairPasteFabricatorModuleContainer extends ModManagerContainerMod
         setRepairPasteCapacity(0);
     }
 
-
     public float getRepairPasteCapacity() {
         return repairPasteCapacity;
     }
 
     public float getRepairPasteCapacityMax() {
         return repairPasteCapacityMax;
+    }
+
+    public float getRepairPasteRegen() {
+        return ConfigManager.getSystemConfig().getInt("repair-paste-regen-per-block") * getSize();
     }
 
     public void setRepairPasteCapacity(float repairPasteCapacity) {
@@ -97,5 +106,17 @@ public class RepairPasteFabricatorModuleContainer extends ModManagerContainerMod
     public void setRepairPasteCapacityMax(float repairPasteCapacityMax) {
         if(repairPasteCapacity > repairPasteCapacityMax) repairPasteCapacity = repairPasteCapacityMax;
         this.repairPasteCapacityMax = repairPasteCapacityMax;
+    }
+
+    private void updateGUI() {
+        if(BuildModeDrawer.currentPiece.getType() == ElementManager.getBlock("Repair Paste Fabricator").getId()) {
+            GameClient.getClientState().getWorldDrawer().getGuiDrawer().getHud().getHelpManager().addInfo(HudContextHelperContainer.Hos.MOUSE, ContextFilter.NORMAL, getHudText());
+        }
+    }
+
+    private String getHudText() {
+        return "Repair Paste Fabricator:\n  Size: " + getSize() +
+                "\n   Capacity: " + StringTools.formatPointZero(repairPasteCapacity) + " / " +
+                StringTools.formatPointZero(repairPasteCapacity) + "\n  Generation: " + getRepairPasteRegen()  + "/s";
     }
 }
