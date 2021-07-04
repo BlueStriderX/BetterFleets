@@ -9,12 +9,12 @@ import org.schema.game.client.view.BuildModeDrawer;
 import org.schema.game.client.view.gui.shiphud.newhud.HudContextHelperContainer;
 import org.schema.game.common.controller.SegmentController;
 import org.schema.game.common.controller.elements.ManagerContainer;
+import org.schema.game.common.data.element.ElementKeyMap;
 import org.schema.schine.graphicsengine.core.Timer;
 import org.schema.schine.graphicsengine.core.settings.ContextFilter;
 import thederpgamer.betterfleets.BetterFleets;
 import thederpgamer.betterfleets.element.ElementManager;
 import thederpgamer.betterfleets.utils.ConfigManager;
-
 import java.io.IOException;
 
 /**
@@ -31,17 +31,17 @@ public class RepairPasteFabricatorModuleContainer extends ModManagerContainerMod
 
     public RepairPasteFabricatorModuleContainer(SegmentController ship, ManagerContainer<?> managerContainer) {
         super(ship, managerContainer, BetterFleets.getInstance(), ElementManager.getBlock("Repair Paste Fabricator").getId());
-        this.timer = 1000f;
+        this.timer = 30f;
     }
 
     @Override
     public void handle(Timer timer) {
+        updateGUI();
         this.timer = Math.max(0f, this.timer - 1);
         if(this.timer <= 0) {
             setRepairPasteCapacity(repairPasteCapacity + (ConfigManager.getSystemConfig().getInt("repair-paste-regen-per-block") * getSize()));
-            this.timer = 1000f;
+            this.timer = 30f;
         }
-        updateGUI();
     }
 
     @Override
@@ -109,9 +109,15 @@ public class RepairPasteFabricatorModuleContainer extends ModManagerContainerMod
     }
 
     private void updateGUI() {
-        if(BuildModeDrawer.currentPiece.getType() == ElementManager.getBlock("Repair Paste Fabricator").getId()) {
-            GameClient.getClientState().getWorldDrawer().getGuiDrawer().getHud().getHelpManager().addInfo(HudContextHelperContainer.Hos.MOUSE, ContextFilter.NORMAL, getHudText());
-        }
+        try {
+            if(getRepairPasteCapacityMax() > 0) {
+                if(GameClient.getClientState().isInFlightMode() && getManagerContainer().getSegmentController().getSegmentBuffer().getPointUnsave(getManagerContainer().getSegmentController().getSlotAssignment().getAsIndex(GameClient.getClientPlayerState().getCurrentShipControllerSlot())).getType() == ElementKeyMap.REPAIR_CONTROLLER_ID) {
+                    GameClient.getClientState().getWorldDrawer().getGuiDrawer().getHud().getHelpManager().addInfo(HudContextHelperContainer.Hos.MOUSE, ContextFilter.NORMAL, StringTools.formatPointZero(getRepairPasteCapacity()) + " / " + StringTools.formatPointZero(getRepairPasteCapacityMax()));
+                } else if(BuildModeDrawer.currentPiece.getType() == ElementManager.getBlock("Repair Paste Fabricator").getId() && !GameClient.getClientState().isInFlightMode()) {
+                    GameClient.getClientState().getWorldDrawer().getGuiDrawer().getHud().getHelpManager().addInfo(HudContextHelperContainer.Hos.MOUSE, ContextFilter.NORMAL, getHudText());
+                }
+            }
+        } catch(Exception ignored) { }
     }
 
     private String getHudText() {

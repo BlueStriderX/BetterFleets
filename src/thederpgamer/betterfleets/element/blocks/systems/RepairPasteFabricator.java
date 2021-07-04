@@ -41,5 +41,6 @@ public class RepairPasteFabricator extends Block {
                 new FactoryResource(10, (short) 867),
                 new FactoryResource(50, (short) 220)
         );
+        BlockConfig.add(blockInfo);
     }
 }

@@ -102,32 +102,6 @@ public class BetterFleets extends StarMod {
                         ArrayList<Fleet> clientFleets = new ArrayList<>(GameClient.getClientState().getFleetManager().getAvailableFleetsClient());
                         ArrayList<Fleet> sectorFleets = new ArrayList<>();
                         for(Fleet fleet : clientFleets) if(fleet.getFlagShip().getSector().equals(selectedPos)) sectorFleets.add(fleet);
-
-                        /*
-                        if(event.getRawEvent().pressedLeftMouse()) {
-                            if(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
-                                for(Fleet fleet : sectorFleets) {
-                                    if(FleetGUIManager.selectedFleets.contains(fleet)) {
-                                        FleetGUIManager.selectedFleets.remove(fleet);
-                                        LogManager.logDebug("Client removed fleet " + fleet.getName().trim() + " from selection.");
-                                        GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - back");
-                                    } else {
-                                        FleetGUIManager.selectedFleets.add(fleet);
-                                        LogManager.logDebug("Client added fleet " + fleet.getName().trim() + " to selection.");
-                                        GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - select 2");
-                                    }
-                                }
-                            } else {
-                                if(!sectorFleets.isEmpty()) {
-                                    FleetGUIManager.selectedFleets.clear();
-                                    FleetGUIManager.selectedFleets.add(sectorFleets.get(0));
-                                    LogManager.logDebug("Client added fleet " + sectorFleets.get(0).getName().trim() + " to selection.");
-                                    GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - select 1");
-                                }
-                            }
-                            FleetGUIManager.getPanel().updateFleetList();
-                        } else if(event.getRawEvent().pressedRightMouse()) {
-                         */
                         if(event.getRawEvent().pressedRightMouse()) {
                             StringBuilder builder = new StringBuilder();
                             for(int i = 0; i < FleetGUIManager.selectedFleets.size(); i ++) {
