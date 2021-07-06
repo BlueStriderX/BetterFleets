@@ -237,7 +237,7 @@ public enum FleetCommandTypes {
     }, new Translatable() {
         @Override
         public String getName(Enum en) {
-            return "Fleet will use support beams on nearby friendly targets while attempting to stay away from enemies. Fleet will prioritize ships that have low reactor HP.";
+            return "Fleet will use support beams on nearby friendly targets while attempting to stay away from enemies.";
         }
     }, new FleetCommandDialog() {
         @Override

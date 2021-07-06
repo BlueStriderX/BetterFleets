@@ -18,13 +18,12 @@ import org.schema.game.server.ai.program.fleetcontrollable.states.FleetSeachingF
 import org.schema.schine.ai.stateMachines.FSMException;
 import org.schema.schine.ai.stateMachines.Transition;
 import thederpgamer.betterfleets.utils.ConfigManager;
-
 import javax.vecmath.Vector3f;
 import java.io.IOException;
 import java.util.ArrayList;
 
 /**
- * Fleet blockade command state.
+ * Fleet intercept command state.
  *
  * @author TheDerpGamer
  * @since 07/06/2021

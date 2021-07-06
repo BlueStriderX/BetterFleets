@@ -1,11 +1,8 @@
 package thederpgamer.betterfleets.entity.fleet.commands;
 
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import org.schema.game.common.controller.Ship;
 import org.schema.game.common.data.fleet.Fleet;
 import org.schema.game.common.data.fleet.missions.machines.states.FleetState;
 import org.schema.schine.ai.stateMachines.FSMException;
-import java.util.List;
 
 /**
  * Fleet support command state.
@@ -14,9 +11,7 @@ import java.util.List;
  * @since 07/06/2021
  */
 public class Support extends FleetState {
-
-    private List<Ship> loaded = new ObjectArrayList<>();
-
+    
     public Support(Fleet fleet) {
         super(fleet);
     }
