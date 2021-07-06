@@ -87,11 +87,11 @@ public class Artillery extends FleetState {
                                 targetProgram.setSectorTarget(newSector);
                                 if(!(ship.getAiConfiguration().getAiEntityState().getCurrentProgram().getMachine().getFsm().getCurrentState() instanceof FleetMovingToSector)) {
                                     ship.getAiConfiguration().getAiEntityState().getCurrentProgram().getMachine().getFsm().stateTransition(Transition.MOVE_TO_SECTOR);
-                                    LogManager.logDebug("Fleet member " + ship.getName() + " is moving to sector " + newSector.toString() + " to get into artillery range.");
+                                    LogManager.logDebug("Fleet member " + ship.getName() + " is moving to sector " + newSector.toString() + " to get into artillery range of target " + ((SegmentController) targetProgram.getTarget()).getName() + ".");
                                 }
                             } else {
                                 ship.getAiConfiguration().getAiEntityState().getCurrentProgram().getMachine().getFsm().stateTransition(Transition.SEARCH_FOR_TARGET);
-                                LogManager.logDebug("Fleet member " + ship.getName() + " is in artillery range of target and engaging from sector " + member.getSector().toString() + ".");
+                                LogManager.logDebug("Fleet member " + ship.getName() + " is in artillery range of target " + ((SegmentController) targetProgram.getTarget()).getName() + " and engaging from sector " + member.getSector().toString() + ".");
                             }
                         }
                     }
