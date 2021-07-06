@@ -7,6 +7,7 @@ import org.schema.common.util.linAlg.Vector3i;
 import org.schema.game.common.controller.SegmentController;
 import org.schema.game.common.controller.Ship;
 import org.schema.game.common.data.fleet.Fleet;
+import org.schema.game.common.data.fleet.FleetCommandTypes;
 import org.schema.game.common.data.fleet.FleetMember;
 import org.schema.game.common.data.fleet.missions.machines.states.FleetState;
 import org.schema.game.common.data.player.faction.FactionRelation;
@@ -75,26 +76,34 @@ public class Artillery extends FleetState {
                     if(newTarget != null) {
                         targetProgram.setTarget(newTarget);
                         moveToMaxRange();
-                    }
+                    } else getEntityState().sendFleetCommand(FleetCommandTypes.IDLE);
                 } else {
                     Vector3i newSector = getFurthestSectorInRange(maxRange);
                     for(FleetMember member : getEntityState().getMembers()) {
                         if(member.isLoaded()) {
                             Ship ship = (Ship) member.getLoaded();
                             targetProgram = (TargetProgram<?>) ship.getAiConfiguration().getAiEntityState().getCurrentProgram();
-                            targetProgram.setSectorTarget(newSector);
-                            if(!(ship.getAiConfiguration().getAiEntityState().getCurrentProgram().getMachine().getFsm().getCurrentState() instanceof FleetMovingToSector)) {
-                                ship.getAiConfiguration().getAiEntityState().getCurrentProgram().getMachine().getFsm().stateTransition(Transition.MOVE_TO_SECTOR);
-                                LogManager.logDebug("Fleet member " + ship.getName() + " is moving to sector " + newSector.toString() + " to get into artillery range.");
+                            if(member.getSector() != newSector && !isWithinRange(member.getSector(), newSector, GameServer.getUniverse().getSector(targetProgram.getTarget().getSectorId()).pos, 1500)) {
+                                targetProgram.setSectorTarget(newSector);
+                                if(!(ship.getAiConfiguration().getAiEntityState().getCurrentProgram().getMachine().getFsm().getCurrentState() instanceof FleetMovingToSector)) {
+                                    ship.getAiConfiguration().getAiEntityState().getCurrentProgram().getMachine().getFsm().stateTransition(Transition.MOVE_TO_SECTOR);
+                                    LogManager.logDebug("Fleet member " + ship.getName() + " is moving to sector " + newSector.toString() + " to get into artillery range.");
+                                }
                             } else {
                                 ship.getAiConfiguration().getAiEntityState().getCurrentProgram().getMachine().getFsm().stateTransition(Transition.SEARCH_FOR_TARGET);
-                                LogManager.logDebug("Fleet member " + ship.getName() + " is in artillery range of target and engaging from sector " + newSector.toString() + ".");
+                                LogManager.logDebug("Fleet member " + ship.getName() + " is in artillery range of target and engaging from sector " + member.getSector().toString() + ".");
                             }
                         }
                     }
                 }
             }
         }
+    }
+
+    private boolean isWithinRange(Vector3i currentSector, Vector3i requiredSector, Vector3i targetSector, int range) {
+        float requiredDistance = Math.abs(Vector3i.getDisatance(requiredSector, targetSector));
+        float currentDistance = Math.abs(Vector3i.getDisatance(currentSector, targetSector));
+        return Math.abs(requiredDistance - currentDistance) <= range;
     }
 
     private SegmentController findFurthestTargetWithinRange(float maxRange) {
