@@ -21,6 +21,7 @@ import org.schema.schine.input.Mouse;
 import thederpgamer.betterfleets.utils.FleetGUIManager;
 import thederpgamer.betterfleets.utils.LogManager;
 
+import javax.vecmath.Vector4f;
 import java.util.ArrayList;
 import java.util.HashSet;
 
@@ -61,6 +62,7 @@ public class MapControllerManager extends AbstractControlManager {
                 if (selected.isEmpty()) {
                     FleetGUIManager.selectedFleets.clear();
                     FleetGUIManager.getPanel().fleetBox.cleanUp();
+                    FleetGUIManager.getPanel().fleetBox.setColor(new Vector4f(0.1f, 0.3f, 0.1f, 0.0f));
                     FleetGUIManager.getPanel().updateFleetList();
                 } else {
                     for (SelectableMapEntry selectableEntry : selected) {
@@ -116,6 +118,7 @@ public class MapControllerManager extends AbstractControlManager {
                             } else {
                                 FleetGUIManager.selectedFleets.clear();
                                 FleetGUIManager.getPanel().fleetBox.cleanUp();
+                                FleetGUIManager.getPanel().fleetBox.setColor(new Vector4f(0.1f, 0.3f, 0.1f, 0.0f));
                             }
                             FleetGUIManager.getPanel().updateFleetList();
                         }

@@ -25,6 +25,8 @@ import thederpgamer.betterfleets.element.blocks.systems.RepairPasteFabricator;
 import thederpgamer.betterfleets.gui.hud.RepairPasteFabricatorHudOverlay;
 import thederpgamer.betterfleets.systems.RepairPasteFabricatorSystem;
 import thederpgamer.betterfleets.utils.*;
+
+import javax.vecmath.Vector4f;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -408,6 +410,7 @@ public class BetterFleets extends StarMod {
                                 });
                                 FleetGUIManager.getPanel().fleetActionsList.moveToMouse();
                                 FleetGUIManager.getPanel().fleetActionsList.draw();
+                                FleetGUIManager.getPanel().fleetBox.setColor(new Vector4f(0.1f, 0.3f, 0.1f, 0.5f));
                                 FleetGUIManager.getPanel().fleetBox.draw();
                             } else FleetGUIManager.getPanel().updateFleetList();
                         }
