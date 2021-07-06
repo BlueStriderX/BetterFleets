@@ -91,7 +91,10 @@ public class Artillery extends FleetState {
                                 }
                             } else {
                                 ship.getAiConfiguration().getAiEntityState().getCurrentProgram().getMachine().getFsm().stateTransition(Transition.SEARCH_FOR_TARGET);
-                                LogManager.logDebug("Fleet member " + ship.getName() + " is in artillery range of target " + ((SegmentController) targetProgram.getTarget()).getName() + " and engaging from sector " + member.getSector().toString() + ".");
+                                Vector3f targetPos = targetProgram.getTarget().getWorldTransform().origin;
+                                Vector3f shipPos = ship.getWorldTransform().origin;
+                                int range = (int) Math.abs(Vector3fTools.distance(targetPos.x, targetPos.y, targetPos.z, shipPos.x, shipPos.y, shipPos.z));
+                                LogManager.logDebug("Fleet member " + ship.getName() + " is in artillery range of target " + ((SegmentController) targetProgram.getTarget()).getName() + " and engaging from sector " + member.getSector().toString() + " at a range of " + range + "m.");
                             }
                         }
                     }
