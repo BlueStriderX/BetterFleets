@@ -49,7 +49,7 @@ public class ResourceManager {
                 //Load Sprites
                 for(String spriteName : spriteNames) {
                     try {
-                        Sprite sprite = StarLoaderTexture.newSprite(instance.getJarBufferedImage("thederpgamer/decor/resources/sprites/" + spriteName + ".png"), instance, spriteName);
+                        Sprite sprite = StarLoaderTexture.newSprite(instance.getJarBufferedImage("thederpgamer/betterfleets/resources/sprites/" + spriteName + ".png"), instance, spriteName);
                         sprite.setName(spriteName);
                         spriteMap.put(spriteName, sprite);
                     } catch(Exception exception) {
@@ -60,7 +60,7 @@ public class ResourceManager {
                 //Load models
                 for(String modelName : modelNames) {
                     try {
-                        loader.getMeshLoader().loadModMesh(instance, modelName, instance.getJarResource("thederpgamer/decor/resources/models/" + modelName + ".zip"), null);
+                        loader.getMeshLoader().loadModMesh(instance, modelName, instance.getJarResource("thederpgamer/betterfleets/resources/models/" + modelName + ".zip"), null);
                     } catch(ResourceException | IOException exception) {
                         LogManager.logException("Failed to load model \"" + modelName + "\"", exception);
                     }

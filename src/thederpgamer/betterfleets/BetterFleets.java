@@ -56,6 +56,12 @@ public class BetterFleets extends StarMod {
             "MapControllerManager",
             "MapToolsPanel",
             "RepairBeamHandler",
+            "FleetManager",
+            "FleetFiniteStateMachine",
+            "FleetState",
+            "FleetStateType",
+            "FleetCommandTypes",
+            "Transition",
             "HudContextHelpManager"
     };
 

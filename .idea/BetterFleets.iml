@@ -23,7 +23,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../StarMade-Open/StarMadeJar.jar!/" />
+          <root url="jar://$MODULE_DIR$/../StarMade-Open/StarMade.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
