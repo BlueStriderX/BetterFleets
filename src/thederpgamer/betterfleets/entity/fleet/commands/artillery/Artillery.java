@@ -19,6 +19,7 @@ import org.schema.game.server.data.ServerConfig;
 import org.schema.schine.ai.stateMachines.FSMException;
 import org.schema.schine.ai.stateMachines.Transition;
 import thederpgamer.betterfleets.utils.FleetUtils;
+import thederpgamer.betterfleets.utils.LogManager;
 import javax.vecmath.Vector3f;
 import java.io.IOException;
 import java.util.Objects;
@@ -77,11 +78,19 @@ public class Artillery extends FleetState {
                     }
                 } else {
                     Vector3i newSector = getFurthestSectorInRange(maxRange);
-                    targetProgram.setSectorTarget(newSector);
-                    if(!(flagShip.getAiConfiguration().getAiEntityState().getCurrentProgram().getMachine().getFsm().getCurrentState() instanceof FleetMovingToSector)) {
-                        flagShip.getAiConfiguration().getAiEntityState().getCurrentProgram().getMachine().getFsm().stateTransition(Transition.MOVE_TO_SECTOR);
-                    } else {
-                        flagShip.getAiConfiguration().getAiEntityState().getCurrentProgram().getMachine().getFsm().stateTransition(Transition.SEARCH_FOR_TARGET);
+                    for(FleetMember member : getEntityState().getMembers()) {
+                        if(member.isLoaded()) {
+                            Ship ship = (Ship) member.getLoaded();
+                            targetProgram = (TargetProgram<?>) ship.getAiConfiguration().getAiEntityState().getCurrentProgram();
+                            targetProgram.setSectorTarget(newSector);
+                            if(!(ship.getAiConfiguration().getAiEntityState().getCurrentProgram().getMachine().getFsm().getCurrentState() instanceof FleetMovingToSector)) {
+                                ship.getAiConfiguration().getAiEntityState().getCurrentProgram().getMachine().getFsm().stateTransition(Transition.MOVE_TO_SECTOR);
+                                LogManager.logDebug("Fleet member " + ship.getName() + " is moving to sector " + newSector.toString() + " to get into artillery range.");
+                            } else {
+                                ship.getAiConfiguration().getAiEntityState().getCurrentProgram().getMachine().getFsm().stateTransition(Transition.SEARCH_FOR_TARGET);
+                                LogManager.logDebug("Fleet member " + ship.getName() + " is in artillery range of target and engaging from sector " + newSector.toString() + ".");
+                            }
+                        }
                     }
                 }
             }

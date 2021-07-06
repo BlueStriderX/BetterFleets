@@ -201,7 +201,7 @@ public enum FleetCommandTypes {
     ARTILLERY(new Translatable() {
         @Override
         public String getName(Enum en) {
-            return "Long-range Artillery Fire Mode";
+            return "Artillery Fire Mode";
         }
     }, new Translatable() {
         @Override

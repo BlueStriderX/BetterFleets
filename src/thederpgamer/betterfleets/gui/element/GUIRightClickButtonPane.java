@@ -22,7 +22,6 @@ public class GUIRightClickButtonPane extends GUIHorizontalButtonTablePane {
     @Override
     public void cleanUp() {
         super.cleanUp();
-        getParent().detach(this);
         active = false;
     }
 
