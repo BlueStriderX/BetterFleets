@@ -1,28 +1,15 @@
 package org.schema.game.common.data.fleet.missions.machines;
 
 import org.schema.game.common.data.fleet.Fleet;
-import org.schema.game.common.data.fleet.missions.machines.states.Attacking;
-import org.schema.game.common.data.fleet.missions.machines.states.CallbackToCarrier;
-import org.schema.game.common.data.fleet.missions.machines.states.Cloaking;
-import org.schema.game.common.data.fleet.missions.machines.states.Defending;
-import org.schema.game.common.data.fleet.missions.machines.states.FormationingIdle;
-import org.schema.game.common.data.fleet.missions.machines.states.FormationingSentry;
-import org.schema.game.common.data.fleet.missions.machines.states.Idle;
-import org.schema.game.common.data.fleet.missions.machines.states.Jamming;
-import org.schema.game.common.data.fleet.missions.machines.states.MiningAsteroids;
-import org.schema.game.common.data.fleet.missions.machines.states.Moving;
-import org.schema.game.common.data.fleet.missions.machines.states.Patrolling;
-import org.schema.game.common.data.fleet.missions.machines.states.SentryIdle;
-import org.schema.game.common.data.fleet.missions.machines.states.Trading;
-import org.schema.game.common.data.fleet.missions.machines.states.UnCloaking;
-import org.schema.game.common.data.fleet.missions.machines.states.UnJamming;
+import org.schema.game.common.data.fleet.missions.machines.states.*;
 import org.schema.schine.ai.MachineProgram;
 import org.schema.schine.ai.stateMachines.FiniteStateMachine;
 import org.schema.schine.ai.stateMachines.Message;
 import org.schema.schine.ai.stateMachines.State;
 import org.schema.schine.ai.stateMachines.Transition;
-import thederpgamer.betterfleets.entity.fleet.commands.artillery.Artillery;
-import thederpgamer.betterfleets.entity.fleet.commands.support.Support;
+import thederpgamer.betterfleets.entity.fleet.commands.Artillery;
+import thederpgamer.betterfleets.entity.fleet.commands.Intercept;
+import thederpgamer.betterfleets.entity.fleet.commands.Support;
 
 /**
  * Modified version of FleetFiniteStateMachine.
@@ -46,6 +33,7 @@ public class FleetFiniteStateMachine extends FiniteStateMachine<FleetFiniteState
 
     //INSERTED CODE
     private Artillery artillery;
+    private Intercept intercept;
     private Support support;
     //
 
@@ -88,6 +76,7 @@ public class FleetFiniteStateMachine extends FiniteStateMachine<FleetFiniteState
 
         //INSERTED CODE
         artillery = new Artillery(gObj);
+        intercept = new Intercept(gObj);
         support = new Support(gObj);
         //
         cloaking = new Cloaking(gObj);
@@ -109,6 +98,7 @@ public class FleetFiniteStateMachine extends FiniteStateMachine<FleetFiniteState
 
         //INSERTED CODE
         addState(artillery);
+        addState(intercept);
         addState(support);
         //
 
@@ -135,6 +125,7 @@ public class FleetFiniteStateMachine extends FiniteStateMachine<FleetFiniteState
 
         //INSERTED CODE
         s.addTransition(Transition.FLEET_ARTILLERY, artillery);
+        s.addTransition(Transition.FLEET_INTERCEPT, intercept);
         s.addTransition(Transition.FLEET_SUPPORT, support);
         //
 

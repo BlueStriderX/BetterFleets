@@ -82,6 +82,12 @@ public abstract class FleetState extends State{
                 return "ARTILLERY";
             }
         }),
+        INTERCEPTING(new Translatable() {
+            @Override
+            public String getName(Enum en) {
+                return "BLOCKADING";
+            }
+        }),
         SUPPORT(new Translatable() {
             @Override
             public String getName(Enum en) {

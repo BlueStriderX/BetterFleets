@@ -1,4 +1,4 @@
-package thederpgamer.betterfleets.entity.fleet.commands.artillery;
+package thederpgamer.betterfleets.entity.fleet.commands;
 
 import api.common.GameCommon;
 import api.common.GameServer;
@@ -15,10 +15,12 @@ import org.schema.game.common.data.world.Sector;
 import org.schema.game.common.data.world.SimpleTransformableSendableObject;
 import org.schema.game.server.ai.program.common.TargetProgram;
 import org.schema.game.server.ai.program.fleetcontrollable.states.FleetMovingToSector;
+import org.schema.game.server.ai.program.fleetcontrollable.states.FleetSeachingForTarget;
 import org.schema.game.server.data.GameServerState;
 import org.schema.game.server.data.ServerConfig;
 import org.schema.schine.ai.stateMachines.FSMException;
 import org.schema.schine.ai.stateMachines.Transition;
+import thederpgamer.betterfleets.utils.ConfigManager;
 import thederpgamer.betterfleets.utils.FleetUtils;
 import thederpgamer.betterfleets.utils.LogManager;
 import javax.vecmath.Vector3f;
@@ -34,8 +36,11 @@ import java.util.Random;
  */
 public class Artillery extends FleetState {
 
+    private float timer;
+
     public Artillery(Fleet fleet) {
         super(fleet);
+        this.timer = ConfigManager.getMainConfig().getInt("fleet-command-update-interval");
     }
 
     @Override
@@ -50,7 +55,11 @@ public class Artillery extends FleetState {
 
     @Override
     public boolean onUpdate() throws FSMException {
-        moveToMaxRange();
+        if(timer <= 0) {
+            moveToMaxRange();
+            timer = ConfigManager.getMainConfig().getInt("fleet-command-update-interval");
+        }
+        else timer --;
         return false;
     }
 
@@ -83,13 +92,13 @@ public class Artillery extends FleetState {
                         if(member.isLoaded()) {
                             Ship ship = (Ship) member.getLoaded();
                             targetProgram = (TargetProgram<?>) ship.getAiConfiguration().getAiEntityState().getCurrentProgram();
-                            if(member.getSector() != newSector && !isWithinRange(member.getSector(), newSector, GameServer.getUniverse().getSector(targetProgram.getTarget().getSectorId()).pos, 1500)) {
+                            if(member.getSector() != newSector && !isWithinRange(member.getSector(), newSector, GameServer.getUniverse().getSector(targetProgram.getTarget().getSectorId()).pos, 1000)) {
                                 targetProgram.setSectorTarget(newSector);
                                 if(!(ship.getAiConfiguration().getAiEntityState().getCurrentProgram().getMachine().getFsm().getCurrentState() instanceof FleetMovingToSector)) {
                                     ship.getAiConfiguration().getAiEntityState().getCurrentProgram().getMachine().getFsm().stateTransition(Transition.MOVE_TO_SECTOR);
                                     LogManager.logDebug("Fleet member " + ship.getName() + " is moving to sector " + newSector.toString() + " to get into artillery range of target " + ((SegmentController) targetProgram.getTarget()).getName() + ".");
                                 }
-                            } else {
+                            } else if(!(ship.getAiConfiguration().getAiEntityState().getCurrentProgram().getMachine().getFsm().getCurrentState() instanceof FleetSeachingForTarget)) {
                                 ship.getAiConfiguration().getAiEntityState().getCurrentProgram().getMachine().getFsm().stateTransition(Transition.SEARCH_FOR_TARGET);
                                 Vector3f targetPos = targetProgram.getTarget().getWorldTransform().origin;
                                 Vector3f shipPos = ship.getWorldTransform().origin;
@@ -153,7 +162,7 @@ public class Artillery extends FleetState {
             while(true) {
                 Vector3f possiblePos = new Vector3f(targetPos.x + (sectorSize * mul), targetPos.y + (sectorSize *  mul), targetPos.z + (sectorSize * mul));
                 float distance = Math.abs(Vector3fTools.distance(currentPos.x, currentPos.y, currentPos.z, possiblePos.x, possiblePos.y, possiblePos.z));
-                if(distance - maxRange <= 1500) {
+                if(distance - maxRange <= 1000) {
                     try {
                         furthestSector = getNearestAdjacentNeutralSector(targetSector);
                         mul ++;

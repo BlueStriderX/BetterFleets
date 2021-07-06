@@ -15,7 +15,6 @@ import org.schema.schine.graphicsengine.forms.gui.newgui.GUIHorizontalArea.HButt
 import org.schema.schine.input.InputState;
 import org.schema.schine.network.client.ClientState;
 import thederpgamer.betterfleets.utils.FleetUtils;
-
 import java.util.Arrays;
 
 /**
@@ -206,7 +205,7 @@ public enum FleetCommandTypes {
     }, new Translatable() {
         @Override
         public String getName(Enum en) {
-            return "Fleet will engage targets at it's maximum firing range, and will try to avoid direct engagement whenever possible. Fleet will prioritize targets that are being engaged by other friendly ships in order to act as fire support.";
+            return "Fleet will engage targets from as far away as possible while still being within the max range of it's guns.";
         }
     }, new FleetCommandDialog() {
         @Override
@@ -214,6 +213,22 @@ public enum FleetCommandTypes {
             fleet.sendFleetCommand(ARTILLERY);
         }
     }, Transition.FLEET_ARTILLERY),
+    INTERCEPT(new Translatable() {
+        @Override
+        public String getName(Enum en) {
+            return "Intercept Mode";
+        }
+    }, new Translatable() {
+        @Override
+        public String getName(Enum en) {
+            return "Fleet will engage enemy targets at close range, intercepting attacks on allied ships by getting in between them to draw away enemy fire.";
+        }
+    }, new FleetCommandDialog() {
+        @Override
+        public void clientSend(final Fleet fleet) {
+            fleet.sendFleetCommand(INTERCEPT);
+        }
+    }, Transition.FLEET_INTERCEPT),
     SUPPORT(new Translatable() {
         @Override
         public String getName(Enum en) {
@@ -222,7 +237,7 @@ public enum FleetCommandTypes {
     }, new Translatable() {
         @Override
         public String getName(Enum en) {
-            return "Fleet will use support beams on nearby friendly targets while attempting to avoid direct engagement. Fleet will prioritize ships that need the most support.";
+            return "Fleet will use support beams on nearby friendly targets while attempting to stay away from enemies. Fleet will prioritize ships that have low reactor HP.";
         }
     }, new FleetCommandDialog() {
         @Override

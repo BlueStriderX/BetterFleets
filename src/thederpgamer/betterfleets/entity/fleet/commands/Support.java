@@ -1,4 +1,4 @@
-package thederpgamer.betterfleets.entity.fleet.commands.support;
+package thederpgamer.betterfleets.entity.fleet.commands;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.schema.game.common.controller.Ship;

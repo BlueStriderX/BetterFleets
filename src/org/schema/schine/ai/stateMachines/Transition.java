@@ -98,6 +98,7 @@ public enum Transition {
     FLEET_UNJAM,
     //INSERTED CODE
     FLEET_ARTILLERY,
+    FLEET_INTERCEPT,
     FLEET_SUPPORT,
     //
     FLEET_ACTION_DONE,
