@@ -18,11 +18,14 @@ import thederpgamer.betterfleets.utils.ResourceManager;
 public class RepairPasteFabricator extends Block {
 
     public RepairPasteFabricator() {
-        super("Repair Paste Fabricator", ElementKeyMap.getInfo(362).getType(), "sides", "sides", "caps", "caps", "sides", "sides");
+        super("Repair Paste Fabricator", ElementKeyMap.getInfo(362).getType());
     }
 
     @Override
     public void initialize() {
+        short capsId = (short) ResourceManager.getTexture("repair-paste-fabricator-caps").getTextureId();
+        short sidesId = (short) ResourceManager.getTexture("repair-paste-fabricator-sides").getTextureId();
+        blockInfo.setTextureId(new short[] {sidesId, sidesId, capsId, capsId, sidesId, sidesId});
         blockInfo.setBuildIconNum(ResourceManager.getTexture("repair-paste-fabricator-icon").getTextureId());
         blockInfo.setDescription("Slowly generates Repair Paste over time that can be used in Astrotech systems as an alternative to blocks and resources.");
         blockInfo.setInRecipe(true);
