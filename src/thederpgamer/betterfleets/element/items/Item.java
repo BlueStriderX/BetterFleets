@@ -4,7 +4,6 @@ import api.config.BlockConfig;
 import org.schema.game.common.data.element.ElementCategory;
 import org.schema.game.common.data.element.ElementInformation;
 import thederpgamer.betterfleets.BetterFleets;
-import thederpgamer.betterfleets.element.ElementManager;
 import thederpgamer.betterfleets.utils.ResourceManager;
 
 /**
@@ -25,7 +24,6 @@ public abstract class Item {
         itemInfo.setPlacable(false);
         itemInfo.setPhysical(false);
         BlockConfig.setElementCategory(itemInfo, category);
-        ElementManager.addItem(this);
     }
 
     public final ElementInformation getItemInfo() {

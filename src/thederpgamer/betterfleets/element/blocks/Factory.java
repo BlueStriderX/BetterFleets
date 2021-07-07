@@ -4,7 +4,6 @@ import api.config.BlockConfig;
 import org.schema.game.common.data.element.ElementCategory;
 import org.schema.game.common.data.element.ElementInformation;
 import thederpgamer.betterfleets.BetterFleets;
-import thederpgamer.betterfleets.element.ElementManager;
 import thederpgamer.betterfleets.utils.ResourceManager;
 
 /**
@@ -37,7 +36,6 @@ public abstract class Factory {
 
         blockInfo = BlockConfig.newFactory(BetterFleets.getInstance(), name, textureIds);
         BlockConfig.setElementCategory(blockInfo, category);
-        ElementManager.addFactory(this);
     }
 
     public final ElementInformation getBlockInfo() {

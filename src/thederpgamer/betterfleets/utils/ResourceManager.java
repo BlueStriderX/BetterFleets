@@ -17,8 +17,9 @@ import java.util.HashMap;
 public class ResourceManager {
 
     private static final String[] textureNames = {
-            "repair-paste-fabricator-caps",
-            "repair-paste-fabricator-sides"
+            "repair-paste-fabricator/repair-paste-fabricator-icon",
+            "repair-paste-fabricator/repair-paste-fabricator-caps",
+            "repair-paste-fabricator/repair-paste-fabricator-sides"
     };
 
     private static final String[] spriteNames = {
@@ -33,16 +34,20 @@ public class ResourceManager {
     private static HashMap<String, Sprite> spriteMap = new HashMap<>();
 
     public static void loadResources(final BetterFleets instance, final ResourceLoader loader) {
-
         StarLoaderTexture.runOnGraphicsThread(new Runnable() {
             @Override
             public void run() {
                 //Load Textures
-                for(String textureName : textureNames) {
+                for(String texturePath : textureNames) {
+                    String textureName = texturePath.substring(texturePath.lastIndexOf('/') + 1);
                     try {
-                        textureMap.put(textureName, StarLoaderTexture.newBlockTexture(instance.getJarBufferedImage("thederpgamer/betterfleets/resources/textures/" + textureName + ".png")));
+                        if(textureName.endsWith("icon")) {
+                            textureMap.put(textureName, StarLoaderTexture.newIconTexture(instance.getJarBufferedImage("thederpgamer/betterfleets/resources/textures/" + texturePath + ".png")));
+                        } else {
+                            textureMap.put(textureName, StarLoaderTexture.newBlockTexture(instance.getJarBufferedImage("thederpgamer/betterfleets/resources/textures/" + texturePath + ".png")));
+                        }
                     } catch(Exception exception) {
-                        LogManager.logException("Failed to load texture \"" + textureName + "\"", exception);
+                        LogManager.logException("Failed to load texture \"" + texturePath + "\"", exception);
                     }
                 }
 
