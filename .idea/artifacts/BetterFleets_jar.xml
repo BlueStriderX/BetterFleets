@@ -5,6 +5,7 @@
       <element id="archive" name="BetterFleets.jar">
         <element id="module-output" name="BetterFleets" />
         <element id="file-copy" path="$PROJECT_DIR$/src/mod.json" />
+        <element id="file-copy" path="$PROJECT_DIR$/src/modicon.png" />
       </element>
     </root>
   </artifact>

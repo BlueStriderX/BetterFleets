@@ -221,7 +221,7 @@ public enum FleetCommandTypes {
     }, new Translatable() {
         @Override
         public String getName(Enum en) {
-            return "Fleet will engage enemy targets at close range, intercepting attacks on allied ships by getting in between them to draw away enemy fire.";
+            return "Fleet will engage enemy targets at close range, attempting to intercept attacks on allied ships by drawing away the attention of nearby enemies.";
         }
     }, new FleetCommandDialog() {
         @Override
