@@ -85,7 +85,7 @@ public abstract class FleetState extends State{
         INTERCEPTING(new Translatable() {
             @Override
             public String getName(Enum en) {
-                return "BLOCKADING";
+                return "INTERCEPTING";
             }
         }),
         SUPPORT(new Translatable() {

@@ -11,7 +11,7 @@ import org.schema.schine.ai.stateMachines.FSMException;
  * @since 07/06/2021
  */
 public class Support extends FleetState {
-    
+
     public Support(Fleet fleet) {
         super(fleet);
     }

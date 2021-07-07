@@ -13,12 +13,11 @@ import org.schema.schine.common.language.Lng;
 import org.schema.schine.graphicsengine.core.MouseEvent;
 import org.schema.schine.graphicsengine.core.Timer;
 import org.schema.schine.graphicsengine.core.settings.StateParameterNotFoundException;
-import org.schema.schine.graphicsengine.forms.font.FontLibrary;
 import org.schema.schine.graphicsengine.forms.gui.*;
 import org.schema.schine.input.InputState;
 import thederpgamer.betterfleets.gui.element.GUIRightClickButtonPane;
-import thederpgamer.betterfleets.gui.map.SelectedFleetList;
 import thederpgamer.betterfleets.utils.FleetGUIManager;
+
 import javax.vecmath.Vector4f;
 
 /**
@@ -32,10 +31,8 @@ public class MapToolsPanel extends GUIAncor {
     private Vector3i relPosTmp = new Vector3i();
 
     //INSERTED CODE
-    private SelectedFleetList selectedFleetList;
     private GUIAncor fleetActionsAnchor;
     public GUIRightClickButtonPane fleetActionsList;
-    public GUIColoredRectangle fleetBox;
     //
 
     public MapToolsPanel(InputState state) {
@@ -507,25 +504,8 @@ public class MapToolsPanel extends GUIAncor {
         bg.attach(drawWarpGatesText);
 
         //INSERTED CODE
-        fleetBox = new GUIColoredRectangle(getState(), 100.0f, 100.0f, new Vector4f(0.1f, 0.3f, 0.1f, 0.5f));
-        fleetBox.rounded = 6.0f;
-        fleetBox.onInit();
-        fleetBox.setPos(-200.0f, -480.0f, 0.0f);
-
-        GUITextOverlay fleetBoxOverlay = new GUITextOverlay(120, 20, getState());
-        fleetBoxOverlay.onInit();
-        fleetBoxOverlay.setFont(FontLibrary.FontSize.BIG.getFont());
-        fleetBoxOverlay.setTextSimple("Selected Fleets:");
-        fleetBoxOverlay.setPos(-190.0f, -450.0f, 0.0f);
-        fleetBox.attach(fleetBoxOverlay);
-
-        (selectedFleetList = new SelectedFleetList(getState())).onInit();
-        selectedFleetList.setPos(-190.0f, -430.0f, 0.0f);
-        fleetBox.attach(selectedFleetList);
-        attach(fleetBox);
-
         fleetActionsAnchor = new GUIAncor(getState(), 180.0f, 500.0f);
-        (fleetActionsList = new GUIRightClickButtonPane(getState(), 1, 11, fleetActionsAnchor)).onInit();
+        (fleetActionsList = new GUIRightClickButtonPane(getState(), 1, 14, fleetActionsAnchor)).onInit();
         fleetActionsAnchor.attach(fleetActionsList);
         attach(fleetActionsAnchor);
         fleetActionsList.cleanUp();
@@ -534,9 +514,10 @@ public class MapToolsPanel extends GUIAncor {
 
     //INSERTED CODE
     public void updateFleetList() {
-        selectedFleetList.updateList();
         fleetActionsAnchor.cleanUp();
         fleetActionsList.cleanUp();
+        getMapDrawer().onInit();
+        getMapDrawer().draw();
     }
     //
 }

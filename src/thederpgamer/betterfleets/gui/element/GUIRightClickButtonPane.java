@@ -20,6 +20,12 @@ public class GUIRightClickButtonPane extends GUIHorizontalButtonTablePane {
     }
 
     @Override
+    public void draw() {
+        if(active) super.draw();
+        else cleanUp();
+    }
+
+    @Override
     public void cleanUp() {
         super.cleanUp();
         active = false;
@@ -27,7 +33,7 @@ public class GUIRightClickButtonPane extends GUIHorizontalButtonTablePane {
 
     public void moveToMouse() {
         try {
-            setPos(Mouse.getX(), Mouse.getY() * -1, 0.0f);
+            setPos(Mouse.getX() - 50, Mouse.getY() * -1, 0.0f);
             active = true;
         } catch(Exception ignored) {
             cleanUp();

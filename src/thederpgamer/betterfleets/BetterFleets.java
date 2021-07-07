@@ -25,8 +25,6 @@ import thederpgamer.betterfleets.element.blocks.systems.RepairPasteFabricator;
 import thederpgamer.betterfleets.gui.hud.RepairPasteFabricatorHudOverlay;
 import thederpgamer.betterfleets.systems.RepairPasteFabricatorSystem;
 import thederpgamer.betterfleets.utils.*;
-
-import javax.vecmath.Vector4f;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -284,7 +282,33 @@ public class BetterFleets extends StarMod {
                                     }
                                 });
 
-                                FleetGUIManager.getPanel().fleetActionsList.addButton(0, 6, "DEFEND", GUIHorizontalArea.HButtonColor.GREEN, new GUICallback() {
+                                FleetGUIManager.getPanel().fleetActionsList.addButton(0, 6, "ARTILLERY", GUIHorizontalArea.HButtonColor.RED, new GUICallback() {
+                                    @Override
+                                    public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
+                                        if(mouseEvent.pressedLeftMouse()) {
+                                            GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
+                                            FleetGUIManager.orderFleets(FleetCommandTypes.ARTILLERY);
+                                        }
+                                    }
+
+                                    @Override
+                                    public boolean isOccluded() {
+                                        return false;
+                                    }
+                                }, new GUIActivationCallback() {
+                                    @Override
+                                    public boolean isVisible(InputState inputState) {
+                                        return true;
+                                    }
+
+                                    @Override
+                                    public boolean isActive(InputState inputState) {
+                                        return true;
+                                    }
+                                });
+
+
+                                FleetGUIManager.getPanel().fleetActionsList.addButton(0, 7, "DEFEND", GUIHorizontalArea.HButtonColor.GREEN, new GUICallback() {
                                     @Override
                                     public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
                                         if(mouseEvent.pressedLeftMouse()) {
@@ -309,7 +333,32 @@ public class BetterFleets extends StarMod {
                                     }
                                 });
 
-                                FleetGUIManager.getPanel().fleetActionsList.addButton(0, 7, "SENTRY", GUIHorizontalArea.HButtonColor.ORANGE, new GUICallback() {
+                                FleetGUIManager.getPanel().fleetActionsList.addButton(0, 8, "INTERCEPT", GUIHorizontalArea.HButtonColor.GREEN, new GUICallback() {
+                                    @Override
+                                    public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
+                                        if(mouseEvent.pressedLeftMouse()) {
+                                            GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
+                                            FleetGUIManager.orderFleets(FleetCommandTypes.INTERCEPT);
+                                        }
+                                    }
+
+                                    @Override
+                                    public boolean isOccluded() {
+                                        return false;
+                                    }
+                                }, new GUIActivationCallback() {
+                                    @Override
+                                    public boolean isVisible(InputState inputState) {
+                                        return true;
+                                    }
+
+                                    @Override
+                                    public boolean isActive(InputState inputState) {
+                                        return true;
+                                    }
+                                });
+
+                                FleetGUIManager.getPanel().fleetActionsList.addButton(0, 9, "SENTRY", GUIHorizontalArea.HButtonColor.ORANGE, new GUICallback() {
                                     @Override
                                     public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
                                         if(mouseEvent.pressedLeftMouse()) {
@@ -334,7 +383,32 @@ public class BetterFleets extends StarMod {
                                     }
                                 });
 
-                                FleetGUIManager.getPanel().fleetActionsList.addButton(0, 8, "MINE", GUIHorizontalArea.HButtonColor.ORANGE, new GUICallback() {
+                                FleetGUIManager.getPanel().fleetActionsList.addButton(0, 10, "SUPPORT", GUIHorizontalArea.HButtonColor.ORANGE, new GUICallback() {
+                                    @Override
+                                    public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
+                                        if(mouseEvent.pressedLeftMouse()) {
+                                            GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
+                                            FleetGUIManager.orderFleets(FleetCommandTypes.SUPPORT);
+                                        }
+                                    }
+
+                                    @Override
+                                    public boolean isOccluded() {
+                                        return false;
+                                    }
+                                }, new GUIActivationCallback() {
+                                    @Override
+                                    public boolean isVisible(InputState inputState) {
+                                        return true;
+                                    }
+
+                                    @Override
+                                    public boolean isActive(InputState inputState) {
+                                        return true;
+                                    }
+                                });
+
+                                FleetGUIManager.getPanel().fleetActionsList.addButton(0, 11, "MINE", GUIHorizontalArea.HButtonColor.ORANGE, new GUICallback() {
                                     @Override
                                     public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
                                         if(mouseEvent.pressedLeftMouse()) {
@@ -359,7 +433,7 @@ public class BetterFleets extends StarMod {
                                     }
                                 });
 
-                                FleetGUIManager.getPanel().fleetActionsList.addButton(0, 9, "TOGGLE JAMMING", GUIHorizontalArea.HButtonColor.YELLOW, new GUICallback() {
+                                FleetGUIManager.getPanel().fleetActionsList.addButton(0, 12, "TOGGLE JAMMING", GUIHorizontalArea.HButtonColor.YELLOW, new GUICallback() {
                                     @Override
                                     public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
                                         if(mouseEvent.pressedLeftMouse()) {
@@ -384,7 +458,7 @@ public class BetterFleets extends StarMod {
                                     }
                                 });
 
-                                FleetGUIManager.getPanel().fleetActionsList.addButton(0, 10, "TOGGLE CLOAK", GUIHorizontalArea.HButtonColor.YELLOW, new GUICallback() {
+                                FleetGUIManager.getPanel().fleetActionsList.addButton(0, 13, "TOGGLE CLOAK", GUIHorizontalArea.HButtonColor.YELLOW, new GUICallback() {
                                     @Override
                                     public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
                                         if(mouseEvent.pressedLeftMouse()) {
@@ -410,8 +484,6 @@ public class BetterFleets extends StarMod {
                                 });
                                 FleetGUIManager.getPanel().fleetActionsList.moveToMouse();
                                 FleetGUIManager.getPanel().fleetActionsList.draw();
-                                FleetGUIManager.getPanel().fleetBox.setColor(new Vector4f(0.1f, 0.3f, 0.1f, 0.5f));
-                                FleetGUIManager.getPanel().fleetBox.draw();
                             } else FleetGUIManager.getPanel().updateFleetList();
                         }
                     }
