@@ -19,12 +19,12 @@ import org.schema.schine.graphicsengine.forms.gui.GUICallback;
 import org.schema.schine.graphicsengine.forms.gui.GUIElement;
 import org.schema.schine.graphicsengine.forms.gui.newgui.GUIHorizontalArea;
 import org.schema.schine.input.InputState;
-import org.schema.schine.resource.ResourceLoader;
 import thederpgamer.betterfleets.element.ElementManager;
 import thederpgamer.betterfleets.element.blocks.systems.RepairPasteFabricator;
 import thederpgamer.betterfleets.gui.hud.RepairPasteFabricatorHudOverlay;
 import thederpgamer.betterfleets.systems.RepairPasteFabricatorSystem;
 import thederpgamer.betterfleets.utils.*;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -73,6 +73,7 @@ public class BetterFleets extends StarMod {
         instance = this;
         ConfigManager.initialize(this);
         LogManager.initialize();
+        ResourceManager.loadResources(this);
         registerListeners();
         LogManager.logMessage(MessageType.INFO, "Successfully loaded mod data.");
     }
@@ -81,11 +82,6 @@ public class BetterFleets extends StarMod {
     public byte[] onClassTransform(String className, byte[] byteCode) {
         for(String name : overwriteClasses) if(className.endsWith(name)) return overwriteClass(className, byteCode);
         return super.onClassTransform(className, byteCode);
-    }
-
-    @Override
-    public void onResourceLoad(ResourceLoader loader) {
-        ResourceManager.loadResources(this, loader);
     }
 
     @Override

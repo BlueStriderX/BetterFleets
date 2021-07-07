@@ -1,11 +1,9 @@
 package thederpgamer.betterfleets.utils;
 
 import api.utils.textures.StarLoaderTexture;
-import org.schema.schine.graphicsengine.core.ResourceException;
 import org.schema.schine.graphicsengine.forms.Sprite;
-import org.schema.schine.resource.ResourceLoader;
 import thederpgamer.betterfleets.BetterFleets;
-import java.io.IOException;
+
 import java.util.HashMap;
 
 /**
@@ -26,14 +24,10 @@ public class ResourceManager {
 
     };
 
-    private static final String[] modelNames = {
-
-    };
-
     private static HashMap<String, StarLoaderTexture> textureMap = new HashMap<>();
     private static HashMap<String, Sprite> spriteMap = new HashMap<>();
 
-    public static void loadResources(final BetterFleets instance, final ResourceLoader loader) {
+    public static void loadResources(final BetterFleets instance) {
         StarLoaderTexture.runOnGraphicsThread(new Runnable() {
             @Override
             public void run() {
@@ -59,15 +53,6 @@ public class ResourceManager {
                         spriteMap.put(spriteName, sprite);
                     } catch(Exception exception) {
                         LogManager.logException("Failed to load sprite \"" + spriteName + "\"", exception);
-                    }
-                }
-
-                //Load models
-                for(String modelName : modelNames) {
-                    try {
-                        loader.getMeshLoader().loadModMesh(instance, modelName, instance.getJarResource("thederpgamer/betterfleets/resources/models/" + modelName + ".zip"), null);
-                    } catch(ResourceException | IOException exception) {
-                        LogManager.logException("Failed to load model \"" + modelName + "\"", exception);
                     }
                 }
             }
