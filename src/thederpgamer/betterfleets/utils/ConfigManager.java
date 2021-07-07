@@ -17,7 +17,7 @@ public class ConfigManager {
     private static final String[] defaultMainConfig = {
             "debug-mode: false",
             "max-world-logs: 5",
-            "fleet-command-update-interval: 1000"
+            "fleet-command-update-interval: 15"
     };
 
     //System Config

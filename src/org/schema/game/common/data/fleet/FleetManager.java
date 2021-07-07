@@ -468,6 +468,13 @@ public class FleetManager extends Observable implements FleetSelectionInterface{
                     exception.printStackTrace();
                 }
                 break;
+            case INTERCEPT:
+                try {
+                    fleet.getCurrentProgram().getMachine().getFsm().stateTransition(t.transition);
+                } catch(FSMException exception) {
+                    exception.printStackTrace();
+                }
+                break;
             case SUPPORT:
                 try {
                     fleet.getCurrentProgram().getMachine().getFsm().stateTransition(t.transition);

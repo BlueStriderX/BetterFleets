@@ -82,7 +82,7 @@ public abstract class FleetState extends State{
                 return "ARTILLERY";
             }
         }),
-        INTERCEPTING(new Translatable() {
+        INTERCEPT(new Translatable() {
             @Override
             public String getName(Enum en) {
                 return "INTERCEPTING";
@@ -91,7 +91,7 @@ public abstract class FleetState extends State{
         SUPPORT(new Translatable() {
             @Override
             public String getName(Enum en) {
-                return "SUPPORT";
+                return "SUPPORTING";
             }
         }),
         //

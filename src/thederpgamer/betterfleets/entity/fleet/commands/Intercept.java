@@ -39,7 +39,7 @@ public class Intercept extends FleetState {
 
     @Override
     public FleetStateType getType() {
-        return FleetStateType.INTERCEPTING;
+        return FleetStateType.INTERCEPT;
     }
 
     @Override

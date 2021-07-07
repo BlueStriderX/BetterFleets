@@ -36,6 +36,7 @@ public class FleetGUIManager  {
         for(Fleet fleet : selectedFleets) {
             if(commandType.args.length == 1) fleet.sendFleetCommand(commandType, mapToolsPanel.getMapPosition().get(new Vector3i()));
             else fleet.sendFleetCommand(commandType);
+            fleet.getFlagShip().mapEntry.getColor().set(0.3f, 0.8f, 0.2f, 0.8f);
         }
         selectedFleets.clear();
         mapToolsPanel.updateFleetList();
@@ -43,9 +44,10 @@ public class FleetGUIManager  {
 
     public static void orderJamming() {
         for(Fleet fleet : selectedFleets) {
-            FleetCommandTypes command = FleetCommandTypes.valueOf(fleet.getMissionName().toUpperCase());
+            FleetCommandTypes command = FleetUtils.getCurrentCommand(fleet);
             if(command.equals(FleetCommandTypes.JAM)) fleet.sendFleetCommand(FleetCommandTypes.UNJAM);
             else fleet.sendFleetCommand(FleetCommandTypes.JAM);
+            fleet.getFlagShip().mapEntry.getColor().set(0.3f, 0.8f, 0.2f, 0.8f);
         }
         selectedFleets.clear();
         mapToolsPanel.updateFleetList();
@@ -53,9 +55,10 @@ public class FleetGUIManager  {
 
     public static void orderCloak() {
         for(Fleet fleet : selectedFleets) {
-            FleetCommandTypes command = FleetCommandTypes.valueOf(fleet.getMissionName().toUpperCase());
+            FleetCommandTypes command = FleetUtils.getCurrentCommand(fleet);
             if(command.equals(FleetCommandTypes.CLOAK)) fleet.sendFleetCommand(FleetCommandTypes.UNCLOAK);
             else fleet.sendFleetCommand(FleetCommandTypes.CLOAK);
+            fleet.getFlagShip().mapEntry.getColor().set(0.3f, 0.8f, 0.2f, 0.8f);
         }
         selectedFleets.clear();
         mapToolsPanel.updateFleetList();
@@ -63,11 +66,14 @@ public class FleetGUIManager  {
 
     public static void orderFormation() {
         for(Fleet fleet : selectedFleets) {
-            FleetCommandTypes command = FleetCommandTypes.valueOf(fleet.getFlagShip().command.toUpperCase());
+            FleetCommandTypes command = FleetUtils.getCurrentCommand(fleet);
             if(command.equals(FleetCommandTypes.SENTRY)) fleet.sendFleetCommand(FleetCommandTypes.SENTRY_FORMATION);
             else if(command.equals(FleetCommandTypes.SENTRY_FORMATION)) fleet.sendFleetCommand(FleetCommandTypes.SENTRY);
             else if(command.equals(FleetCommandTypes.FLEET_IDLE_FORMATION)) fleet.sendFleetCommand(FleetCommandTypes.IDLE);
             else fleet.sendFleetCommand(FleetCommandTypes.FLEET_IDLE_FORMATION);
+            fleet.getFlagShip().mapEntry.getColor().set(0.3f, 0.8f, 0.2f, 0.8f);
         }
+        selectedFleets.clear();
+        mapToolsPanel.updateFleetList();
     }
 }

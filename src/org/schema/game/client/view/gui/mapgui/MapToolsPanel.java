@@ -516,8 +516,6 @@ public class MapToolsPanel extends GUIAncor {
     public void updateFleetList() {
         fleetActionsAnchor.cleanUp();
         fleetActionsList.cleanUp();
-        getMapDrawer().onInit();
-        getMapDrawer().draw();
     }
     //
 }

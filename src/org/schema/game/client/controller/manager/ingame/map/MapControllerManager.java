@@ -52,10 +52,10 @@ public class MapControllerManager extends AbstractControlManager {
 
         //INSERTED CODE
         if(Keyboard.isKeyDown(Keyboard.KEY_ESCAPE) || Keyboard.isKeyDown(Keyboard.KEY_M)) {
-            FleetGUIManager.selectedFleets.clear();
-            for(SelectableMapEntry i : selected) {
-                if(i instanceof FleetMember.FleetMemberMapIndication) ((FleetMember.FleetMemberMapIndication) i).getColor().set(0.3f, 0.8f, 0.2f, 0.8f);
+            for(Fleet fleet : FleetGUIManager.selectedFleets) {
+                fleet.getFlagShip().mapEntry.getColor().set(0.3f, 0.8f, 0.2f, 0.8f);
             }
+            FleetGUIManager.selectedFleets.clear();
             FleetGUIManager.getPanel().updateFleetList();
         }
         //
@@ -71,6 +71,9 @@ public class MapControllerManager extends AbstractControlManager {
                 if (!FleetGUIManager.getPanel().fleetActionsList.active) {
                     boolean doubleClick = System.currentTimeMillis() - lastClick < 300L;
                     if (selected.isEmpty()) {
+                        for(Fleet fleet : FleetGUIManager.selectedFleets) {
+                            fleet.getFlagShip().mapEntry.getColor().set(0.3f, 0.8f, 0.2f, 0.8f);
+                        }
                         FleetGUIManager.selectedFleets.clear();
                         FleetGUIManager.getPanel().updateFleetList();
                     } else {
@@ -115,11 +118,10 @@ public class MapControllerManager extends AbstractControlManager {
                                             }
                                         }
                                     } else {
-                                        FleetGUIManager.selectedFleets.clear();
-                                        for (SelectableMapEntry i : selected) {
-                                            if (i instanceof FleetMember.FleetMemberMapIndication)
-                                                ((FleetMember.FleetMemberMapIndication) i).getColor().set(0.3f, 0.8f, 0.2f, 0.8f);
+                                        for(Fleet fleet : FleetGUIManager.selectedFleets) {
+                                            fleet.getFlagShip().mapEntry.getColor().set(0.3f, 0.8f, 0.2f, 0.8f);
                                         }
+                                        FleetGUIManager.selectedFleets.clear();
                                         if (!sectorFleets.isEmpty()) {
                                             FleetGUIManager.selectedFleets.add(sectorFleets.get(0));
                                             ((FleetMember.FleetMemberMapIndication) selectableEntry).getColor().set(0.9f, 0.8f, 0.7f, 0.8f);
@@ -128,11 +130,10 @@ public class MapControllerManager extends AbstractControlManager {
                                         }
                                     }
                                 } else {
-                                    FleetGUIManager.selectedFleets.clear();
-                                    for (SelectableMapEntry i : selected) {
-                                        if (i instanceof FleetMember.FleetMemberMapIndication)
-                                            ((FleetMember.FleetMemberMapIndication) i).getColor().set(0.3f, 0.8f, 0.2f, 0.8f);
+                                    for(Fleet fleet : FleetGUIManager.selectedFleets) {
+                                        fleet.getFlagShip().mapEntry.getColor().set(0.3f, 0.8f, 0.2f, 0.8f);
                                     }
+                                    FleetGUIManager.selectedFleets.clear();
                                 }
                                 FleetGUIManager.getPanel().updateFleetList();
                             }
@@ -142,12 +143,11 @@ public class MapControllerManager extends AbstractControlManager {
                     new StarRunnable() {
                         @Override
                         public void run() {
+                            for(Fleet fleet : FleetGUIManager.selectedFleets) {
+                                fleet.getFlagShip().mapEntry.getColor().set(0.3f, 0.8f, 0.2f, 0.8f);
+                            }
                             FleetGUIManager.selectedFleets.clear();
                             FleetGUIManager.getPanel().updateFleetList();
-                            for (SelectableMapEntry i : selected) {
-                                if (i instanceof FleetMember.FleetMemberMapIndication)
-                                    ((FleetMember.FleetMemberMapIndication) i).getColor().set(0.3f, 0.8f, 0.2f, 0.8f);
-                            }
                         }
                     }.runLater(BetterFleets.getInstance(), 3);
                 }
