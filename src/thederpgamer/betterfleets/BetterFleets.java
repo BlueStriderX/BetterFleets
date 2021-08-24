@@ -3,28 +3,33 @@ package thederpgamer.betterfleets;
 import api.common.GameClient;
 import api.config.BlockConfig;
 import api.listener.Listener;
+import api.listener.events.draw.RegisterWorldDrawersEvent;
 import api.listener.events.gui.HudCreateEvent;
+import api.listener.events.input.KeyPressEvent;
 import api.listener.events.input.MousePressEvent;
 import api.listener.events.register.ManagerContainerRegisterEvent;
 import api.mod.StarLoader;
 import api.mod.StarMod;
 import org.apache.commons.io.IOUtils;
+import org.lwjgl.input.Keyboard;
 import org.schema.common.util.linAlg.Vector3i;
 import org.schema.game.client.view.gamemap.GameMapDrawer;
 import org.schema.game.common.data.fleet.Fleet;
 import org.schema.game.common.data.fleet.FleetCommandTypes;
+import org.schema.schine.graphicsengine.core.Controller;
 import org.schema.schine.graphicsengine.core.MouseEvent;
 import org.schema.schine.graphicsengine.forms.gui.GUIActivationCallback;
 import org.schema.schine.graphicsengine.forms.gui.GUICallback;
 import org.schema.schine.graphicsengine.forms.gui.GUIElement;
 import org.schema.schine.graphicsengine.forms.gui.newgui.GUIHorizontalArea;
 import org.schema.schine.input.InputState;
+import org.schema.schine.input.KeyboardMappings;
+import thederpgamer.betterfleets.controller.tacticalmap.TacticalMapGUIDrawer;
 import thederpgamer.betterfleets.element.ElementManager;
 import thederpgamer.betterfleets.element.blocks.systems.RepairPasteFabricator;
 import thederpgamer.betterfleets.gui.hud.RepairPasteFabricatorHudOverlay;
 import thederpgamer.betterfleets.systems.RepairPasteFabricatorSystem;
 import thederpgamer.betterfleets.utils.*;
-
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -65,7 +70,9 @@ public class BetterFleets extends StarMod {
             "HudContextHelpManager"
     };
 
-    //Hud Elements
+    //GUI
+    public char mapKey;
+    public TacticalMapGUIDrawer tacticalMapDrawer;
     public RepairPasteFabricatorHudOverlay repairPasteHudOverlay;
 
     @Override
@@ -93,6 +100,16 @@ public class BetterFleets extends StarMod {
     }
 
     private void registerListeners() {
+        StarLoader.registerListener(RegisterWorldDrawersEvent.class, new Listener<RegisterWorldDrawersEvent>() {
+            @Override
+            public void onEvent(RegisterWorldDrawersEvent event) {
+                if(tacticalMapDrawer == null) {
+                    event.getModDrawables().add(tacticalMapDrawer = new TacticalMapGUIDrawer());
+                    mapKey = ConfigManager.getMainConfig().getString("tactical-map-toggle-key").charAt(0);
+                }
+            }
+        }, this);
+
         StarLoader.registerListener(ManagerContainerRegisterEvent.class, new Listener<ManagerContainerRegisterEvent>() {
             @Override
             public void onEvent(ManagerContainerRegisterEvent event) {
@@ -104,6 +121,32 @@ public class BetterFleets extends StarMod {
             @Override
             public void onEvent(HudCreateEvent event) {
                 event.addElement(repairPasteHudOverlay = new RepairPasteFabricatorHudOverlay(event.getInputState()));
+            }
+        }, this);
+
+        StarLoader.registerListener(KeyPressEvent.class, new Listener<KeyPressEvent>() {
+            @Override
+            public void onEvent(KeyPressEvent event) {
+                if(event.getChar() == mapKey) {
+                    if(tacticalMapDrawer != null) tacticalMapDrawer.toggleDraw();
+                }
+
+                if(tacticalMapDrawer != null && tacticalMapDrawer.toggleDraw) {
+                    if(KeyboardMappings.getEventKeyState(event.getRawEvent(), GameClient.getClientState())) {
+                        int key = KeyboardMappings.getEventKeySingle(event.getRawEvent());
+                        int amount = (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) ? 100 : 30;
+                        if(key == KeyboardMappings.FORWARD.getMapping()) tacticalMapDrawer.controlManager.move(0, 0, amount);
+                        else if(key == KeyboardMappings.BACKWARDS.getMapping()) tacticalMapDrawer.controlManager.move(0, 0, -amount);
+                        else if(key == KeyboardMappings.STRAFE_RIGHT.getMapping()) tacticalMapDrawer.controlManager.move(amount, 0, 0);
+                        else if(key == KeyboardMappings.STRAFE_LEFT.getMapping()) tacticalMapDrawer.controlManager.move(-amount, 0, 0);
+                        else if(key == KeyboardMappings.UP.getMapping()) tacticalMapDrawer.controlManager.move(0, amount, 0);
+                        else if(key == KeyboardMappings.DOWN.getMapping()) tacticalMapDrawer.controlManager.move(0, -amount, 0);
+                        else if(key == Keyboard.KEY_ESCAPE) {
+                            Controller.setCamera(tacticalMapDrawer.getDefaultCamera());
+                            tacticalMapDrawer.controlManager.onSwitch(false);
+                        }
+                    }
+                }
             }
         }, this);
 

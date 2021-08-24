@@ -17,7 +17,6 @@ import org.schema.schine.graphicsengine.forms.gui.*;
 import org.schema.schine.input.InputState;
 import thederpgamer.betterfleets.gui.element.GUIRightClickButtonPane;
 import thederpgamer.betterfleets.utils.FleetGUIManager;
-
 import javax.vecmath.Vector4f;
 
 /**

@@ -70,7 +70,7 @@ public class MapControllerManager extends AbstractControlManager {
             if (var1.pressedLeftMouse()) {
                 if (!FleetGUIManager.getPanel().fleetActionsList.active) {
                     boolean doubleClick = System.currentTimeMillis() - lastClick < 300L;
-                    if (selected.isEmpty()) {
+                    if (selected.isEmpty() && !doubleClick) {
                         for(Fleet fleet : FleetGUIManager.selectedFleets) {
                             fleet.getFlagShip().mapEntry.getColor().set(0.3f, 0.8f, 0.2f, 0.8f);
                         }

@@ -4,7 +4,6 @@ import api.mod.config.FileConfiguration;
 import thederpgamer.betterfleets.BetterFleets;
 
 /**
- * ConfigManager
  * Manages mod config files and values.
  *
  * @author TheDerpGamer
@@ -17,7 +16,8 @@ public class ConfigManager {
     private static final String[] defaultMainConfig = {
             "debug-mode: false",
             "max-world-logs: 5",
-            "fleet-command-update-interval: 15"
+            "fleet-command-update-interval: 15",
+            "tactical-map-toggle-key: j"
     };
 
     //System Config
