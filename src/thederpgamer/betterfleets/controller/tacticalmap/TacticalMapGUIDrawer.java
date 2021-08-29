@@ -40,6 +40,8 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
     private boolean initialized;
     private final ConcurrentHashMap<Long, TacticalMapFleetIndicator> drawMap;
 
+    private float updateTimer;
+
     public TacticalMapGUIDrawer() {
         toggleDraw = false;
         initialized = false;
@@ -58,6 +60,7 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
         if(toggleDraw) {
             Controller.setCamera(camera);
             controlManager.onSwitch(true);
+            updateIndicators();
         } else {
             Controller.setCamera(getDefaultCamera());
             controlManager.onSwitch(false);
@@ -91,7 +94,13 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
 
     @Override
     public void update(Timer timer) {
+        if(!toggleDraw || !(Controller.getCamera() instanceof TacticalMapCamera)) return;
         time += timer.getDelta();
+
+        updateTimer -= timer.getDelta();
+        if(updateTimer <= 0) updateIndicators();
+
+        controlManager.update(timer);
         SegmentController currentEntity = getCurrentEntity();
         if(currentEntity != null) {
             Sector sector = GameServer.getUniverse().getSector(currentEntity.getSectorId());
@@ -116,6 +125,15 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
     @Override
     public boolean isInvisible() {
         return false;
+    }
+
+    private void updateIndicators() {
+        updateTimer = 1000;
+        for(Map.Entry<Long, TacticalMapFleetIndicator> entry : drawMap.entrySet()) {
+            TacticalMapFleetIndicator indicator = entry.getValue();
+            if(indicator.getDistance() < maxDrawDistance && indicator.getFleet() != null && GameServer.getServerState().getFleetManager().getByFleetDbId(indicator.getFleet().dbid) != null) indicator.updateStats();
+            else drawMap.remove(entry.getKey());
+        }
     }
 
     private void drawGrid(float start, float spacing) {
@@ -220,7 +238,7 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
     private void drawIndicators() {
         for(Map.Entry<Long, TacticalMapFleetIndicator> entry : drawMap.entrySet()) {
             TacticalMapFleetIndicator indicator = entry.getValue();
-            if(indicator.getDistance() < maxDrawDistance && indicator.getFleet() != null && GameServer.getServerState().getFleetManager().getByFleetDbId(indicator.getFleet().dbid) != null) {
+            if(indicator.getDistance() < maxDrawDistance && indicator.getFleet() != null && GameServer.getServerState().getFleetManager().getByFleetDbId(indicator.getFleet().dbid) != null && !indicator.getFleet().isEmpty()) {
                 Indication indication = indicator.getIndication(indicator.getSystem());
                 indicator.drawSprite(camera, indication.getCurrentTransform());
                 indicator.drawLabel(indication.getCurrentTransform());

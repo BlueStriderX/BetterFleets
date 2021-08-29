@@ -35,7 +35,7 @@ public class TacticalMapCamera extends Camera {
             defaultTransform.set(transform);
             defaultTransform.origin.add(new Vector3f(-BetterFleets.getInstance().tacticalMapDrawer.sectorSize, BetterFleets.getInstance().tacticalMapDrawer.sectorSize, -BetterFleets.getInstance().tacticalMapDrawer.sectorSize));
             setLookAlgorithm(new TacticalCameraLook(this, transform));
-            getLookAlgorithm().lookTo(((SegmentController) GameClient.getCurrentControl()).getWorldTransform());
+            getLookAlgorithm().lookTo(((SegmentController) GameClient.getCurrentControl()).getWorldTransformInverse());
         }
     }
 

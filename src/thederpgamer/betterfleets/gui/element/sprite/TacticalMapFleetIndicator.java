@@ -14,6 +14,7 @@ import org.schema.game.client.view.gamemap.GameMapDrawer;
 import org.schema.game.client.view.gui.shiphud.HudIndicatorOverlay;
 import org.schema.game.common.controller.SegmentController;
 import org.schema.game.common.data.fleet.Fleet;
+import org.schema.game.common.data.fleet.FleetMember;
 import org.schema.game.common.data.world.SimpleTransformableSendableObject;
 import org.schema.game.common.data.world.VoidSystem;
 import org.schema.schine.graphicsengine.camera.Camera;
@@ -26,12 +27,15 @@ import org.schema.schine.graphicsengine.forms.Sprite;
 import org.schema.schine.graphicsengine.forms.font.FontLibrary;
 import org.schema.schine.graphicsengine.forms.gui.GUITextOverlay;
 import thederpgamer.betterfleets.BetterFleets;
+import thederpgamer.betterfleets.utils.SectorUtils;
 
 import javax.vecmath.Vector3f;
 import javax.vecmath.Vector4f;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Sprite Indicator for fleets in the Tactical Map GUI.
@@ -54,6 +58,10 @@ public class TacticalMapFleetIndicator extends AbstractMapEntry implements Selec
     private Sprite sprite;
     private GUITextOverlay labelOverlay;
 
+    private Transform lastKnownTransform = new Transform();
+    private double combinedMass;
+    private final ConcurrentHashMap<FleetMember, Double> massMap = new ConcurrentHashMap<>();
+
     public TacticalMapFleetIndicator(Fleet fleet) {
         this.fleet = fleet;
     }
@@ -74,6 +82,7 @@ public class TacticalMapFleetIndicator extends AbstractMapEntry implements Selec
             sprite.setDepthTest(false);
             sprite.setBlend(false);
             sprite.setFlip(true);
+            sprite.setTint(indicatorSprite.getColor());
         }
         sprite.setTransform(transform);
         Sprite.draw3D(sprite, new EntityIndicatorSprite[]{indicatorSprite}, camera);
@@ -87,18 +96,20 @@ public class TacticalMapFleetIndicator extends AbstractMapEntry implements Selec
         transform.basis.set(getCamera().lookAt(false).basis);
         transform.basis.invert();
 
-        labelOverlay.setTextSimple(fleet.getName() + getFactionName() + " - " + StringTools.formatDistance(getDistance()));
+        labelOverlay.setTextSimple(fleet.getName() + getFactionName() + " - " + StringTools.formatDistance(getDistance()) + "\nSize: " + fleet.getMembers().size() + "\nMass: " + StringTools.massFormat(combinedMass));
         labelOverlay.updateTextSize();
-        labelOverlay.getTransform().set(fleet.getFlagShip().getLoaded().getWorldTransform());
+        if(fleet.getFlagShip().isLoaded()) lastKnownTransform.set(fleet.getFlagShip().getLoaded().getWorldTransform());
+        if(!getSector().equals(Objects.requireNonNull(getCurrentEntity()).getSector(new Vector3i()))) SectorUtils.transformToSector(lastKnownTransform, getCurrentEntity().getSector(new Vector3i()), getSector());
+        labelOverlay.setTransform(lastKnownTransform);
         labelOverlay.getTransform().basis.set(transform.basis);
 
-        Vector3f downVector = GlUtil.getBottomVector(new Vector3f(), labelOverlay.getTransform());
-        downVector.scale(20.0f);
-        labelOverlay.getTransform().origin.add(downVector);
+        Vector3f upVector = GlUtil.getUpVector(new Vector3f(), labelOverlay.getTransform());
+        upVector.scale(35.0f);
+        labelOverlay.getTransform().origin.add(upVector);
 
-        Vector3f leftVector = GlUtil.getLeftVector(new Vector3f(), labelOverlay.getTransform());
-        leftVector.scale((labelOverlay.getMaxLineWidth() / 2.0f));
-        labelOverlay.getTransform().origin.add(leftVector);
+        Vector3f rightVector = GlUtil.getRightVector(new Vector3f(), labelOverlay.getTransform());
+        rightVector.scale(25.0f);
+        labelOverlay.getTransform().origin.add(rightVector);
 
         labelOverlay.draw();
     }
@@ -214,6 +225,19 @@ public class TacticalMapFleetIndicator extends AbstractMapEntry implements Selec
         GlUtil.glMatrixMode(GL11.GL_MODELVIEW);
     }
 
+    public void updateStats() {
+        combinedMass = 0;
+        for(FleetMember member : fleet.getMembers()) {
+            SegmentController segmentController = member.getLoaded();
+            if(segmentController != null) {
+                if(massMap.containsKey(member)) massMap.replace(member, (double) segmentController.getTotalPhysicalMass());
+                else massMap.put(member, (double) segmentController.getTotalPhysicalMass());
+            }
+        }
+
+        for(Double mass : massMap.values()) combinedMass += mass;
+    }
+
     @Override
     public int getType() {
         return SimpleTransformableSendableObject.EntityType.SHIP.ordinal();
@@ -293,7 +317,6 @@ public class TacticalMapFleetIndicator extends AbstractMapEntry implements Selec
 
     @Override
     public void onUnSelect() {
-        //setDrawIndication(false);
         setDrawIndication(true);
     }
 

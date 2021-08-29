@@ -9,8 +9,6 @@ import org.schema.game.client.controller.manager.ingame.PlayerInteractionControl
 import org.schema.game.common.controller.SegmentController;
 import org.schema.game.server.data.ServerConfig;
 import org.schema.schine.graphicsengine.camera.CameraMouseState;
-import org.schema.schine.graphicsengine.core.Controller;
-import org.schema.schine.graphicsengine.core.GlUtil;
 import org.schema.schine.graphicsengine.core.MouseEvent;
 import org.schema.schine.graphicsengine.core.Timer;
 import org.schema.schine.input.KeyEventInterface;
@@ -61,17 +59,11 @@ public class TacticalMapControlManager extends AbstractControlManager {
     }
 
     private void handleInteraction(Timer timer) {
-        if(Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)) {
-            Controller.setCamera(guiDrawer.getDefaultCamera());
-            onSwitch(false);
-            return;
-        }
-
         Vector3f movement = new Vector3f();
-        int amount = 5;
+        int amount = 500;
         if(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
-            if(Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)) amount = 100;
-            else amount = 50;
+            if(Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)) amount = 5000;
+            else amount = 1000;
         }
         if(Keyboard.isKeyDown(KeyboardMappings.FORWARD.getMapping())) movement.add(new Vector3f(0, 0, amount));
         if(Keyboard.isKeyDown(KeyboardMappings.BACKWARDS.getMapping())) movement.add(new Vector3f(0, 0, -amount));
@@ -84,38 +76,28 @@ public class TacticalMapControlManager extends AbstractControlManager {
     }
 
     private void move(Vector3f movement) {
-        Vector3f dir = new Vector3f();
-        Vector3f m = new Vector3f(0, 0, 0);
-        if(movement.z != 0) {
-            m.z = movement.z;
-            movement.z = 0;
-            GlUtil.getForwardVector(dir, guiDrawer.camera.getWorldTransform());
+        Vector3f move = new Vector3f();
+        Vector3f forward = new Vector3f(guiDrawer.camera.getForward());
+        Vector3f up = new Vector3f(guiDrawer.camera.getUp());
+        Vector3f right = new Vector3f(guiDrawer.camera.getRight());
+
+        if(movement.x != 0) {
+            right.scale(movement.x);
+            move.add(right);
         }
 
         if(movement.y != 0) {
-            m.y = movement.y;
-            movement.y = 0;
-            GlUtil.getUpVector(dir, guiDrawer.camera.getWorldTransform());
+            up.scale(movement.y);
+            move.add(up);
         }
 
-        if(movement.x != 0) {
-            m.x = movement.x;
-            movement.x = 0;
-            GlUtil.getRightVector(dir, guiDrawer.camera.getWorldTransform());
+        if(movement.z != 0) {
+            forward.scale(movement.z);
+            move.add(forward);
         }
 
-        if(Math.abs(dir.x) >= Math.abs(dir.y) && Math.abs(dir.x) >= Math.abs(dir.z)) {
-            if(dir.x >= 0) movement.x = m.x;
-            else movement.x = -m.x;
-        } else if(Math.abs(dir.y) >= Math.abs(dir.x) && Math.abs(dir.y) >= Math.abs(dir.z)) {
-            if(dir.y >= 0) movement.y = m.y;
-            else movement.y = -m.y;
-        } else if(Math.abs(dir.z) >= Math.abs(dir.y) && Math.abs(dir.z) >= Math.abs(dir.x)) {
-            if(dir.z >= 0) movement.z = m.z;
-            else movement.z = -m.z;
-        }
         Vector3f newPos = new Vector3f(guiDrawer.camera.getWorldTransform().origin);
-        newPos.add(movement);
+        newPos.add(move);
         if(getDistanceFromControl(newPos) < (int) ServerConfig.SECTOR_SIZE.getCurrentState()) guiDrawer.camera.getWorldTransform().origin.set(newPos);
     }
 
@@ -124,7 +106,7 @@ public class TacticalMapControlManager extends AbstractControlManager {
             Vector3f controlPos = ((SegmentController) GameClient.getCurrentControl()).getWorldTransform().origin;
             return Math.abs(Vector3fTools.distance(newPos.x, newPos.y, newPos.z, controlPos.x, controlPos.y, controlPos.z));
         }
-        return (float) ServerConfig.SECTOR_SIZE.getCurrentState();
+        return (int) ServerConfig.SECTOR_SIZE.getCurrentState();
     }
 
     private PlayerInteractionControlManager getInteractionManager() {

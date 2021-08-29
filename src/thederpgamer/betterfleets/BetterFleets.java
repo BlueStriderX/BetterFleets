@@ -16,6 +16,7 @@ import org.schema.common.util.linAlg.Vector3i;
 import org.schema.game.client.view.gamemap.GameMapDrawer;
 import org.schema.game.common.data.fleet.Fleet;
 import org.schema.game.common.data.fleet.FleetCommandTypes;
+import org.schema.schine.graphicsengine.core.Controller;
 import org.schema.schine.graphicsengine.core.MouseEvent;
 import org.schema.schine.graphicsengine.forms.gui.GUIActivationCallback;
 import org.schema.schine.graphicsengine.forms.gui.GUICallback;
@@ -135,8 +136,12 @@ public class BetterFleets extends StarMod {
 
                 if(tacticalMapDrawer != null && tacticalMapDrawer.toggleDraw) {
                     if(KeyboardMappings.getEventKeyState(event.getRawEvent(), GameClient.getClientState())) {
+                        if(Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)) {
+                            Controller.setCamera(tacticalMapDrawer.getDefaultCamera());
+                            tacticalMapDrawer.controlManager.onSwitch(false);
+                        }
+
                         int key = KeyboardMappings.getEventKeySingle(event.getRawEvent());
-                        int amount = (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) ? 100 : 50;
                         int debugAmount = (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) ? 10 : 1;
                         if(Keyboard.isKeyDown(Keyboard.KEY_LMENU) && ConfigManager.getMainConfig().getBoolean("debug-mode")) {
                             if(key == KeyboardMappings.FORWARD.getMapping()) TacticalMapFleetIndicator.changeLabelOffset(0, 0, debugAmount);
