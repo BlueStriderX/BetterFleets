@@ -10,6 +10,7 @@ import api.listener.events.input.MousePressEvent;
 import api.listener.events.register.ManagerContainerRegisterEvent;
 import api.mod.StarLoader;
 import api.mod.StarMod;
+import api.network.packets.PacketUtil;
 import org.apache.commons.io.IOUtils;
 import org.lwjgl.input.Keyboard;
 import org.schema.common.util.linAlg.Vector3i;
@@ -29,6 +30,8 @@ import thederpgamer.betterfleets.element.ElementManager;
 import thederpgamer.betterfleets.element.blocks.systems.RepairPasteFabricator;
 import thederpgamer.betterfleets.gui.element.sprite.TacticalMapFleetIndicator;
 import thederpgamer.betterfleets.gui.hud.RepairPasteFabricatorHudOverlay;
+import thederpgamer.betterfleets.network.client.ClientRequestNearbyEntitiesPacket;
+import thederpgamer.betterfleets.network.server.ServerSendNearbyEntitiesPacket;
 import thederpgamer.betterfleets.systems.RepairPasteFabricatorSystem;
 import thederpgamer.betterfleets.utils.*;
 
@@ -85,6 +88,7 @@ public class BetterFleets extends StarMod {
         LogManager.initialize();
         ResourceManager.loadResources(this);
         registerListeners();
+        registerPackets();
         LogManager.logMessage(MessageType.INFO, "Successfully loaded mod data.");
     }
 
@@ -587,6 +591,11 @@ public class BetterFleets extends StarMod {
                 }
             }
         }, this);
+    }
+
+    private void registerPackets() {
+        PacketUtil.registerPacket(ClientRequestNearbyEntitiesPacket.class);
+        PacketUtil.registerPacket(ServerSendNearbyEntitiesPacket.class);
     }
 
     private byte[] overwriteClass(String className, byte[] byteCode) {

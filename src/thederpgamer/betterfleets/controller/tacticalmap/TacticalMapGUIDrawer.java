@@ -1,20 +1,19 @@
 package thederpgamer.betterfleets.controller.tacticalmap;
 
 import api.common.GameClient;
-import api.common.GameServer;
+import api.network.packets.PacketUtil;
 import api.utils.draw.ModWorldDrawer;
 import org.lwjgl.opengl.GL11;
 import org.schema.common.util.ByteUtil;
 import org.schema.common.util.linAlg.Vector3i;
 import org.schema.game.client.view.effects.Indication;
 import org.schema.game.common.controller.SegmentController;
-import org.schema.game.common.data.world.Sector;
-import org.schema.game.common.data.world.SimpleTransformableSendableObject;
 import org.schema.game.server.data.ServerConfig;
 import org.schema.schine.graphicsengine.camera.Camera;
 import org.schema.schine.graphicsengine.core.*;
 import org.schema.schine.graphicsengine.core.settings.EngineSettings;
 import thederpgamer.betterfleets.gui.element.sprite.TacticalMapFleetIndicator;
+import thederpgamer.betterfleets.network.client.ClientRequestNearbyEntitiesPacket;
 
 import javax.vecmath.Vector3f;
 import java.util.Map;
@@ -38,7 +37,7 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
 
     private float time;
     private boolean initialized;
-    private final ConcurrentHashMap<Long, TacticalMapFleetIndicator> drawMap;
+    public final ConcurrentHashMap<Long, TacticalMapFleetIndicator> drawMap;
 
     private float updateTimer;
     private boolean firstTime = true;
@@ -108,18 +107,7 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
 
         controlManager.update(timer);
         SegmentController currentEntity = getCurrentEntity();
-        if(currentEntity != null) {
-            Sector sector = GameServer.getUniverse().getSector(currentEntity.getSectorId());
-            for(SimpleTransformableSendableObject<?> entity : sector.getEntities()) {
-                if(entity instanceof SegmentController && !((SegmentController) entity).isCloakedFor(currentEntity) && !((SegmentController) entity).isJammingFor(currentEntity)) {
-                    if(((SegmentController) entity).isInFleet()) {
-                        long dbid = ((SegmentController) entity).getFleet().dbid;
-                        if(!drawMap.containsKey(dbid)) drawMap.put(dbid, new TacticalMapFleetIndicator(((SegmentController) entity).getFleet()));
-                        if(drawMap.get(dbid).getDistance() > maxDrawDistance) drawMap.remove(dbid);
-                    }
-                }
-            }
-        }
+        if(currentEntity != null) PacketUtil.sendPacketToServer(new ClientRequestNearbyEntitiesPacket(currentEntity));
     }
 
 
@@ -137,7 +125,7 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
         updateTimer = 1000;
         for(Map.Entry<Long, TacticalMapFleetIndicator> entry : drawMap.entrySet()) {
             TacticalMapFleetIndicator indicator = entry.getValue();
-            if(indicator.getDistance() < maxDrawDistance && indicator.getFleet() != null && GameServer.getServerState().getFleetManager().getByFleetDbId(indicator.getFleet().dbid) != null) indicator.updateStats();
+            if(indicator.getDistance() < maxDrawDistance && indicator.getFleet() != null && !indicator.getFleet().isEmpty()) indicator.updateStats();
             else drawMap.remove(entry.getKey());
         }
     }
@@ -245,7 +233,7 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
     private void drawIndicators() {
         for(Map.Entry<Long, TacticalMapFleetIndicator> entry : drawMap.entrySet()) {
             TacticalMapFleetIndicator indicator = entry.getValue();
-            if(indicator.getDistance() < maxDrawDistance && indicator.getFleet() != null && GameServer.getServerState().getFleetManager().getByFleetDbId(indicator.getFleet().dbid) != null && !indicator.getFleet().isEmpty()) {
+            if(indicator.getDistance() < maxDrawDistance && indicator.getFleet() != null && !indicator.getFleet().isEmpty()) {
                 Indication indication = indicator.getIndication(indicator.getSystem());
                 indicator.drawSprite(indication.getCurrentTransform());
                 indicator.drawLabel(indication.getCurrentTransform());
