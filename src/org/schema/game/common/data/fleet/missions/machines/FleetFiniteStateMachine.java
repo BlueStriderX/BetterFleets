@@ -7,9 +7,7 @@ import org.schema.schine.ai.stateMachines.FiniteStateMachine;
 import org.schema.schine.ai.stateMachines.Message;
 import org.schema.schine.ai.stateMachines.State;
 import org.schema.schine.ai.stateMachines.Transition;
-import thederpgamer.betterfleets.entity.fleet.commands.Artillery;
-import thederpgamer.betterfleets.entity.fleet.commands.Intercept;
-import thederpgamer.betterfleets.entity.fleet.commands.Support;
+import thederpgamer.betterfleets.entity.fleet.commands.*;
 
 /**
  * Modified version of FleetFiniteStateMachine.
@@ -35,6 +33,8 @@ public class FleetFiniteStateMachine extends FiniteStateMachine<FleetFiniteState
     private Artillery artillery;
     private Intercept intercept;
     private Support support;
+    private ActivatingTurrets activatingTurrets;
+    private DeactivatingTurrets deactivatingTurrets;
     //
 
     private Jamming jamming;
@@ -78,6 +78,8 @@ public class FleetFiniteStateMachine extends FiniteStateMachine<FleetFiniteState
         artillery = new Artillery(gObj);
         intercept = new Intercept(gObj);
         support = new Support(gObj);
+        activatingTurrets = new ActivatingTurrets(gObj);
+        deactivatingTurrets = new DeactivatingTurrets(gObj);
         //
         cloaking = new Cloaking(gObj);
         uncloaking = new UnCloaking(gObj);
@@ -100,6 +102,8 @@ public class FleetFiniteStateMachine extends FiniteStateMachine<FleetFiniteState
         addState(artillery);
         addState(intercept);
         addState(support);
+        addState(activatingTurrets);
+        addState(deactivatingTurrets);
         //
 
         moving.addTransition(Transition.TARGET_SECTOR_REACHED, idle);
@@ -127,6 +131,10 @@ public class FleetFiniteStateMachine extends FiniteStateMachine<FleetFiniteState
         s.addTransition(Transition.FLEET_ARTILLERY, artillery);
         s.addTransition(Transition.FLEET_INTERCEPT, intercept);
         s.addTransition(Transition.FLEET_SUPPORT, support);
+        s.addTransition(Transition.FLEET_ACTIVATING_TURRETS, activatingTurrets);
+        s.addTransition(Transition.FLEET_DEACTIVATING_TURRETS, deactivatingTurrets);
+        activatingTurrets.addTransition(Transition.FLEET_ACTION_DONE, s);
+        deactivatingTurrets.addTransition(Transition.FLEET_ACTION_DONE, s);
         //
 
         s.addTransition(Transition.FLEET_CLOAK, cloaking);

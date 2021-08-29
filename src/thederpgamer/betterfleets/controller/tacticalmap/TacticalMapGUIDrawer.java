@@ -41,6 +41,7 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
     private final ConcurrentHashMap<Long, TacticalMapFleetIndicator> drawMap;
 
     private float updateTimer;
+    private boolean firstTime = true;
 
     public TacticalMapGUIDrawer() {
         toggleDraw = false;
@@ -60,6 +61,10 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
         if(toggleDraw) {
             Controller.setCamera(camera);
             controlManager.onSwitch(true);
+            if(firstTime) {
+                camera.reset();
+                firstTime = false;
+            }
             updateIndicators();
         } else {
             Controller.setCamera(getDefaultCamera());

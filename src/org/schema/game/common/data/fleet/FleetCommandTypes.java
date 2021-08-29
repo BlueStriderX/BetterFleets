@@ -344,6 +344,40 @@ public enum FleetCommandTypes {
                 }
             },
             Transition.FLEET_MINE),
+    //INSERTED CODE
+    ACTIVATE_TURRETS(new Translatable() {
+        @Override
+        public String getName(Enum en) {
+            return "Activate All Turrets";
+        }
+    }, new Translatable() {
+        @Override
+        public String getName(Enum en) {
+            return "Fleet will activate docked turrets.";
+        }
+    }, new FleetCommandDialog() {
+        @Override
+        public void clientSend(final Fleet fleet) {
+            fleet.sendFleetCommand(ACTIVATE_TURRETS);
+        }
+    }, Transition.FLEET_ACTIVATING_TURRETS),
+    DEACTIVATE_TURRETS(new Translatable() {
+        @Override
+        public String getName(Enum en) {
+            return "Deactivate All Turrets";
+        }
+    }, new Translatable() {
+        @Override
+        public String getName(Enum en) {
+            return "Fleet will deactivate docked turrets.";
+        }
+    }, new FleetCommandDialog() {
+        @Override
+        public void clientSend(final Fleet fleet) {
+            fleet.sendFleetCommand(DEACTIVATE_TURRETS);
+        }
+    }, Transition.FLEET_DEACTIVATING_TURRETS),
+    //
     CLOAK(new Translatable() {
         @Override
         public String getName(Enum en) {

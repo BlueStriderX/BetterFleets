@@ -504,7 +504,7 @@ public class MapToolsPanel extends GUIAncor {
 
         //INSERTED CODE
         fleetActionsAnchor = new GUIAncor(getState(), 180.0f, 500.0f);
-        (fleetActionsList = new GUIRightClickButtonPane(getState(), 1, 14, fleetActionsAnchor)).onInit();
+        (fleetActionsList = new GUIRightClickButtonPane(getState(), 1, 16, fleetActionsAnchor)).onInit();
         fleetActionsAnchor.attach(fleetActionsList);
         attach(fleetActionsAnchor);
         fleetActionsList.cleanUp();

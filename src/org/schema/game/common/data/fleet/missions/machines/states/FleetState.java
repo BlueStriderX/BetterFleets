@@ -94,6 +94,18 @@ public abstract class FleetState extends State{
                 return "SUPPORTING";
             }
         }),
+        ACTIVATING_TURRETS(new Translatable() {
+            @Override
+            public String getName(Enum en) {
+                return "ACTIVATING TURRETS";
+            }
+        }),
+        DEACTIVATING_TURRETS(new Translatable() {
+            @Override
+            public String getName(Enum en) {
+                return "DEACTIVATING TURRETS";
+            }
+        }),
         //
         FORMATION_SENTRY(new Translatable() {
             @Override
