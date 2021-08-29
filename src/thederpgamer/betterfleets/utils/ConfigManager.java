@@ -17,7 +17,7 @@ public class ConfigManager {
             "debug-mode: false",
             "max-world-logs: 5",
             "fleet-command-update-interval: 15",
-            "tactical-map-toggle-key: j",
+            "tactical-map-toggle-key: ,",
             "tactical-map-view-distance: 1.2"
     };
 

@@ -133,8 +133,8 @@ public class FleetFiniteStateMachine extends FiniteStateMachine<FleetFiniteState
         s.addTransition(Transition.FLEET_SUPPORT, support);
         s.addTransition(Transition.FLEET_ACTIVATING_TURRETS, activatingTurrets);
         s.addTransition(Transition.FLEET_DEACTIVATING_TURRETS, deactivatingTurrets);
-        activatingTurrets.addTransition(Transition.FLEET_ACTION_DONE, s);
-        deactivatingTurrets.addTransition(Transition.FLEET_ACTION_DONE, s);
+        activatingTurrets.addTransition(Transition.FLEET_EMPTY, s);
+        deactivatingTurrets.addTransition(Transition.FLEET_EMPTY, s);
         //
 
         s.addTransition(Transition.FLEET_CLOAK, cloaking);

@@ -31,13 +31,13 @@ public class ActivatingTurrets extends FleetState {
 
     @Override
     public boolean onUpdate() throws FSMException {
-        if(getEntityState().getFlagShip() == null) stateTransition(Transition.FLEET_EMPTY);
-        else {
+        if(!getEntityState().isEmpty()){
             for(FleetMember member : getEntityState().getMembers()) {
                 Ship ship = (Ship) member.getLoaded();
                 if(ship != null) ship.railController.activateAllAIClient(true, true, true);
             }
         }
+        stateTransition(Transition.FLEET_EMPTY);
         return false;
     }
 

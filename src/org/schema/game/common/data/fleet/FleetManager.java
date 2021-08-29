@@ -577,6 +577,22 @@ public class FleetManager extends Observable implements FleetSelectionInterface{
                     e.printStackTrace();
                 }
                 break;
+            //INSERTED CODE
+            case ACTIVATE_TURRETS:
+                try {
+                    fleet.getCurrentProgram().getMachine().getFsm().stateTransition(t.transition);
+                } catch(FSMException exception) {
+                    exception.printStackTrace();
+                }
+                break;
+            case DEACTIVATE_TURRETS:
+                try {
+                    fleet.getCurrentProgram().getMachine().getFsm().stateTransition(t.transition);
+                } catch(FSMException exception) {
+                    exception.printStackTrace();
+                }
+                break;
+            //
             case CLOAK:
             case UNCLOAK:
             case JAM:
