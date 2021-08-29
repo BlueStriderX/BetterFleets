@@ -16,7 +16,6 @@ import org.schema.common.util.linAlg.Vector3i;
 import org.schema.game.client.view.gamemap.GameMapDrawer;
 import org.schema.game.common.data.fleet.Fleet;
 import org.schema.game.common.data.fleet.FleetCommandTypes;
-import org.schema.schine.graphicsengine.core.Controller;
 import org.schema.schine.graphicsengine.core.MouseEvent;
 import org.schema.schine.graphicsengine.forms.gui.GUIActivationCallback;
 import org.schema.schine.graphicsengine.forms.gui.GUICallback;
@@ -146,17 +145,6 @@ public class BetterFleets extends StarMod {
                             else if(key == KeyboardMappings.STRAFE_LEFT.getMapping()) TacticalMapFleetIndicator.changeLabelOffset(-debugAmount, 0, 0);
                             else if(key == KeyboardMappings.UP.getMapping()) TacticalMapFleetIndicator.changeLabelOffset(0, debugAmount, 0);
                             else if(key == KeyboardMappings.DOWN.getMapping()) TacticalMapFleetIndicator.changeLabelOffset(0, -debugAmount, 0);
-                        } else {
-                            if(key == KeyboardMappings.FORWARD.getMapping()) tacticalMapDrawer.controlManager.move(0, 0, amount);
-                            else if(key == KeyboardMappings.BACKWARDS.getMapping()) tacticalMapDrawer.controlManager.move(0, 0, -amount);
-                            else if(key == KeyboardMappings.STRAFE_RIGHT.getMapping()) tacticalMapDrawer.controlManager.move(amount, 0, 0);
-                            else if(key == KeyboardMappings.STRAFE_LEFT.getMapping()) tacticalMapDrawer.controlManager.move(-amount, 0, 0);
-                            else if(key == KeyboardMappings.UP.getMapping()) tacticalMapDrawer.controlManager.move(0, amount, 0);
-                            else if(key == KeyboardMappings.DOWN.getMapping()) tacticalMapDrawer.controlManager.move(0, -amount, 0);
-                            else if(key == Keyboard.KEY_ESCAPE) {
-                                Controller.setCamera(tacticalMapDrawer.getDefaultCamera());
-                                tacticalMapDrawer.controlManager.onSwitch(false);
-                            }
                         }
                     }
                 }

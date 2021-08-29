@@ -1,6 +1,7 @@
 package thederpgamer.betterfleets.controller.tacticalmap;
 
 import api.common.GameClient;
+import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.schema.common.util.linAlg.Vector3fTools;
 import org.schema.game.client.controller.manager.AbstractControlManager;
@@ -8,10 +9,13 @@ import org.schema.game.client.controller.manager.ingame.PlayerInteractionControl
 import org.schema.game.common.controller.SegmentController;
 import org.schema.game.server.data.ServerConfig;
 import org.schema.schine.graphicsengine.camera.CameraMouseState;
+import org.schema.schine.graphicsengine.core.Controller;
 import org.schema.schine.graphicsengine.core.GlUtil;
 import org.schema.schine.graphicsengine.core.MouseEvent;
 import org.schema.schine.graphicsengine.core.Timer;
 import org.schema.schine.input.KeyEventInterface;
+import org.schema.schine.input.KeyboardMappings;
+
 import javax.vecmath.Vector3f;
 
 /**
@@ -43,7 +47,7 @@ public class TacticalMapControlManager extends AbstractControlManager {
         getInteractionManager().getBuildToolsManager().suspend(true);
         getInteractionManager().getInShipControlManager().getShipControlManager().getShipExternalFlightController().suspend(true);
         getInteractionManager().getInShipControlManager().getShipControlManager().getSegmentBuildController().suspend(true);
-        guiDrawer.camera.getMouseState().updateMouseState(GameClient.getClientState());
+        handleInteraction(timer);
     }
 
     @Override
@@ -53,42 +57,65 @@ public class TacticalMapControlManager extends AbstractControlManager {
 
     @Override
     public void handleKeyEvent(KeyEventInterface keyEvent) {
-
+        super.handleKeyEvent(keyEvent);
     }
 
-    public void move(int x, int y, int z) {
+    private void handleInteraction(Timer timer) {
+        if(Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)) {
+            Controller.setCamera(guiDrawer.getDefaultCamera());
+            onSwitch(false);
+            return;
+        }
+
+        Vector3f movement = new Vector3f();
+        int amount = 5;
+        if(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
+            if(Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)) amount = 100;
+            else amount = 50;
+        }
+        if(Keyboard.isKeyDown(KeyboardMappings.FORWARD.getMapping())) movement.add(new Vector3f(0, 0, amount));
+        if(Keyboard.isKeyDown(KeyboardMappings.BACKWARDS.getMapping())) movement.add(new Vector3f(0, 0, -amount));
+        if(Keyboard.isKeyDown(KeyboardMappings.STRAFE_LEFT.getMapping())) movement.add(new Vector3f(-amount, 0, 0));
+        if(Keyboard.isKeyDown(KeyboardMappings.STRAFE_RIGHT.getMapping())) movement.add(new Vector3f(amount, 0, 0));
+        if(Keyboard.isKeyDown(KeyboardMappings.UP.getMapping())) movement.add(new Vector3f(0, amount, 0));
+        if(Keyboard.isKeyDown(KeyboardMappings.DOWN.getMapping())) movement.add(new Vector3f(0, -amount, 0));
+        movement.scale(timer.getDelta());
+        move(movement);
+    }
+
+    private void move(Vector3f movement) {
         Vector3f dir = new Vector3f();
-        int m = 0;
-        if(z != 0) {
-            m = z;
-            z = 0;
+        Vector3f m = new Vector3f(0, 0, 0);
+        if(movement.z != 0) {
+            m.z = movement.z;
+            movement.z = 0;
             GlUtil.getForwardVector(dir, guiDrawer.camera.getWorldTransform());
         }
 
-        if(y != 0) {
-            m = y;
-            y = 0;
+        if(movement.y != 0) {
+            m.y = movement.y;
+            movement.y = 0;
             GlUtil.getUpVector(dir, guiDrawer.camera.getWorldTransform());
         }
 
-        if(x != 0) {
-            m = x;
-            x = 0;
+        if(movement.x != 0) {
+            m.x = movement.x;
+            movement.x = 0;
             GlUtil.getRightVector(dir, guiDrawer.camera.getWorldTransform());
         }
 
         if(Math.abs(dir.x) >= Math.abs(dir.y) && Math.abs(dir.x) >= Math.abs(dir.z)) {
-            if(dir.x >= 0) x = m;
-            else x = -m;
+            if(dir.x >= 0) movement.x = m.x;
+            else movement.x = -m.x;
         } else if(Math.abs(dir.y) >= Math.abs(dir.x) && Math.abs(dir.y) >= Math.abs(dir.z)) {
-            if(dir.y >= 0) y = m;
-            else y = -m;
+            if(dir.y >= 0) movement.y = m.y;
+            else movement.y = -m.y;
         } else if(Math.abs(dir.z) >= Math.abs(dir.y) && Math.abs(dir.z) >= Math.abs(dir.x)) {
-            if(dir.z >= 0) z = m;
-            else z = -m;
+            if(dir.z >= 0) movement.z = m.z;
+            else movement.z = -m.z;
         }
         Vector3f newPos = new Vector3f(guiDrawer.camera.getWorldTransform().origin);
-        newPos.add(new Vector3f(x, y, z));
+        newPos.add(movement);
         if(getDistanceFromControl(newPos) < (int) ServerConfig.SECTOR_SIZE.getCurrentState()) guiDrawer.camera.getWorldTransform().origin.set(newPos);
     }
 
