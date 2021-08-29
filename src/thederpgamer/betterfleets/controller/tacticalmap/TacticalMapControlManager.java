@@ -13,6 +13,8 @@ import org.schema.schine.graphicsengine.core.MouseEvent;
 import org.schema.schine.graphicsengine.core.Timer;
 import org.schema.schine.input.KeyEventInterface;
 import org.schema.schine.input.KeyboardMappings;
+import thederpgamer.betterfleets.BetterFleets;
+import thederpgamer.betterfleets.utils.ConfigManager;
 
 import javax.vecmath.Vector3f;
 
@@ -25,14 +27,17 @@ import javax.vecmath.Vector3f;
 public class TacticalMapControlManager extends AbstractControlManager {
 
     private TacticalMapGUIDrawer guiDrawer;
+    public float viewDistance;
 
     public TacticalMapControlManager(TacticalMapGUIDrawer guiDrawer) {
         super(GameClient.getClientState());
         this.guiDrawer = guiDrawer;
+        this.viewDistance = (float) ConfigManager.getMainConfig().getDouble("tactical-map-view-distance");
     }
 
     @Override
     public void onSwitch(boolean active) {
+        getInteractionManager().setActive(!active);
         getInteractionManager().getInShipControlManager().getShipControlManager().getShipExternalFlightController().suspend(active);
         getInteractionManager().getInShipControlManager().getShipControlManager().getSegmentBuildController().suspend(active);
         super.onSwitch(active);
@@ -42,6 +47,7 @@ public class TacticalMapControlManager extends AbstractControlManager {
     public void update(Timer timer) {
         CameraMouseState.setGrabbed(Mouse.isButtonDown(1));
         getInteractionManager().suspend(true);
+        getInteractionManager().setActive(false);
         getInteractionManager().getBuildToolsManager().suspend(true);
         getInteractionManager().getInShipControlManager().getShipControlManager().getShipExternalFlightController().suspend(true);
         getInteractionManager().getInShipControlManager().getShipControlManager().getSegmentBuildController().suspend(true);
@@ -60,15 +66,16 @@ public class TacticalMapControlManager extends AbstractControlManager {
 
     private void handleInteraction(Timer timer) {
         Vector3f movement = new Vector3f();
-        int amount = 500;
+        int amount = 100;
         if(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
             if(Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)) amount = 5000;
             else amount = 1000;
         }
+        if(Keyboard.isKeyDown(Keyboard.KEY_X)) BetterFleets.getInstance().tacticalMapDrawer.camera.reset();
         if(Keyboard.isKeyDown(KeyboardMappings.FORWARD.getMapping())) movement.add(new Vector3f(0, 0, amount));
         if(Keyboard.isKeyDown(KeyboardMappings.BACKWARDS.getMapping())) movement.add(new Vector3f(0, 0, -amount));
-        if(Keyboard.isKeyDown(KeyboardMappings.STRAFE_LEFT.getMapping())) movement.add(new Vector3f(-amount, 0, 0));
-        if(Keyboard.isKeyDown(KeyboardMappings.STRAFE_RIGHT.getMapping())) movement.add(new Vector3f(amount, 0, 0));
+        if(Keyboard.isKeyDown(KeyboardMappings.STRAFE_LEFT.getMapping())) movement.add(new Vector3f(amount, 0, 0));
+        if(Keyboard.isKeyDown(KeyboardMappings.STRAFE_RIGHT.getMapping())) movement.add(new Vector3f(-amount, 0, 0));
         if(Keyboard.isKeyDown(KeyboardMappings.UP.getMapping())) movement.add(new Vector3f(0, amount, 0));
         if(Keyboard.isKeyDown(KeyboardMappings.DOWN.getMapping())) movement.add(new Vector3f(0, -amount, 0));
         movement.scale(timer.getDelta());
@@ -98,7 +105,7 @@ public class TacticalMapControlManager extends AbstractControlManager {
 
         Vector3f newPos = new Vector3f(guiDrawer.camera.getWorldTransform().origin);
         newPos.add(move);
-        if(getDistanceFromControl(newPos) < (int) ServerConfig.SECTOR_SIZE.getCurrentState()) guiDrawer.camera.getWorldTransform().origin.set(newPos);
+        if(getDistanceFromControl(newPos) < (int) ServerConfig.SECTOR_SIZE.getCurrentState() * ConfigManager.getMainConfig().getDouble("tactical-map-view-distance")) guiDrawer.camera.getWorldTransform().origin.set(newPos);
     }
 
     private float getDistanceFromControl(Vector3f newPos) {

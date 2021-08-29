@@ -25,6 +25,7 @@ import org.schema.schine.graphicsengine.core.settings.EngineSettings;
 import org.schema.schine.graphicsengine.forms.SelectableSprite;
 import org.schema.schine.graphicsengine.forms.Sprite;
 import org.schema.schine.graphicsengine.forms.font.FontLibrary;
+import org.schema.schine.graphicsengine.forms.gui.GUIOverlay;
 import org.schema.schine.graphicsengine.forms.gui.GUITextOverlay;
 import thederpgamer.betterfleets.BetterFleets;
 import thederpgamer.betterfleets.utils.SectorUtils;
@@ -55,7 +56,7 @@ public class TacticalMapFleetIndicator extends AbstractMapEntry implements Selec
     private float selectDepth;
 
     private EntityIndicatorSprite indicatorSprite;
-    private Sprite sprite;
+    private GUIOverlay sprite;
     private GUITextOverlay labelOverlay;
 
     private Transform lastKnownTransform = new Transform();
@@ -74,18 +75,25 @@ public class TacticalMapFleetIndicator extends AbstractMapEntry implements Selec
         return GameClient.getClientState().getWorldDrawer().getGuiDrawer().getHud().getIndicator();
     }
 
-    public void drawSprite(Camera camera, Transform transform) {
+    public void drawSprite(Transform transform) {
         if(indicatorSprite == null || sprite == null) {
             indicatorSprite = new EntityIndicatorSprite(getFleet().getFlagShip().getLoaded());
-            sprite = Controller.getResLoader().getSprite("map-sprites-8x2-c-gui-");
-            sprite.setBillboard(true);
-            sprite.setDepthTest(false);
-            sprite.setBlend(false);
-            sprite.setFlip(true);
-            sprite.setTint(indicatorSprite.getColor());
+            sprite = new GUIOverlay(Controller.getResLoader().getSprite("map-sprites-8x2-c-gui-"), GameClient.getClientState());
+            sprite.onInit();
+            sprite.getSprite().setBillboard(true);
+            sprite.getSprite().setDepthTest(true);
+            sprite.getSprite().setBlend(true);
+            sprite.getSprite().setFlip(true);
+            sprite.getSprite().setTint(indicatorSprite.getColor());
         }
-        sprite.setTransform(transform);
-        Sprite.draw3D(sprite, new EntityIndicatorSprite[]{indicatorSprite}, camera);
+        transform.basis.set(getCamera().lookAt(false).basis);
+        transform.basis.invert();
+
+        if(fleet.getFlagShip().isLoaded()) lastKnownTransform.set(fleet.getFlagShip().getLoaded().getWorldTransform());
+        if(!getSector().equals(Objects.requireNonNull(getCurrentEntity()).getSector(new Vector3i()))) SectorUtils.transformToSector(lastKnownTransform, getCurrentEntity().getSector(new Vector3i()), getSector());
+        sprite.getTransform().set(lastKnownTransform);
+        sprite.getTransform().basis.set(transform.basis);
+        sprite.draw();
     }
 
     public void drawLabel(Transform transform) {
@@ -100,7 +108,7 @@ public class TacticalMapFleetIndicator extends AbstractMapEntry implements Selec
         labelOverlay.updateTextSize();
         if(fleet.getFlagShip().isLoaded()) lastKnownTransform.set(fleet.getFlagShip().getLoaded().getWorldTransform());
         if(!getSector().equals(Objects.requireNonNull(getCurrentEntity()).getSector(new Vector3i()))) SectorUtils.transformToSector(lastKnownTransform, getCurrentEntity().getSector(new Vector3i()), getSector());
-        labelOverlay.setTransform(lastKnownTransform);
+        labelOverlay.getTransform().set(lastKnownTransform);
         labelOverlay.getTransform().basis.set(transform.basis);
 
         Vector3f upVector = GlUtil.getUpVector(new Vector3f(), labelOverlay.getTransform());
@@ -117,9 +125,8 @@ public class TacticalMapFleetIndicator extends AbstractMapEntry implements Selec
     public void drawPath(Camera camera, float time, float sectorSize) {
         if(fleet.getCurrentMoveTarget() != null && ((fleet.getFlagShip().getFactionId() == -1 && GameClient.getClientPlayerState().getName().equals(fleet.getOwner())) || (GameClient.getClientPlayerState().getFactionId() == fleet.getFlagShip().getFactionId() && GameClient.getClientPlayerState().getFactionId() != -1))) {
             startDrawDottedLine(camera);
-            if(fleet.getOwner().equals(GameClient.getClientPlayerState().getName())) {
-                drawDottedLine(getSector(), fleet.getCurrentMoveTarget(), new Vector4f(0.0f,1.0f,0.5f,1.0f), time, sectorSize);
-            } else drawDottedLine(getSector(), fleet.getCurrentMoveTarget(), new Vector4f(0.0f,1.0f,1.0f,1.0f), time, sectorSize);
+            if(fleet.getOwner().equals(GameClient.getClientPlayerState().getName().toLowerCase())) drawDottedLine(getSector(), fleet.getCurrentMoveTarget(), new Vector4f(0.1f,1.0f,0.5f,1.0f), time, sectorSize);
+            else drawDottedLine(getSector(), fleet.getCurrentMoveTarget(), new Vector4f(0.0f,1.0f,1.0f,1.0f), time, sectorSize);
             endDrawDottedLine();
         }
     }
@@ -174,9 +181,10 @@ public class TacticalMapFleetIndicator extends AbstractMapEntry implements Selec
     private void drawDottedLine(Vector3i from, Vector3i to, Vector4f color, float moving, float sectorSize) {
         Vector3f fromPx = new Vector3f();
         Vector3f toPx = new Vector3f();
+        float sectorSizeHalf = sectorSize * 0.5f;
 
-        fromPx.set((from.x) * sectorSize + (sectorSize / 2.0f), (from.y) * sectorSize + (sectorSize / 2.0f), (from.z) * sectorSize + (sectorSize / 2.0f));
-        toPx.set((to.x) * sectorSize + (sectorSize / 2.0f), (to.y) * sectorSize + (sectorSize / 2.0f), (to.z) * sectorSize + (sectorSize / 2.0f));
+        fromPx.set((from.x) * sectorSize + sectorSizeHalf, (from.y) * sectorSize + sectorSizeHalf, (from.z) * sectorSize + sectorSizeHalf);
+        toPx.set((to.x) * sectorSize + sectorSizeHalf, (to.y) * sectorSize + sectorSizeHalf, (to.z) * sectorSize + sectorSizeHalf);
         if(fromPx.equals(toPx)) return;
         Vector3f dir = new Vector3f();
         Vector3f dirN = new Vector3f();
@@ -204,8 +212,7 @@ public class TacticalMapFleetIndicator extends AbstractMapEntry implements Selec
             }
             b.set(dirN);
 
-
-            if((f+dotedSize) >= len) {
+            if((f + dotedSize) >= len) {
                 b.scale(len);
                 f = len;
             } else b.scale(f + dotedSize);
@@ -223,6 +230,7 @@ public class TacticalMapFleetIndicator extends AbstractMapEntry implements Selec
         GlUtil.glMatrixMode(GL11.GL_PROJECTION);
         GlUtil.glPopMatrix();
         GlUtil.glMatrixMode(GL11.GL_MODELVIEW);
+
     }
 
     public void updateStats() {

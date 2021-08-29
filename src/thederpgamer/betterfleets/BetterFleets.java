@@ -478,7 +478,57 @@ public class BetterFleets extends StarMod {
                                     }
                                 });
 
-                                FleetGUIManager.getPanel().fleetActionsList.addButton(0, 12, "TOGGLE JAMMING", GUIHorizontalArea.HButtonColor.YELLOW, new GUICallback() {
+                                FleetGUIManager.getPanel().fleetActionsList.addButton(0, 12, "ACTIVATE TURRETS", GUIHorizontalArea.HButtonColor.YELLOW, new GUICallback() {
+                                    @Override
+                                    public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
+                                        if(mouseEvent.pressedLeftMouse()) {
+                                            GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
+                                            FleetGUIManager.orderTurretsActivate();
+                                        }
+                                    }
+
+                                    @Override
+                                    public boolean isOccluded() {
+                                        return false;
+                                    }
+                                }, new GUIActivationCallback() {
+                                    @Override
+                                    public boolean isVisible(InputState inputState) {
+                                        return true;
+                                    }
+
+                                    @Override
+                                    public boolean isActive(InputState inputState) {
+                                        return true;
+                                    }
+                                });
+
+                                FleetGUIManager.getPanel().fleetActionsList.addButton(0, 13, "DEACTIVATE TURRETS", GUIHorizontalArea.HButtonColor.YELLOW, new GUICallback() {
+                                    @Override
+                                    public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
+                                        if(mouseEvent.pressedLeftMouse()) {
+                                            GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
+                                            FleetGUIManager.orderTurretsDeactivate();
+                                        }
+                                    }
+
+                                    @Override
+                                    public boolean isOccluded() {
+                                        return false;
+                                    }
+                                }, new GUIActivationCallback() {
+                                    @Override
+                                    public boolean isVisible(InputState inputState) {
+                                        return true;
+                                    }
+
+                                    @Override
+                                    public boolean isActive(InputState inputState) {
+                                        return true;
+                                    }
+                                });
+
+                                FleetGUIManager.getPanel().fleetActionsList.addButton(0, 14, "TOGGLE JAMMING", GUIHorizontalArea.HButtonColor.YELLOW, new GUICallback() {
                                     @Override
                                     public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
                                         if(mouseEvent.pressedLeftMouse()) {
@@ -503,7 +553,7 @@ public class BetterFleets extends StarMod {
                                     }
                                 });
 
-                                FleetGUIManager.getPanel().fleetActionsList.addButton(0, 13, "TOGGLE CLOAK", GUIHorizontalArea.HButtonColor.YELLOW, new GUICallback() {
+                                FleetGUIManager.getPanel().fleetActionsList.addButton(0, 15, "TOGGLE CLOAK", GUIHorizontalArea.HButtonColor.YELLOW, new GUICallback() {
                                     @Override
                                     public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
                                         if(mouseEvent.pressedLeftMouse()) {

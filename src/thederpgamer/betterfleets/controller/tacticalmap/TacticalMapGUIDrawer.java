@@ -77,6 +77,7 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
     public void onInit() {
         controlManager = new TacticalMapControlManager(this);
         camera = new TacticalMapCamera();
+        camera.reset();
         camera.alwaysAllowWheelZoom = true;
         initialized = true;
     }
@@ -151,20 +152,21 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
 
         GlUtil.glBegin(GL11.GL_LINES);
         float size = spacing * 3;
-        float end = start + (1f / 3f) * size;
-        float lineAlpha = 0;
-        float lineAlphaB = 0;
-        for (float i = 0; i < 3; i++) {
+        float end = (start + (1f / 3f) * size);
+        float lineAlpha;
+        float lineAlphaB;
+        for (float i = 0; i < 3; i ++) {
             lineAlphaB = 1;
             lineAlpha = 1;
 
-            if (i == 0) {
+            if(i == 0) {
                 lineAlpha = 0;
                 lineAlphaB = 0.6f;
-            } else if (i == 2) {
+            } else if(i == 2) {
                 lineAlpha = 0.6f;
                 lineAlphaB = 0;
             }
+
             GlUtil.glColor4fForced(1, 1, 1, lineAlpha);
             GL11.glVertex3f(selectedPos.x * spacing, selectedPos.y * spacing, start);
             GlUtil.glColor4fForced(1, 1, 1, lineAlphaB);
@@ -240,7 +242,7 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
             TacticalMapFleetIndicator indicator = entry.getValue();
             if(indicator.getDistance() < maxDrawDistance && indicator.getFleet() != null && GameServer.getServerState().getFleetManager().getByFleetDbId(indicator.getFleet().dbid) != null && !indicator.getFleet().isEmpty()) {
                 Indication indication = indicator.getIndication(indicator.getSystem());
-                indicator.drawSprite(camera, indication.getCurrentTransform());
+                indicator.drawSprite(indication.getCurrentTransform());
                 indicator.drawLabel(indication.getCurrentTransform());
                 indicator.drawPath(camera, time, sectorSize);
             } else drawMap.remove(entry.getKey());

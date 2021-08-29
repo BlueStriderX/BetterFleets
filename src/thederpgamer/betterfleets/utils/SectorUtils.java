@@ -16,11 +16,8 @@ public class SectorUtils {
         int sectorSize = (int) ServerConfig.SECTOR_SIZE.getCurrentState();
         Vector3i diff = new Vector3i(currentSector);
         diff.sub(targetSector);
-        if(diff.x > 0) transform.origin.x += sectorSize * diff.x;
-        else if(diff.x < 0) transform.origin.x -= sectorSize * diff.x;
-        if(diff.y > 0) transform.origin.y += sectorSize * diff.y;
-        else if(diff.y < 0) transform.origin.y -= sectorSize * diff.y;
-        if(diff.z > 0) transform.origin.z += sectorSize * diff.z;
-        else if(diff.z < 0) transform.origin.z -= sectorSize * diff.z;
+        transform.origin.x -= sectorSize * diff.x;
+        transform.origin.y -= sectorSize * diff.y;
+        transform.origin.z -= sectorSize * diff.z;
     }
 }

@@ -4,9 +4,12 @@ import api.common.GameCommon;
 import com.bulletphysics.util.ObjectArrayList;
 import org.schema.common.util.linAlg.Vector3i;
 import org.schema.game.client.view.gui.mapgui.MapToolsPanel;
+import org.schema.game.common.controller.Ship;
 import org.schema.game.common.data.fleet.Fleet;
 import org.schema.game.common.data.fleet.FleetCommandTypes;
+import org.schema.game.common.data.fleet.FleetMember;
 import org.schema.game.common.data.player.faction.FactionRelation;
+
 import java.util.List;
 
 /**
@@ -72,6 +75,28 @@ public class FleetGUIManager  {
             else if(command.equals(FleetCommandTypes.FLEET_IDLE_FORMATION)) fleet.sendFleetCommand(FleetCommandTypes.IDLE);
             else fleet.sendFleetCommand(FleetCommandTypes.FLEET_IDLE_FORMATION);
             fleet.getFlagShip().mapEntry.getColor().set(0.3f, 0.8f, 0.2f, 0.8f);
+        }
+        selectedFleets.clear();
+        mapToolsPanel.updateFleetList();
+    }
+
+    public static void orderTurretsActivate() {
+        for(Fleet fleet : selectedFleets) {
+            for(FleetMember member : fleet.getMembers()) {
+                Ship ship = (Ship) member.getLoaded();
+                if(ship != null) ship.railController.activateAllAIClient(true, true, true);
+            }
+        }
+        selectedFleets.clear();
+        mapToolsPanel.updateFleetList();
+    }
+
+    public static void orderTurretsDeactivate() {
+        for(Fleet fleet : selectedFleets) {
+            for(FleetMember member : fleet.getMembers()) {
+                Ship ship = (Ship) member.getLoaded();
+                if(ship != null) ship.railController.activateAllAIClient(false, true, false);
+            }
         }
         selectedFleets.clear();
         mapToolsPanel.updateFleetList();
