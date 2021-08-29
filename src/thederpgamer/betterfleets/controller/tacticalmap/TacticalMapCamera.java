@@ -6,7 +6,10 @@ import org.schema.game.common.controller.SegmentController;
 import org.schema.schine.graphicsengine.camera.Camera;
 import org.schema.schine.graphicsengine.camera.viewer.PositionableViewer;
 import org.schema.schine.graphicsengine.core.Timer;
+import org.schema.schine.input.Mouse;
 import thederpgamer.betterfleets.BetterFleets;
+import thederpgamer.betterfleets.utils.Inputs;
+
 import javax.vecmath.Vector3f;
 
 /**
@@ -41,7 +44,9 @@ public class TacticalMapCamera extends Camera {
         alwaysAllowWheelZoom = true;
         if(GameClient.getCurrentControl() != null && GameClient.getCurrentControl() instanceof SegmentController) {
             if(transform == null) transform = (((SegmentController) GameClient.getCurrentControl()).getWorldTransform());
-            getLookAlgorithm().mouseRotate(server, (float)this.mouseState.dx / 1000.0F, (float)this.mouseState.dy / 1000.0F, 0.0F, this.getMouseSensibilityX(), this.getMouseSensibilityY(), 0.0F);
+            if(Mouse.isGrabbed() && Mouse.isButtonDown(Inputs.MouseButtons.RIGHT_MOUSE.id)) {
+                getLookAlgorithm().mouseRotate(server, (float)this.mouseState.dx / 1000.0F, (float)this.mouseState.dy / 1000.0F, 0.0F, this.getMouseSensibilityX(), this.getMouseSensibilityY(), 0.0F);
+            }
         }
     }
 }

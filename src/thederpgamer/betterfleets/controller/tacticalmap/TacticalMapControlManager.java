@@ -33,18 +33,17 @@ public class TacticalMapControlManager extends AbstractControlManager {
     public void onSwitch(boolean active) {
         getInteractionManager().getInShipControlManager().getShipControlManager().getShipExternalFlightController().suspend(active);
         getInteractionManager().getInShipControlManager().getShipControlManager().getSegmentBuildController().suspend(active);
-        getInteractionManager().setActive(!active);
         super.onSwitch(active);
     }
 
     @Override
     public void update(Timer timer) {
         CameraMouseState.setGrabbed(Mouse.isButtonDown(1));
-        getInteractionManager().setActive(false);
         getInteractionManager().suspend(true);
         getInteractionManager().getBuildToolsManager().suspend(true);
         getInteractionManager().getInShipControlManager().getShipControlManager().getShipExternalFlightController().suspend(true);
         getInteractionManager().getInShipControlManager().getShipControlManager().getSegmentBuildController().suspend(true);
+        guiDrawer.camera.getMouseState().updateMouseState(GameClient.getClientState());
     }
 
     @Override

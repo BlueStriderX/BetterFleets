@@ -27,9 +27,11 @@ import org.schema.schine.input.KeyboardMappings;
 import thederpgamer.betterfleets.controller.tacticalmap.TacticalMapGUIDrawer;
 import thederpgamer.betterfleets.element.ElementManager;
 import thederpgamer.betterfleets.element.blocks.systems.RepairPasteFabricator;
+import thederpgamer.betterfleets.gui.element.sprite.TacticalMapFleetIndicator;
 import thederpgamer.betterfleets.gui.hud.RepairPasteFabricatorHudOverlay;
 import thederpgamer.betterfleets.systems.RepairPasteFabricatorSystem;
 import thederpgamer.betterfleets.utils.*;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -58,6 +60,7 @@ public class BetterFleets extends StarMod {
 
     //Data
     private final String[] overwriteClasses = new String[] {
+            "PlayerPanel",
             "MapControllerManager",
             "MapToolsPanel",
             "RepairBeamHandler",
@@ -134,16 +137,26 @@ public class BetterFleets extends StarMod {
                 if(tacticalMapDrawer != null && tacticalMapDrawer.toggleDraw) {
                     if(KeyboardMappings.getEventKeyState(event.getRawEvent(), GameClient.getClientState())) {
                         int key = KeyboardMappings.getEventKeySingle(event.getRawEvent());
-                        int amount = (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) ? 100 : 30;
-                        if(key == KeyboardMappings.FORWARD.getMapping()) tacticalMapDrawer.controlManager.move(0, 0, amount);
-                        else if(key == KeyboardMappings.BACKWARDS.getMapping()) tacticalMapDrawer.controlManager.move(0, 0, -amount);
-                        else if(key == KeyboardMappings.STRAFE_RIGHT.getMapping()) tacticalMapDrawer.controlManager.move(amount, 0, 0);
-                        else if(key == KeyboardMappings.STRAFE_LEFT.getMapping()) tacticalMapDrawer.controlManager.move(-amount, 0, 0);
-                        else if(key == KeyboardMappings.UP.getMapping()) tacticalMapDrawer.controlManager.move(0, amount, 0);
-                        else if(key == KeyboardMappings.DOWN.getMapping()) tacticalMapDrawer.controlManager.move(0, -amount, 0);
-                        else if(key == Keyboard.KEY_ESCAPE) {
-                            Controller.setCamera(tacticalMapDrawer.getDefaultCamera());
-                            tacticalMapDrawer.controlManager.onSwitch(false);
+                        int amount = (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) ? 100 : 50;
+                        int debugAmount = (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) ? 10 : 1;
+                        if(Keyboard.isKeyDown(Keyboard.KEY_LMENU) && ConfigManager.getMainConfig().getBoolean("debug-mode")) {
+                            if(key == KeyboardMappings.FORWARD.getMapping()) TacticalMapFleetIndicator.changeLabelOffset(0, 0, debugAmount);
+                            else if(key == KeyboardMappings.BACKWARDS.getMapping()) TacticalMapFleetIndicator.changeLabelOffset(0, 0, -debugAmount);
+                            else if(key == KeyboardMappings.STRAFE_RIGHT.getMapping()) TacticalMapFleetIndicator.changeLabelOffset(debugAmount, 0, 0);
+                            else if(key == KeyboardMappings.STRAFE_LEFT.getMapping()) TacticalMapFleetIndicator.changeLabelOffset(-debugAmount, 0, 0);
+                            else if(key == KeyboardMappings.UP.getMapping()) TacticalMapFleetIndicator.changeLabelOffset(0, debugAmount, 0);
+                            else if(key == KeyboardMappings.DOWN.getMapping()) TacticalMapFleetIndicator.changeLabelOffset(0, -debugAmount, 0);
+                        } else {
+                            if(key == KeyboardMappings.FORWARD.getMapping()) tacticalMapDrawer.controlManager.move(0, 0, amount);
+                            else if(key == KeyboardMappings.BACKWARDS.getMapping()) tacticalMapDrawer.controlManager.move(0, 0, -amount);
+                            else if(key == KeyboardMappings.STRAFE_RIGHT.getMapping()) tacticalMapDrawer.controlManager.move(amount, 0, 0);
+                            else if(key == KeyboardMappings.STRAFE_LEFT.getMapping()) tacticalMapDrawer.controlManager.move(-amount, 0, 0);
+                            else if(key == KeyboardMappings.UP.getMapping()) tacticalMapDrawer.controlManager.move(0, amount, 0);
+                            else if(key == KeyboardMappings.DOWN.getMapping()) tacticalMapDrawer.controlManager.move(0, -amount, 0);
+                            else if(key == Keyboard.KEY_ESCAPE) {
+                                Controller.setCamera(tacticalMapDrawer.getDefaultCamera());
+                                tacticalMapDrawer.controlManager.onSwitch(false);
+                            }
                         }
                     }
                 }
