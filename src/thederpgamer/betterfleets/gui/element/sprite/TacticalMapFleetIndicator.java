@@ -59,7 +59,7 @@ public class TacticalMapFleetIndicator extends AbstractMapEntry implements Selec
     private GUIOverlay sprite;
     private GUITextOverlay labelOverlay;
 
-    private Transform lastKnownTransform = new Transform();
+    private final Transform lastKnownTransform = new Transform();
     private double combinedMass;
     private final ConcurrentHashMap<FleetMember, Double> massMap = new ConcurrentHashMap<>();
 
@@ -78,19 +78,21 @@ public class TacticalMapFleetIndicator extends AbstractMapEntry implements Selec
     public void drawSprite(Transform transform) {
         if(indicatorSprite == null || sprite == null) {
             indicatorSprite = new EntityIndicatorSprite(getFleet().getFlagShip().getLoaded());
-            sprite = new GUIOverlay(Controller.getResLoader().getSprite("map-sprites-8x2-c-gui-"), GameClient.getClientState());
+            Sprite s = Controller.getResLoader().getSprite("map-sprites-8x2-c-gui-");
+            s.setSelectedMultiSprite(SimpleTransformableSendableObject.EntityType.SHIP.mapSprite);
+            sprite = new GUIOverlay(s, GameClient.getClientState());
             sprite.onInit();
             sprite.getSprite().setBillboard(true);
-            sprite.getSprite().setDepthTest(true);
-            sprite.getSprite().setBlend(true);
+            sprite.getSprite().setDepthTest(false);
+            sprite.getSprite().setBlend(false);
             sprite.getSprite().setFlip(true);
-            sprite.getSprite().setTint(indicatorSprite.getColor());
         }
         transform.basis.set(getCamera().lookAt(false).basis);
         transform.basis.invert();
 
         if(fleet.getFlagShip().isLoaded()) lastKnownTransform.set(fleet.getFlagShip().getLoaded().getWorldTransform());
         if(!getSector().equals(Objects.requireNonNull(getCurrentEntity()).getSector(new Vector3i()))) SectorUtils.transformToSector(lastKnownTransform, getCurrentEntity().getSector(new Vector3i()), getSector());
+        sprite.getSprite().setTint(indicatorSprite.getColor());
         sprite.getTransform().set(lastKnownTransform);
         sprite.getTransform().basis.set(transform.basis);
         sprite.draw();

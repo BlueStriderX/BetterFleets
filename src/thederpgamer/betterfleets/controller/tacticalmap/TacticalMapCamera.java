@@ -42,7 +42,7 @@ public class TacticalMapCamera extends Camera {
             getWorldTransform().set(temp);
 
             Vector3f backwards = new Vector3f(getForward());
-            backwards.scale(((SegmentController) GameClient.getCurrentControl()).getBoundingBox().maxHalfSize() + 30);
+            backwards.scale(((SegmentController) GameClient.getCurrentControl()).getBoundingBox().maxSize() + 15);
             backwards.negate();
             getWorldTransform().origin.add(backwards);
         }
