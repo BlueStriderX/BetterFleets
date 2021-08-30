@@ -3,6 +3,7 @@ package thederpgamer.betterfleets.gui.element.tacticalmap;
 import org.newdawn.slick.Color;
 import org.schema.common.util.StringTools;
 import org.schema.game.common.data.fleet.FleetMember;
+import org.schema.schine.graphicsengine.forms.font.FontLibrary;
 import org.schema.schine.graphicsengine.forms.gui.GUIColoredRectangle;
 import org.schema.schine.graphicsengine.forms.gui.GUIListElement;
 import org.schema.schine.graphicsengine.forms.gui.GUITextOverlay;
@@ -27,12 +28,12 @@ public class FleetMemberListElement extends GUIListElement {
     public final FleetMember member;
     private float lastKnownHealth = -1.0f;
 
-    private GUIColoredRectangle background;
-    private GUITextOverlay labelOverlay;
+    public GUITextOverlay labelOverlay;
 
     public FleetMemberListElement(InputState inputState, FleetMember member) {
         super(inputState);
         this.member = member;
+        this.content = new GUIColoredRectangle(getState(), 34.0f, 14.0f, new Vector4f());
 
         VERY_LOW_HEALTH = decode("0xB81111");
         LOW_HEALTH = decode("0xFFB030");
@@ -44,31 +45,36 @@ public class FleetMemberListElement extends GUIListElement {
     @Override
     public void onInit() {
         super.onInit();
-        background = new GUIColoredRectangle(getState(), 34.0f, 14.0f, new Vector4f());
-        background.onInit();
-        attach(background);
+        content.onInit();
         labelOverlay = new GUITextOverlay(30, 10, getState());
         labelOverlay.onInit();
-        background.attach(labelOverlay);
-        labelOverlay.getPos().x -= 2.0f;
-        labelOverlay.getPos().y -= 2.0f;
+        labelOverlay.setFont(FontLibrary.FontSize.MEDIUM.getFont());
+        ((GUIColoredRectangle) content).rounded = 6;
+        content.attach(labelOverlay);
         updateDisplay();
+    }
+
+    @Override
+    public void draw() {
+        super.draw();
+        content.draw();
+        labelOverlay.draw();
     }
 
     public void updateDisplay() {
         if(!member.isLoaded()) {
             if(lastKnownHealth < 0.0f) {
-                background.setColor(new Vector4f(0.5f, 0.5f, 0.5f, 0.5f));
+                ((GUIColoredRectangle) content).setColor(new Vector4f(0.5f, 0.5f, 0.5f, 0.5f));
                 labelOverlay.setColor(new Vector4f(0.85f, 0.85f, 0.85f, 1.0f));
                 labelOverlay.setTextSimple(member.getName() + " - ???HP");
             } else {
-                background.setColor(getHealthColor(lastKnownHealth));
+                ((GUIColoredRectangle) content).setColor(getHealthColor(lastKnownHealth));
                 labelOverlay.setColor(getHealthColor(lastKnownHealth));
                 labelOverlay.setTextSimple(member.getName() + " - " + StringTools.formatPointZero(lastKnownHealth * 100) + "HP");
             }
         } else {
             lastKnownHealth = member.getShipPercent();
-            background.setColor(getHealthColor(lastKnownHealth));
+            ((GUIColoredRectangle) content).setColor(getHealthColor(lastKnownHealth));
             labelOverlay.setColor(getHealthColor(lastKnownHealth));
             labelOverlay.setTextSimple(member.getName() + " - " + StringTools.formatPointZero(lastKnownHealth * 100) + "HP");
         }

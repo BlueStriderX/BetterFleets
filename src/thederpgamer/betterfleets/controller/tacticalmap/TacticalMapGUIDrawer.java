@@ -104,9 +104,9 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
         camera.reset();
         camera.alwaysAllowWheelZoom = true;
 
-        fleetPanelBackground = new GUIColoredRectangle(GameClient.getClientState(), GLFrame.getWidth(), 230.0f, new Vector4f(0.15f, 0.3f, 0.2f, 0.5f));
+        fleetPanelBackground = new GUIColoredRectangle(GameClient.getClientState(), GLFrame.getWidth() - 150.0f, 230.0f, new Vector4f(0.15f, 0.3f, 0.2f, 0.5f));
         fleetPanelBackground.rounded = 6;
-        fleetPanelBackground.orientate(GUIElement.ORIENTATION_HORIZONTAL_MIDDLE | GUIElement.ORIENTATION_BOTTOM);
+        fleetPanelBackground.orientate(GUIElement.ORIENTATION_RIGHT | GUIElement.ORIENTATION_BOTTOM);
 
         GUIAncor fleetListAnchor = new GUIAncor(GameClient.getClientState(), (GLFrame.getWidth() / 2.0f) - 20.0f, 180.0f);
         fleetListAnchor.onInit();
@@ -114,7 +114,7 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
         fleetListAnchor.attach(fleetSelectionList);
         fleetPanelBackground.attach(fleetListAnchor);
         fleetSelectionList.setInside(true);
-        fleetSelectionList.setPos((fleetSelectionList.getWidth() / 2.0f) + 15.0f, (GLFrame.getHeight() - (fleetSelectionList.getHeight() / 2.0f)) - 15.0f, 0.0f);
+        fleetSelectionList.setPos(fleetPanelBackground.getPos().x, GLFrame.getHeight() - 170.0f, 0.0f);
 
         GUIAncor fleetActionsAnchor = new GUIAncor(GameClient.getClientState(), (GLFrame.getWidth() / 2.0f) - 20.0f, 180.0f);
         fleetActionsAnchor.onInit();
@@ -123,7 +123,7 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
         fleetActionsAnchor.attach(fleetActionsList);
         fleetPanelBackground.attach(fleetActionsAnchor);
         fleetActionsList.setInside(true);
-        fleetActionsList.setPos(((GLFrame.getWidth() / 2.0f) + (fleetActionsList.getWidth() / 2.0f)) - 15.0f, (GLFrame.getHeight() - (fleetActionsList.getHeight() / 2.0f)) - 15.0f, 0.0f);
+        fleetActionsList.setPos(GLFrame.getWidth() - fleetActionsList.getWidth() - 10.0f, GLFrame.getHeight() - fleetActionsList.getHeight() - 5.0f, 0.0f);
 
         initialized = true;
     }
@@ -139,8 +139,8 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
             GlUtil.glDisable(GL11.GL_BLEND);
             GUIElement.enableOrthogonal();
 
-            fleetSelectionList.setPos((fleetSelectionList.getWidth() / 2.0f) + 15.0f, (GLFrame.getHeight() - (fleetSelectionList.getHeight() / 2.0f)) - 15.0f, 0.0f);
-            fleetActionsList.setPos(((GLFrame.getWidth() / 2.0f) + (fleetActionsList.getWidth() / 2.0f)) - 15.0f, (GLFrame.getHeight() - (fleetActionsList.getHeight() / 2.0f)) - 15.0f, 0.0f);
+            fleetSelectionList.setPos(fleetPanelBackground.getPos().x, GLFrame.getHeight() - 170.0f, 0.0f);
+            fleetActionsList.setPos(GLFrame.getWidth() - fleetActionsList.getWidth() - 10.0f, GLFrame.getHeight() - fleetActionsList.getHeight() - 5.0f, 0.0f);
             fleetActionsList.active = true;
 
             fleetPanelBackground.draw();

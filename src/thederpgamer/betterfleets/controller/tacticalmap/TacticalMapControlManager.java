@@ -89,21 +89,19 @@ public class TacticalMapControlManager extends AbstractControlManager {
             TacticalMapFleetIndicator selected = null;
             for(Map.Entry<Long, TacticalMapFleetIndicator> entry : guiDrawer.drawMap.entrySet()) {
                 Vector3f spritePos = new Vector3f(entry.getValue().lastKnownTransform.origin);
-                if(GameClient.getClientState().getWorldDrawer().getGameMapDrawer().getWorldToScreenConverter().getMousePosition(entry.getValue().sprite.getSprite(), spritePos, new Vector3f(0.85f, 0.85f, 0.85f))) {
-                    selected = entry.getValue();
-                    break;
+                if(entry.getValue().getFleet().getOwner().equals(GameClient.getClientPlayerState().getName().toLowerCase())) {
+                    if(GameClient.getClientState().getWorldDrawer().getGameMapDrawer().getWorldToScreenConverter().getMousePosition(entry.getValue().sprite.getSprite(), spritePos, new Vector3f(0.689f, 0.689f, 0.689f))) {
+                        selected = entry.getValue();
+                        break;
+                    }
                 }
             }
 
             if(selected == null) guiDrawer.clearSelected();
             else {
-                if(guiDrawer.selectedFleets.contains(selected.getFleet().dbid)) {
-                    if(!Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) guiDrawer.clearSelected();
-                    selected.onSelect(1.0f);
-                } else {
-                    if(!Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) guiDrawer.clearSelected();
-                    else selected.onSelect(1.0f);
-                }
+                if(!Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) guiDrawer.clearSelected();
+                if(guiDrawer.selectedFleets.contains(selected.getFleet().dbid)) selected.onUnSelect();
+                else selected.onSelect(1.0f);
             }
         }
     }

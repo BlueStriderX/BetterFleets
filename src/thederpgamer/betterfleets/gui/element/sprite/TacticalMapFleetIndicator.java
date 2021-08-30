@@ -28,7 +28,6 @@ import org.schema.schine.graphicsengine.forms.font.FontLibrary;
 import org.schema.schine.graphicsengine.forms.gui.GUIOverlay;
 import org.schema.schine.graphicsengine.forms.gui.GUITextOverlay;
 import thederpgamer.betterfleets.BetterFleets;
-import thederpgamer.betterfleets.controller.tacticalmap.TacticalMapGUIDrawer;
 import thederpgamer.betterfleets.utils.SectorUtils;
 
 import javax.vecmath.Vector3f;
@@ -323,13 +322,10 @@ public class TacticalMapFleetIndicator extends AbstractMapEntry implements Selec
 
     @Override
     public void onSelect(float depth) {
-        TacticalMapGUIDrawer drawer = BetterFleets.getInstance().tacticalMapDrawer;
-        if(!drawer.selectedFleets.contains(getFleet().dbid)) {
-            setDrawIndication(true);
-            selectDepth = depth;
-            selected = true;
-            drawer.selectedFleets.add(getFleet().dbid);
-        } else onUnSelect();
+        setDrawIndication(true);
+        selectDepth = depth;
+        selected = true;
+        BetterFleets.getInstance().tacticalMapDrawer.selectedFleets.add(getFleet().dbid);
     }
 
     @Override
