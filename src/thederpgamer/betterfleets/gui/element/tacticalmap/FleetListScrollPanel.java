@@ -1,7 +1,6 @@
 package thederpgamer.betterfleets.gui.element.tacticalmap;
 
 import org.schema.schine.graphicsengine.forms.gui.GUIElement;
-import org.schema.schine.graphicsengine.forms.gui.GUIListElement;
 import org.schema.schine.graphicsengine.forms.gui.GUIScrollablePanel;
 import org.schema.schine.input.InputState;
 
@@ -18,16 +17,6 @@ public class FleetListScrollPanel extends GUIScrollablePanel {
     public FleetListScrollPanel(GUIElement guiElement, FleetMemberElementList list, InputState inputState) {
         super(list.getWidth(), list.getHeight(), guiElement, inputState);
         this.list = list;
-    }
-
-    @Override
-    public void draw() {
-        if(!list.isCollapsed()) {
-            super.draw();
-            for(GUIListElement element : list.getList()) element.draw();
-        } else {
-            for(GUIListElement element : list.getList()) element.cleanUp();
-        }
     }
 
     @Override

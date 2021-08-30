@@ -1,6 +1,7 @@
 package thederpgamer.betterfleets.gui.element.tacticalmap;
 
 import org.newdawn.slick.Color;
+import org.newdawn.slick.font.effects.OutlineEffect;
 import org.schema.common.util.StringTools;
 import org.schema.game.common.data.fleet.FleetMember;
 import org.schema.schine.graphicsengine.forms.font.FontLibrary;
@@ -28,7 +29,8 @@ public class FleetMemberListElement extends GUIListElement {
     public final FleetMember member;
     private float lastKnownHealth = -1.0f;
 
-    public GUITextOverlay labelOverlay;
+    private GUITextOverlay labelOverlay;
+    private GUITextOverlay healthOverlay;
 
     public FleetMemberListElement(InputState inputState, FleetMember member) {
         super(inputState);
@@ -39,37 +41,48 @@ public class FleetMemberListElement extends GUIListElement {
         LOW_HEALTH = decode("0xFFB030");
         MID_HEALTH = decode("0xFFDD30");
         HIGH_HEALTH = decode("0x32D420");
-        MAX_HEALTH = decode("0x1BE39A");
+        MAX_HEALTH = decode("0x3BE392");
     }
 
     @Override
     public void onInit() {
         super.onInit();
-        content.onInit();
+
         labelOverlay = new GUITextOverlay(30, 10, getState());
         labelOverlay.onInit();
         labelOverlay.setFont(FontLibrary.FontSize.SMALL.getFont());
-        ((GUIColoredRectangle) content).rounded = 6;
+        labelOverlay.setLimitTextDraw(100);
         content.attach(labelOverlay);
+
+        healthOverlay = new GUITextOverlay(30, 10, getState());
+        healthOverlay.onInit();
+        healthOverlay.setFont(FontLibrary.FontSize.MEDIUM.getFont());
+        content.attach(healthOverlay);
+
+        ((GUIColoredRectangle) content).rounded = 3;
         updateDisplay();
     }
 
     public void updateDisplay() {
         if(!member.isLoaded()) {
-            if(lastKnownHealth < 0.0f) {
-                ((GUIColoredRectangle) content).setColor(new Vector4f(0.5f, 0.5f, 0.5f, 0.5f));
-                labelOverlay.setTextSimple(member.getName() + " - ???HP");
-            } else {
-                ((GUIColoredRectangle) content).setColor(getHealthColor(lastKnownHealth));
-                labelOverlay.setTextSimple(member.getName() + " - " + StringTools.formatPointZero(lastKnownHealth * 100) + "HP");
-            }
+            if(lastKnownHealth < 0.0f) ((GUIColoredRectangle) content).setColor(new Vector4f(0.5f, 0.5f, 0.5f, 0.5f));
+            else ((GUIColoredRectangle) content).setColor(getHealthColor(lastKnownHealth));
         } else {
             lastKnownHealth = member.getShipPercent();
+            healthOverlay.setColor(getHealthColor(lastKnownHealth));
             ((GUIColoredRectangle) content).setColor(getHealthColor(lastKnownHealth));
-            labelOverlay.setTextSimple(member.getName() + " - " + StringTools.formatPointZero(lastKnownHealth * 100) + "HP");
         }
+        healthOverlay.setTextSimple(StringTools.formatPointZero(lastKnownHealth * 100) + "%");
+        labelOverlay.setTextSimple(member.getName());
+        labelOverlay.getPos().x = (content.getPos().x * 5) + 5.0f;
+        healthOverlay.getPos().x = 500.0f - healthOverlay.getWidth() - 5.0f;
+        ((GUIColoredRectangle) content).setHeight(labelOverlay.getHeight() + 10.0f);
         content.setInside(true);
         labelOverlay.setInside(true);
+        healthOverlay.setInside(true);
+
+        healthOverlay.setFont(FontLibrary.FontSize.MEDIUM.getFont());
+        healthOverlay.getFont().getEffects().add(new OutlineEffect(2, java.awt.Color.decode(getFontOutlineColor(lastKnownHealth))));
     }
 
     public static Vector4f getHealthColor(float lastKnownHealth) {
@@ -80,6 +93,15 @@ public class FleetMemberListElement extends GUIListElement {
         else if(lastKnownHealth >= 0.3f) healthColor.set(LOW_HEALTH);
         else if(lastKnownHealth >= 0.15f) healthColor.set(VERY_LOW_HEALTH);
         return healthColor;
+    }
+
+    public static String getFontOutlineColor(float lastKnownHealth) {
+        if(lastKnownHealth >= 0.95f) return "0x3BE392";
+        else if(lastKnownHealth >= 0.75f) return"0x32D40";
+        else if(lastKnownHealth >= 0.5f)  return "0xFFDD30";
+        else if(lastKnownHealth >= 0.3f) return "0xFFB030";
+        else if(lastKnownHealth >= 0.15f) return "0xB81111";
+        else return "0xFFFFFF";
     }
 
     public static Vector4f decode(String code) {

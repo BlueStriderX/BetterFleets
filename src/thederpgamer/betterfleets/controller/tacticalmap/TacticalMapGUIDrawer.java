@@ -116,9 +116,11 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
         scrollablePanel.setContent(fleetListAnchor);
         scrollablePanel.setScrollable(GUIScrollablePanel.SCROLLABLE_VERTICAL);
         scrollablePanel.onInit();
+        fleetSelectionList.setScrollPane(scrollablePanel);
         fleetPanelBackground.attach(scrollablePanel);
         fleetSelectionList.setInside(true);
         fleetSelectionList.setPos(fleetPanelBackground.getPos().x, fleetPanelBackground.getPos().y, 0.0f);
+        fleetPanelBackground.attach(scrollablePanel);
 
         GUIAncor fleetActionsAnchor = new GUIAncor(GameClient.getClientState(), (fleetPanelBackground.getWidth() / 2.0f) - 50.0f, 180.0f);
         fleetActionsAnchor.onInit();
@@ -141,8 +143,8 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
             drawIndicators();
 
             GlUtil.glDisable(GL11.GL_BLEND);
+            GUIElement.enableOrthogonal();
             if(!selectedFleets.isEmpty()) {
-                GUIElement.enableOrthogonal();
                 fleetSelectionList.setPos(fleetPanelBackground.getPos().x, fleetPanelBackground.getPos().y, 0.0f);
                 fleetActionsList.setPos(GLFrame.getWidth() - fleetActionsList.getWidth() - 10.0f, GLFrame.getHeight() - fleetActionsList.getHeight() - 5.0f, 0.0f);
                 fleetActionsList.active = true;
@@ -150,8 +152,8 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
                 fleetPanelBackground.draw();
                 fleetSelectionList.draw();
                 fleetActionsList.draw();
-                GUIElement.disableOrthogonal();
             }
+            GUIElement.disableOrthogonal();
         } else cleanUp();
     }
 

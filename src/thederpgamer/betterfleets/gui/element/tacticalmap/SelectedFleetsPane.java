@@ -22,7 +22,7 @@ import java.util.Objects;
 public class SelectedFleetsPane extends GUIElementList {
 
     private float timer;
-    private int currentIndex = 0;
+    public int currentIndex = -1;
 
     public SelectedFleetsPane(InputState inputState) {
         super(inputState);
@@ -38,7 +38,6 @@ public class SelectedFleetsPane extends GUIElementList {
     public void update(Timer time) {
         super.update(time);
         timer -= time.getDelta();
-
         if(timer <= 0 || BetterFleets.getInstance().tacticalMapDrawer.selectedFleets.size() != size()) {
             updateFleetList();
             timer = 1000L;
@@ -48,11 +47,9 @@ public class SelectedFleetsPane extends GUIElementList {
     @Override
     public void draw() {
         super.draw();
-        //get(currentIndex).draw();
-        for(GUIListElement element : this) {
-            //FleetListScrollPanel scrollPanel = (FleetListScrollPanel) get(currentIndex).getContent();
-            FleetListScrollPanel scrollPanel = (FleetListScrollPanel) element.getContent();
-            scrollPanel.draw();
+        if(!isEmpty() && currentIndex != -1) {
+            FleetListScrollPanel scrollPanel = (FleetListScrollPanel) get(currentIndex).getContent();
+            scrollPanel.list.draw();
         }
     }
 
@@ -78,6 +75,7 @@ public class SelectedFleetsPane extends GUIElementList {
                     scrollPanel.setContent(entryBackground);
                     scrollPanel.setScrollable(GUIScrollablePanel.SCROLLABLE_HORIZONTAL | GUIScrollablePanel.SCROLLABLE_VERTICAL);
                     scrollPanel.onInit();
+                    list.getList().setScrollPane(scrollPanel);
                     GUIListElement listElement = new GUIListElement(scrollPanel, getState());
                     listElement.onInit();
                     add(listElement);
