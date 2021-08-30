@@ -19,11 +19,15 @@ import thederpgamer.betterfleets.utils.LogManager;
 public class FleetMemberElementList extends GUIEnterableList {
 
     public final Fleet fleet;
+    private SelectedFleetsPane pane;
+    private int index;
     private float timer;
 
-    public FleetMemberElementList(InputState inputState, Fleet fleet, GUIElement collapsedButton, GUIElement backButton) {
+    public FleetMemberElementList(InputState inputState, Fleet fleet, SelectedFleetsPane pane, int index, GUIElement collapsedButton, GUIElement backButton) {
         super(inputState, collapsedButton, backButton);
         this.fleet = fleet;
+        this.pane = pane;
+        this.index = index;
     }
 
     @Override
@@ -46,28 +50,37 @@ public class FleetMemberElementList extends GUIEnterableList {
     public void draw() {
         super.draw();
         if(!isCollapsed()) {
-            float pos = getList().getPos().y + 2.0f;
+            float pos = collapsedButton.getPos().y + 2.0f;
             for(GUIListElement element : list) {
                 FleetMemberListElement memberElement = (FleetMemberListElement) element;
-                memberElement.setPos(getList().getPos().x, pos, getList().getPos().z);
-                memberElement.draw();
-                pos += memberElement.getHeight() + 2.0f;
+                memberElement.setPos(collapsedButton.getPos().x, pos, collapsedButton.getPos().z);
+                pos += (memberElement.getHeight() / 15.0f) + 2.0f;
             }
         } else {
-            for(GUIListElement element : list) {
-                FleetMemberListElement memberElement = (FleetMemberListElement) element;
-                memberElement.cleanUp();
+            for(GUIListElement element : list) element.cleanUp();
+        }
+    }
+
+    @Override
+    public void callback(GUIElement element, MouseEvent mouseEvent) {
+        super.callback(element, mouseEvent);
+        if(mouseEvent.pressedLeftMouse()) {
+            if(element.equals(collapsedButton)) {
+                if(isCollapsed()) switchCollapsed(true);
+            } else if(element.equals(backButton)) {
+                if(!isCollapsed()) switchCollapsed(true);
             }
         }
     }
 
     @Override
-    public void callback(GUIElement element, MouseEvent event) {
-        super.callback(element, event);
-        if(element.equals(collapsedButton)) {
-            if(isCollapsed()) switchCollapsed(true);
-        } else if(element.equals(backButton)) {
-            if(!isCollapsed()) switchCollapsed(true);
+    public void switchCollapsed(boolean bool) {
+        super.switchCollapsed(bool);
+        for(int i = 0; i < pane.size(); i ++) {
+            if(i != index) {
+                FleetListScrollPanel panel = (FleetListScrollPanel) pane.get(i).getContent();
+                if(!panel.list.isCollapsed() && panel.list != this) panel.list.switchCollapsed(bool);
+            }
         }
     }
 
@@ -80,6 +93,7 @@ public class FleetMemberElementList extends GUIEnterableList {
                 list.add(element);
             } catch(Exception exception) {
                 LogManager.logException("Something went wrong while initializing fleet member list pane", exception);
+                exception.printStackTrace();
             }
         }
     }

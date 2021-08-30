@@ -48,45 +48,40 @@ public class FleetMemberListElement extends GUIListElement {
         content.onInit();
         labelOverlay = new GUITextOverlay(30, 10, getState());
         labelOverlay.onInit();
-        labelOverlay.setFont(FontLibrary.FontSize.MEDIUM.getFont());
+        labelOverlay.setFont(FontLibrary.FontSize.SMALL.getFont());
         ((GUIColoredRectangle) content).rounded = 6;
         content.attach(labelOverlay);
         updateDisplay();
-    }
-
-    @Override
-    public void draw() {
-        super.draw();
-        content.draw();
-        labelOverlay.draw();
     }
 
     public void updateDisplay() {
         if(!member.isLoaded()) {
             if(lastKnownHealth < 0.0f) {
                 ((GUIColoredRectangle) content).setColor(new Vector4f(0.5f, 0.5f, 0.5f, 0.5f));
-                labelOverlay.setColor(new Vector4f(0.85f, 0.85f, 0.85f, 1.0f));
+                //labelOverlay.setColor(new Vector4f(0.85f, 0.85f, 0.85f, 1.0f));
                 labelOverlay.setTextSimple(member.getName() + " - ???HP");
             } else {
                 ((GUIColoredRectangle) content).setColor(getHealthColor(lastKnownHealth));
-                labelOverlay.setColor(getHealthColor(lastKnownHealth));
+                //labelOverlay.setColor(getHealthColor(lastKnownHealth));
                 labelOverlay.setTextSimple(member.getName() + " - " + StringTools.formatPointZero(lastKnownHealth * 100) + "HP");
             }
         } else {
             lastKnownHealth = member.getShipPercent();
             ((GUIColoredRectangle) content).setColor(getHealthColor(lastKnownHealth));
-            labelOverlay.setColor(getHealthColor(lastKnownHealth));
+            //labelOverlay.setColor(getHealthColor(lastKnownHealth));
             labelOverlay.setTextSimple(member.getName() + " - " + StringTools.formatPointZero(lastKnownHealth * 100) + "HP");
         }
+        content.setInside(true);
+        labelOverlay.setInside(true);
     }
 
     public static Vector4f getHealthColor(float lastKnownHealth) {
         Vector4f healthColor = new Vector4f();
-        if(lastKnownHealth <= 0.15f) healthColor.set(VERY_LOW_HEALTH);
-        else if(lastKnownHealth <= 0.3f) healthColor.set(LOW_HEALTH);
-        else if(lastKnownHealth <= 0.5f) healthColor.set(MID_HEALTH);
-        else if(lastKnownHealth <= 0.75f) healthColor.set(HIGH_HEALTH);
-        else if(lastKnownHealth <= 0.95f) healthColor.set(MAX_HEALTH);
+        if(lastKnownHealth >= 0.95f) healthColor.set(MAX_HEALTH);
+        else if(lastKnownHealth >= 0.75f) healthColor.set(HIGH_HEALTH);
+        else if(lastKnownHealth >= 0.5f) healthColor.set(MID_HEALTH);
+        else if(lastKnownHealth >= 0.3f) healthColor.set(LOW_HEALTH);
+        else if(lastKnownHealth >= 0.15f) healthColor.set(VERY_LOW_HEALTH);
         return healthColor;
     }
 

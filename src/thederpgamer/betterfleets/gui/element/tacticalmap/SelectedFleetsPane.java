@@ -3,10 +3,7 @@ package thederpgamer.betterfleets.gui.element.tacticalmap;
 import api.common.GameCommon;
 import org.schema.schine.graphicsengine.core.Timer;
 import org.schema.schine.graphicsengine.forms.font.FontLibrary;
-import org.schema.schine.graphicsengine.forms.gui.GUIColoredRectangle;
-import org.schema.schine.graphicsengine.forms.gui.GUIElementList;
-import org.schema.schine.graphicsengine.forms.gui.GUIListElement;
-import org.schema.schine.graphicsengine.forms.gui.GUITextOverlay;
+import org.schema.schine.graphicsengine.forms.gui.*;
 import org.schema.schine.input.InputState;
 import thederpgamer.betterfleets.BetterFleets;
 import thederpgamer.betterfleets.gui.element.sprite.TacticalMapFleetIndicator;
@@ -46,21 +43,6 @@ public class SelectedFleetsPane extends GUIElementList {
         }
     }
 
-    @Override
-    public void draw() {
-        super.draw();
-        for(GUIListElement element : this) {
-            FleetMemberElementList list = (FleetMemberElementList) element.getContent().getChilds().get(0);
-            for(GUIListElement e : list.getList()) {
-                FleetMemberListElement memberElement = (FleetMemberListElement) e;
-                memberElement.updateDisplay();
-                memberElement.labelOverlay.setPos(memberElement.getPos());
-                memberElement.draw();
-                memberElement.labelOverlay.draw();
-            }
-        }
-    }
-
     public void updateFleetList() {
         clear();
         int index = 0;
@@ -73,13 +55,17 @@ public class SelectedFleetsPane extends GUIElementList {
                     }
                     GUITextOverlay[] buttons = createButtons(display);
                     Vector4f color = (index % 2 == 0) ? new Vector4f(0.1f, 0.3f, 0.5f, 0.65f) :  new Vector4f(0.1f, 0.4f, 0.6f, 0.65f);
-                    FleetMemberElementList list = new FleetMemberElementList(getState(), entry.getValue().getFleet(), buttons[0], buttons[1]);
+                    FleetMemberElementList list = new FleetMemberElementList(getState(), entry.getValue().getFleet(), this, index, buttons[0], buttons[1]);
                     list.onInit();
                     GUIColoredRectangle entryBackground = new GUIColoredRectangle(getState(), buttons[0].getWidth() + 4.0f, buttons[0].getHeight() + 4.0f, color);
                     entryBackground.rounded = 6;
                     entryBackground.onInit();
                     entryBackground.attach(list);
-                    GUIListElement listElement = new GUIListElement(entryBackground, getState());
+                    FleetListScrollPanel scrollPanel = new FleetListScrollPanel(entryBackground, list, getState());
+                    scrollPanel.setContent(entryBackground);
+                    scrollPanel.setScrollable(GUIScrollablePanel.SCROLLABLE_HORIZONTAL | GUIScrollablePanel.SCROLLABLE_VERTICAL);
+                    scrollPanel.onInit();
+                    GUIListElement listElement = new GUIListElement(scrollPanel, getState());
                     listElement.onInit();
                     add(listElement);
                     entryBackground.setPos(listElement.getPos());
@@ -88,6 +74,7 @@ public class SelectedFleetsPane extends GUIElementList {
                     index ++;
                 } catch(Exception exception) {
                     LogManager.logException("Something went wrong while initializing fleet list pane", exception);
+                    exception.printStackTrace();
                 }
             }
         }

@@ -112,11 +112,15 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
         fleetListAnchor.onInit();
         (fleetSelectionList = new SelectedFleetsPane(GameClient.getClientState())).onInit();
         fleetListAnchor.attach(fleetSelectionList);
-        fleetPanelBackground.attach(fleetListAnchor);
+        GUIScrollablePanel scrollablePanel = new GUIScrollablePanel(fleetListAnchor.getWidth(), fleetListAnchor.getHeight(), fleetListAnchor, GameClient.getClientState());
+        scrollablePanel.setContent(fleetListAnchor);
+        scrollablePanel.setScrollable(GUIScrollablePanel.SCROLLABLE_VERTICAL);
+        scrollablePanel.onInit();
+        fleetPanelBackground.attach(scrollablePanel);
         fleetSelectionList.setInside(true);
-        fleetSelectionList.setPos(fleetPanelBackground.getPos().x, GLFrame.getHeight() - 170.0f, 0.0f);
+        fleetSelectionList.setPos(fleetPanelBackground.getPos().x, fleetPanelBackground.getPos().y, 0.0f);
 
-        GUIAncor fleetActionsAnchor = new GUIAncor(GameClient.getClientState(), (GLFrame.getWidth() / 2.0f) - 20.0f, 180.0f);
+        GUIAncor fleetActionsAnchor = new GUIAncor(GameClient.getClientState(), (fleetPanelBackground.getWidth() / 2.0f) - 50.0f, 180.0f);
         fleetActionsAnchor.onInit();
         (fleetActionsList = new GUIRightClickButtonPane(GameClient.getClientState(), 2, 7, fleetActionsAnchor)).onInit();
         createActionsPane();
@@ -137,16 +141,17 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
             drawIndicators();
 
             GlUtil.glDisable(GL11.GL_BLEND);
-            GUIElement.enableOrthogonal();
+            if(!selectedFleets.isEmpty()) {
+                GUIElement.enableOrthogonal();
+                fleetSelectionList.setPos(fleetPanelBackground.getPos().x, fleetPanelBackground.getPos().y, 0.0f);
+                fleetActionsList.setPos(GLFrame.getWidth() - fleetActionsList.getWidth() - 10.0f, GLFrame.getHeight() - fleetActionsList.getHeight() - 5.0f, 0.0f);
+                fleetActionsList.active = true;
 
-            fleetSelectionList.setPos(fleetPanelBackground.getPos().x, GLFrame.getHeight() - 170.0f, 0.0f);
-            fleetActionsList.setPos(GLFrame.getWidth() - fleetActionsList.getWidth() - 10.0f, GLFrame.getHeight() - fleetActionsList.getHeight() - 5.0f, 0.0f);
-            fleetActionsList.active = true;
-
-            fleetPanelBackground.draw();
-            fleetSelectionList.draw();
-            fleetActionsList.draw();
-            GUIElement.disableOrthogonal();
+                fleetPanelBackground.draw();
+                fleetSelectionList.draw();
+                fleetActionsList.draw();
+                GUIElement.disableOrthogonal();
+            }
         } else cleanUp();
     }
 
