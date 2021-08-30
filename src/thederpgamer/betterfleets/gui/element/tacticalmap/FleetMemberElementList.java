@@ -19,8 +19,8 @@ import thederpgamer.betterfleets.utils.LogManager;
 public class FleetMemberElementList extends GUIEnterableList {
 
     public final Fleet fleet;
-    private SelectedFleetsPane pane;
-    private int index;
+    private final SelectedFleetsPane pane;
+    private final int index;
     private float timer;
 
     public FleetMemberElementList(InputState inputState, Fleet fleet, SelectedFleetsPane pane, int index, GUIElement collapsedButton, GUIElement backButton) {

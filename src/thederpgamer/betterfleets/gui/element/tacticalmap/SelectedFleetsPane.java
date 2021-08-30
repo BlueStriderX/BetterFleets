@@ -22,6 +22,7 @@ import java.util.Objects;
 public class SelectedFleetsPane extends GUIElementList {
 
     private float timer;
+    private int currentIndex = 0;
 
     public SelectedFleetsPane(InputState inputState) {
         super(inputState);
@@ -37,9 +38,21 @@ public class SelectedFleetsPane extends GUIElementList {
     public void update(Timer time) {
         super.update(time);
         timer -= time.getDelta();
+
         if(timer <= 0 || BetterFleets.getInstance().tacticalMapDrawer.selectedFleets.size() != size()) {
             updateFleetList();
             timer = 1000L;
+        }
+    }
+
+    @Override
+    public void draw() {
+        super.draw();
+        //get(currentIndex).draw();
+        for(GUIListElement element : this) {
+            //FleetListScrollPanel scrollPanel = (FleetListScrollPanel) get(currentIndex).getContent();
+            FleetListScrollPanel scrollPanel = (FleetListScrollPanel) element.getContent();
+            scrollPanel.draw();
         }
     }
 

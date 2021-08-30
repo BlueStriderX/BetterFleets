@@ -58,17 +58,14 @@ public class FleetMemberListElement extends GUIListElement {
         if(!member.isLoaded()) {
             if(lastKnownHealth < 0.0f) {
                 ((GUIColoredRectangle) content).setColor(new Vector4f(0.5f, 0.5f, 0.5f, 0.5f));
-                //labelOverlay.setColor(new Vector4f(0.85f, 0.85f, 0.85f, 1.0f));
                 labelOverlay.setTextSimple(member.getName() + " - ???HP");
             } else {
                 ((GUIColoredRectangle) content).setColor(getHealthColor(lastKnownHealth));
-                //labelOverlay.setColor(getHealthColor(lastKnownHealth));
                 labelOverlay.setTextSimple(member.getName() + " - " + StringTools.formatPointZero(lastKnownHealth * 100) + "HP");
             }
         } else {
             lastKnownHealth = member.getShipPercent();
             ((GUIColoredRectangle) content).setColor(getHealthColor(lastKnownHealth));
-            //labelOverlay.setColor(getHealthColor(lastKnownHealth));
             labelOverlay.setTextSimple(member.getName() + " - " + StringTools.formatPointZero(lastKnownHealth * 100) + "HP");
         }
         content.setInside(true);
