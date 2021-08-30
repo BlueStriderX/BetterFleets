@@ -44,6 +44,11 @@ public class MapControllerManager extends AbstractControlManager {
         return this.getState().getGlobalGameControlManager().getIngameControlManager().getPlayerGameControlManager().getPlayerIntercationManager();
     }
 
+    private void removeFleet(Fleet fleet) {
+        FleetGUIManager.selectedFleets.remove(fleet);
+        fleet.getFlagShip().mapEntry.getColor().set(FleetGUIManager.getIconColor(fleet));
+    }
+
     public void handleKeyEvent(KeyEventInterface var1) {
         super.handleKeyEvent(var1);
         if (KeyboardMappings.getEventKeyState(var1, this.getState()) && KeyboardMappings.getEventKeySingle(var1) == 88) {
@@ -53,7 +58,8 @@ public class MapControllerManager extends AbstractControlManager {
         //INSERTED CODE
         if(Keyboard.isKeyDown(Keyboard.KEY_ESCAPE) || Keyboard.isKeyDown(Keyboard.KEY_M)) {
             for(Fleet fleet : FleetGUIManager.selectedFleets) {
-                fleet.getFlagShip().mapEntry.getColor().set(0.3f, 0.8f, 0.2f, 0.8f);
+                FleetGUIManager.selectedFleets.remove(fleet);
+                fleet.getFlagShip().mapEntry.getColor().set(FleetGUIManager.getIconColor(fleet));
             }
             FleetGUIManager.selectedFleets.clear();
             FleetGUIManager.getPanel().updateFleetList();
@@ -71,9 +77,8 @@ public class MapControllerManager extends AbstractControlManager {
                 if (!FleetGUIManager.getPanel().fleetActionsList.active) {
                     boolean doubleClick = System.currentTimeMillis() - lastClick < 300L;
                     if (selected.isEmpty() && !doubleClick) {
-                        for(Fleet fleet : FleetGUIManager.selectedFleets) {
-                            fleet.getFlagShip().mapEntry.getColor().set(0.3f, 0.8f, 0.2f, 0.8f);
-                        }
+                        ArrayList<Fleet> toRemove = new ArrayList<>(FleetGUIManager.selectedFleets);
+                        for(Fleet fleet : toRemove) removeFleet(fleet);
                         FleetGUIManager.selectedFleets.clear();
                         FleetGUIManager.getPanel().updateFleetList();
                     } else {
@@ -99,40 +104,37 @@ public class MapControllerManager extends AbstractControlManager {
                                     FleetMember.FleetMemberMapIndication fleetIcon = (FleetMember.FleetMemberMapIndication) selectableEntry;
                                     Vector3i sectorPos = new Vector3i((int) (fleetIcon.getPos().x / (100f / VoidSystem.SYSTEM_SIZEf)), (int) (fleetIcon.getPos().y / (100f / VoidSystem.SYSTEM_SIZEf)), (int) (fleetIcon.getPos().z / (100f / VoidSystem.SYSTEM_SIZEf)));
                                     ArrayList<Fleet> sectorFleets = new ArrayList<>();
-                                    for (Fleet clientFleet : clientFleets)
-                                        if (clientFleet.getFlagShip().getSector().equals(sectorPos))
-                                            sectorFleets.add(clientFleet);
+                                    for(Fleet clientFleet : clientFleets)
+                                        if(clientFleet.getFlagShip().getSector().equals(sectorPos)) sectorFleets.add(clientFleet);
 
                                     if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
                                         for (Fleet fleet : sectorFleets) {
                                             if (FleetGUIManager.selectedFleets.contains(fleet)) {
-                                                FleetGUIManager.selectedFleets.remove(fleet);
-                                                ((FleetMember.FleetMemberMapIndication) selectableEntry).getColor().set(0.3f, 0.8f, 0.2f, 0.8f);
+                                                ArrayList<Fleet> toRemove = new ArrayList<>(FleetGUIManager.selectedFleets);
+                                                for(Fleet f : toRemove) removeFleet(f);
                                                 LogManager.logDebug("Client removed fleet " + fleet.getName().trim() + " from selection.");
                                                 GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - back");
                                             } else {
                                                 FleetGUIManager.selectedFleets.add(fleet);
-                                                ((FleetMember.FleetMemberMapIndication) selectableEntry).getColor().set(0.9f, 0.8f, 0.7f, 0.8f);
+                                                ((FleetMember.FleetMemberMapIndication) selectableEntry).getColor().set(FleetGUIManager.getIconColor(fleet));
                                                 LogManager.logDebug("Client added fleet " + fleet.getName().trim() + " to selection.");
                                                 GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - select 2");
                                             }
                                         }
                                     } else {
-                                        for(Fleet fleet : FleetGUIManager.selectedFleets) {
-                                            fleet.getFlagShip().mapEntry.getColor().set(0.3f, 0.8f, 0.2f, 0.8f);
-                                        }
+                                        ArrayList<Fleet> toRemove = new ArrayList<>(FleetGUIManager.selectedFleets);
+                                        for(Fleet f : toRemove) removeFleet(f);
                                         FleetGUIManager.selectedFleets.clear();
-                                        if (!sectorFleets.isEmpty()) {
+                                        if(!sectorFleets.isEmpty()) {
                                             FleetGUIManager.selectedFleets.add(sectorFleets.get(0));
-                                            ((FleetMember.FleetMemberMapIndication) selectableEntry).getColor().set(0.9f, 0.8f, 0.7f, 0.8f);
+                                            ((FleetMember.FleetMemberMapIndication) selectableEntry).getColor().set(FleetGUIManager.getIconColor(sectorFleets.get(0)));
                                             LogManager.logDebug("Client added fleet " + sectorFleets.get(0).getName().trim() + " to selection.");
                                             GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - select 1");
                                         }
                                     }
                                 } else {
-                                    for(Fleet fleet : FleetGUIManager.selectedFleets) {
-                                        fleet.getFlagShip().mapEntry.getColor().set(0.3f, 0.8f, 0.2f, 0.8f);
-                                    }
+                                    ArrayList<Fleet> toRemove = new ArrayList<>(FleetGUIManager.selectedFleets);
+                                    for(Fleet f : toRemove) removeFleet(f);
                                     FleetGUIManager.selectedFleets.clear();
                                 }
                                 FleetGUIManager.getPanel().updateFleetList();
@@ -143,9 +145,8 @@ public class MapControllerManager extends AbstractControlManager {
                     new StarRunnable() {
                         @Override
                         public void run() {
-                            for(Fleet fleet : FleetGUIManager.selectedFleets) {
-                                fleet.getFlagShip().mapEntry.getColor().set(0.3f, 0.8f, 0.2f, 0.8f);
-                            }
+                            ArrayList<Fleet> toRemove = new ArrayList<>(FleetGUIManager.selectedFleets);
+                            for(Fleet f : toRemove) removeFleet(f);
                             FleetGUIManager.selectedFleets.clear();
                             FleetGUIManager.getPanel().updateFleetList();
                         }

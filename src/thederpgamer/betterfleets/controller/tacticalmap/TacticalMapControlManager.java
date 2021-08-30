@@ -14,9 +14,12 @@ import org.schema.schine.graphicsengine.core.Timer;
 import org.schema.schine.input.KeyEventInterface;
 import org.schema.schine.input.KeyboardMappings;
 import thederpgamer.betterfleets.BetterFleets;
+import thederpgamer.betterfleets.gui.element.sprite.TacticalMapFleetIndicator;
 import thederpgamer.betterfleets.utils.ConfigManager;
+import thederpgamer.betterfleets.utils.Inputs;
 
 import javax.vecmath.Vector3f;
+import java.util.Map;
 
 /**
  * <Description>
@@ -26,7 +29,7 @@ import javax.vecmath.Vector3f;
  */
 public class TacticalMapControlManager extends AbstractControlManager {
 
-    private TacticalMapGUIDrawer guiDrawer;
+    private final TacticalMapGUIDrawer guiDrawer;
     public float viewDistance;
 
     public TacticalMapControlManager(TacticalMapGUIDrawer guiDrawer) {
@@ -40,6 +43,7 @@ public class TacticalMapControlManager extends AbstractControlManager {
         getInteractionManager().setActive(!active);
         getInteractionManager().getInShipControlManager().getShipControlManager().getShipExternalFlightController().suspend(active);
         getInteractionManager().getInShipControlManager().getShipControlManager().getSegmentBuildController().suspend(active);
+        guiDrawer.clearSelected();
         super.onSwitch(active);
     }
 
@@ -80,6 +84,28 @@ public class TacticalMapControlManager extends AbstractControlManager {
         if(Keyboard.isKeyDown(KeyboardMappings.DOWN.getMapping())) movement.add(new Vector3f(0, -amount, 0));
         movement.scale(timer.getDelta());
         move(movement);
+
+        if(Mouse.getEventButton() == Inputs.MouseButtons.LEFT_MOUSE.id && Mouse.getEventButtonState() && !Mouse.isGrabbed()) {
+            TacticalMapFleetIndicator selected = null;
+            for(Map.Entry<Long, TacticalMapFleetIndicator> entry : guiDrawer.drawMap.entrySet()) {
+                Vector3f spritePos = new Vector3f(entry.getValue().lastKnownTransform.origin);
+                if(GameClient.getClientState().getWorldDrawer().getGameMapDrawer().getWorldToScreenConverter().getMousePosition(entry.getValue().sprite.getSprite(), spritePos, new Vector3f(0.85f, 0.85f, 0.85f))) {
+                    selected = entry.getValue();
+                    break;
+                }
+            }
+
+            if(selected == null) guiDrawer.clearSelected();
+            else {
+                if(guiDrawer.selectedFleets.contains(selected.getFleet().dbid)) {
+                    if(!Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) guiDrawer.clearSelected();
+                    selected.onSelect(1.0f);
+                } else {
+                    if(!Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) guiDrawer.clearSelected();
+                    else selected.onSelect(1.0f);
+                }
+            }
+        }
     }
 
     private void move(Vector3f movement) {

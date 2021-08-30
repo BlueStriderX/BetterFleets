@@ -261,7 +261,7 @@ public class BetterFleets extends StarMod {
                                     public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
                                         if(mouseEvent.pressedLeftMouse()) {
                                             GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
-                                            FleetGUIManager.orderFleets(FleetCommandTypes.IDLE);
+                                            FleetGUIManager.orderFleets(FleetCommandTypes.CALL_TO_CARRIER);
                                         }
                                     }
 

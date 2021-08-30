@@ -1,6 +1,7 @@
 package thederpgamer.betterfleets.utils;
 
 import api.utils.textures.StarLoaderTexture;
+import org.schema.schine.graphicsengine.forms.Sprite;
 import thederpgamer.betterfleets.BetterFleets;
 import java.util.HashMap;
 
@@ -18,7 +19,13 @@ public class ResourceManager {
             "repair-paste-fabricator/repair-paste-fabricator-sides"
     };
 
+    private static final String[] spriteNames = {
+
+    };
+
     private static final HashMap<String, StarLoaderTexture> textureMap = new HashMap<>();
+    private static final HashMap<String, Sprite> spriteMap = new HashMap<>();
+
 
     public static void loadResources(final BetterFleets instance) {
         StarLoaderTexture.runOnGraphicsThread(new Runnable() {
@@ -37,11 +44,24 @@ public class ResourceManager {
                         LogManager.logException("Failed to load texture \"" + texturePath + "\"", exception);
                     }
                 }
+
+                //Load Sprites
+                for(String spriteName : spriteNames) {
+                    try {
+                        spriteMap.put(spriteName, StarLoaderTexture.newSprite(instance.getJarBufferedImage("thederpgamer/betterfleets/resources/sprites/" + spriteName + ".png"), BetterFleets.getInstance(), spriteName));
+                    } catch(Exception exception) {
+                        LogManager.logException("Failed to load sprite \"" + spriteMap + "\"", exception);
+                    }
+                }
             }
         });
     }
 
     public static StarLoaderTexture getTexture(String name) {
         return textureMap.get(name);
+    }
+
+    public static Sprite getSprite(String name) {
+        return spriteMap.get(name);
     }
 }

@@ -64,7 +64,7 @@ public class EntityIndicatorSprite implements PositionableSubColorSprite {
         return entity.getWorldTransform().origin;
     }
 
-    private float getAlpha() {
+    public float getAlpha() {
         if(getCurrentEntity() != null) {
             Vector3f currentPos = getCurrentEntity().getWorldTransform().origin;
             Vector3f entityPos = entity.getWorldTransform().origin;

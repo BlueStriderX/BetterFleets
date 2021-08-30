@@ -28,6 +28,7 @@ import org.schema.schine.graphicsengine.forms.font.FontLibrary;
 import org.schema.schine.graphicsengine.forms.gui.GUIOverlay;
 import org.schema.schine.graphicsengine.forms.gui.GUITextOverlay;
 import thederpgamer.betterfleets.BetterFleets;
+import thederpgamer.betterfleets.controller.tacticalmap.TacticalMapGUIDrawer;
 import thederpgamer.betterfleets.utils.SectorUtils;
 
 import javax.vecmath.Vector3f;
@@ -50,18 +51,18 @@ public class TacticalMapFleetIndicator extends AbstractMapEntry implements Selec
 
     private final Fleet fleet;
     private Indication indication;
-    private final Vector4f color = new Vector4f(0.3f, 0.8f, 0.2f, 0.8f);
     private final Vector3f pos = new Vector3f();
     private boolean drawIndication;
     private float selectDepth;
 
     private EntityIndicatorSprite indicatorSprite;
-    private GUIOverlay sprite;
-    private GUITextOverlay labelOverlay;
+    public GUIOverlay sprite;
+    public GUITextOverlay labelOverlay;
 
-    private final Transform lastKnownTransform = new Transform();
+    public final Transform lastKnownTransform = new Transform();
     private double combinedMass;
     private final ConcurrentHashMap<FleetMember, Double> massMap = new ConcurrentHashMap<>();
+    private boolean selected = false;
 
     public TacticalMapFleetIndicator(Fleet fleet) {
         this.fleet = fleet;
@@ -84,7 +85,7 @@ public class TacticalMapFleetIndicator extends AbstractMapEntry implements Selec
             sprite.onInit();
             sprite.getSprite().setBillboard(true);
             sprite.getSprite().setDepthTest(false);
-            sprite.getSprite().setBlend(false);
+            sprite.getSprite().setBlend(true);
             sprite.getSprite().setFlip(true);
         }
         transform.basis.set(getCamera().lookAt(false).basis);
@@ -92,7 +93,7 @@ public class TacticalMapFleetIndicator extends AbstractMapEntry implements Selec
 
         if(fleet.getFlagShip().isLoaded()) lastKnownTransform.set(fleet.getFlagShip().getLoaded().getWorldTransform());
         if(!getSector().equals(Objects.requireNonNull(getCurrentEntity()).getSector(new Vector3i()))) SectorUtils.transformToSector(lastKnownTransform, getCurrentEntity().getSector(new Vector3i()), getSector());
-        sprite.getSprite().setTint(indicatorSprite.getColor());
+        sprite.getSprite().setTint(getColor());
         sprite.getTransform().set(lastKnownTransform);
         sprite.getTransform().basis.set(transform.basis);
         sprite.draw();
@@ -265,7 +266,8 @@ public class TacticalMapFleetIndicator extends AbstractMapEntry implements Selec
 
     @Override
     public Vector4f getColor() {
-        return color;
+        if(selected) return new Vector4f(1.0f, 1.0f, 0.0f, indicatorSprite.getAlpha());
+        else return indicatorSprite.getColor();
     }
 
     @Override
@@ -321,13 +323,20 @@ public class TacticalMapFleetIndicator extends AbstractMapEntry implements Selec
 
     @Override
     public void onSelect(float depth) {
-        setDrawIndication(true);
-        selectDepth = depth;
+        TacticalMapGUIDrawer drawer = BetterFleets.getInstance().tacticalMapDrawer;
+        if(!drawer.selectedFleets.contains(getFleet().dbid)) {
+            setDrawIndication(true);
+            selectDepth = depth;
+            selected = true;
+            drawer.selectedFleets.add(getFleet().dbid);
+        } else onUnSelect();
     }
 
     @Override
     public void onUnSelect() {
         setDrawIndication(true);
+        selected = false;
+        BetterFleets.getInstance().tacticalMapDrawer.selectedFleets.remove(getFleet().dbid);
     }
 
     @Override

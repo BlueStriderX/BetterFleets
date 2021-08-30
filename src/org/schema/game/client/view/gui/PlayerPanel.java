@@ -329,7 +329,7 @@ public class PlayerPanel extends GUIElement {
         }
 
         //INSERTED CODE
-        if (inGameActive() && !mapActive() && !BetterFleets.getInstance().tacticalMapDrawer.controlManager.isActive()) {
+        if (inGameActive() && !mapActive() && !BetterFleets.getInstance().tacticalMapDrawer.toggleDraw) {
         //
             if (isDrawShipSideBar()) {
 
