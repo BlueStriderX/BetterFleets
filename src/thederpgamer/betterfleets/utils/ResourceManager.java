@@ -20,13 +20,7 @@ public class ResourceManager {
     };
 
     private static final String[] spriteNames = {
-            "entity-indicator-unknown",
-            "entity-indicator-ship-neutral", "entity-indicator-ship-friend", "entity-indicator-ship-enemy",
-            "entity-indicator-ship-neutral-selected", "entity-indicator-ship-friend-selected", "entity-indicator-ship-enemy-selected",
-            "entity-indicator-space-station-neutral", "entity-indicator-space-station-friend", "entity-indicator-space-station-enemy",
-            "entity-indicator-space-station-neutral-selected", "entity-indicator-space-station-friend-selected", "entity-indicator-space-station-enemy-selected",
-            "entity-indicator-pirate-station", "entity-indicator-trade-station",
-            "entity-indicator-shop"
+            "tactical-map-indicators"
     };
 
     private static final HashMap<String, StarLoaderTexture> textureMap = new HashMap<>();
@@ -54,9 +48,10 @@ public class ResourceManager {
                 //Load Sprites
                 for(String spriteName : spriteNames) {
                     try {
-                        spriteMap.put(spriteName, StarLoaderTexture.newSprite(instance.getJarBufferedImage("thederpgamer/betterfleets/resources/sprites/" + spriteName + ".png"), BetterFleets.getInstance(), spriteName));
+                        spriteMap.put(spriteName, StarLoaderTexture.newSprite(instance.getJarBufferedImage("thederpgamer/betterfleets/resources/sprites/" + spriteName + ".png"), BetterFleets.getInstance(), spriteName, false, false));
+                        spriteMap.get(spriteName).setName(spriteName);
                     } catch(Exception exception) {
-                        LogManager.logException("Failed to load sprite \"" + spriteMap + "\"", exception);
+                        LogManager.logException("Failed to load sprite \"" + spriteName + "\"", exception);
                     }
                 }
             }
@@ -68,6 +63,9 @@ public class ResourceManager {
     }
 
     public static Sprite getSprite(String name) {
-        return spriteMap.get(name);
+        Sprite sprite = StarLoaderTexture.newSprite(BetterFleets.getInstance().getJarBufferedImage("thederpgamer/betterfleets/resources/sprites/" + name + ".png"), BetterFleets.getInstance(), name, false, false);
+        sprite.setName(name);
+        return sprite;
+        //return spriteMap.get(name);
     }
 }

@@ -58,7 +58,18 @@ import java.util.Random;
  */
 public class TacticalMapEntityIndicator extends AbstractMapEntry implements SelectableSprite {
 
-    private static final Vector3f labelOffset = new Vector3f(-1800.0f, -670.0f, 490.0f);
+    public enum SpriteTypes {
+        UNKNOWN,
+        SHIP_NEUTRAL,
+        SHIP_FRIENDLY,
+        SHIP_ENEMY,
+        STATION_NEUTRAL,
+        STATION_FRIENDLY,
+        STATION_ENEMY,
+        STATION_TRADE,
+        STATION_PIRATE,
+        SHOP
+    }
 
     private final SegmentController entity;
     private Indication indication;
@@ -66,13 +77,12 @@ public class TacticalMapEntityIndicator extends AbstractMapEntry implements Sele
     private boolean drawIndication;
     private float selectDepth;
 
-    private EntityIndicatorSubSprite indicatorSprite;
     public GUIOverlay sprite;
     public GUITextOverlay labelOverlay;
+    private EntityIndicatorSubSprite[] subSprite;
 
     public final Transform entityTransform = new Transform();
     public boolean selected = false;
-    public boolean needsUpdate = true;
 
     public TacticalMapEntityIndicator(SegmentController entity) {
         this.entity = entity;
@@ -86,66 +96,86 @@ public class TacticalMapEntityIndicator extends AbstractMapEntry implements Sele
         return GameClient.getClientState().getWorldDrawer().getGuiDrawer().getHud().getIndicator();
     }
 
-    private Sprite getDisplaySprite(SegmentController playerEntity) {
+    public int getSpriteIndex() {
         int entityFaction = entity.getFactionId();
-        int playerFactionId = playerEntity.getFactionId();
+        int playerFactionId = Objects.requireNonNull(getCurrentEntity()).getFactionId();
         FactionRelation.RType relation = Objects.requireNonNull(GameCommon.getGameState()).getFactionManager().getRelation(entityFaction, playerFactionId);
-        if((entity.isJammingFor(playerEntity) || entity.isCloakedFor(playerEntity)) && !relation.equals(FactionRelation.RType.FRIEND)) return ResourceManager.getSprite("entity-indicator-unknown");
+        if((entity.isJammingFor(getCurrentEntity()) || entity.isCloakedFor(getCurrentEntity())) && !relation.equals(FactionRelation.RType.FRIEND)) return SpriteTypes.UNKNOWN.ordinal();
         else {
             try {
-                String prefix = "entity-indicator-";
-                String suffix = (selected) ? relation.getName().toLowerCase().trim() + "-selected" : "-" + relation.getName().toLowerCase().trim();
-                String spriteName = entity.getType().getName().toLowerCase().replace(" ", "-").replace("_", "-").trim();
-                if(entity.getType().equals(SimpleTransformableSendableObject.EntityType.SPACE_STATION)) {
+                if(entity.getType().equals(SimpleTransformableSendableObject.EntityType.SHIP)) {
+                    switch(relation) {
+                        case NEUTRAL: return SpriteTypes.SHIP_NEUTRAL.ordinal();
+                        case FRIEND: return SpriteTypes.SHIP_FRIENDLY.ordinal();
+                        case ENEMY: return SpriteTypes.SHIP_ENEMY.ordinal();
+                    }
+                } else if(entity.getType().equals(SimpleTransformableSendableObject.EntityType.SPACE_STATION)) {
                     if(entity.getFactionId() == FactionManager.PIRATES_ID) {
-                        if(!selected) return ResourceManager.getSprite("entity-indicator-pirate-station");
+                        if(!selected) return SpriteTypes.STATION_PIRATE.ordinal();
                         else throw new IllegalStateException("Pirate stations should never be selectable!");
                     } else if(entity.getFactionId() == FactionManager.TRAIDING_GUILD_ID) {
-                        if(!selected) return ResourceManager.getSprite("entity-indicator-trade-station");
+                        if(!selected) return SpriteTypes.STATION_TRADE.ordinal();
                         else throw new IllegalStateException("Trade stations should never be selectable!");
+                    } else {
+                        switch(relation) {
+                            case NEUTRAL: return SpriteTypes.STATION_NEUTRAL.ordinal();
+                            case FRIEND: return SpriteTypes.STATION_FRIENDLY.ordinal();
+                            case ENEMY: return SpriteTypes.STATION_ENEMY.ordinal();
+                        }
                     }
                 } else if(entity.getType().equals(SimpleTransformableSendableObject.EntityType.SHOP)) {
-                    if(!selected) return ResourceManager.getSprite("entity-indicator-shop");
+                    if(!selected) return SpriteTypes.SHOP.ordinal();
                     else throw new IllegalStateException("Shops should never be selectable!");
                 }
-                Sprite sprite = ResourceManager.getSprite(prefix + spriteName + suffix);
-                if(sprite == null) {
-                    LogManager.logWarning("Failed to find correct map sprite for entity \"" + entity.getName() + "\". Reverting to default sprite...", null);
-                    return ResourceManager.getSprite("entity-indicator-unknown");
-                } else return sprite;
             } catch(Exception exception) {
                 LogManager.logException("Encountered an exception while trying to pick a map sprite for entity \"" + entity.getName() + "\"", exception);
-                return ResourceManager.getSprite("entity-indicator-unknown");
+                return SpriteTypes.UNKNOWN.ordinal();
             }
         }
+        return SpriteTypes.UNKNOWN.ordinal();
     }
 
-    public void drawSprite(Transform transform, SegmentController playerEntity) {
-        if(indicatorSprite == null || sprite == null || needsUpdate) {
-            indicatorSprite = new EntityIndicatorSubSprite(getEntity());
-            needsUpdate = false;
-            sprite = new GUIOverlay(getDisplaySprite(playerEntity), GameClient.getClientState());
-            sprite.onInit();
+    public void drawSprite(Transform transform) {
+        if(sprite == null) {
+            Sprite s = ResourceManager.getSprite("tactical-map-indicators");
+            s.setMultiSpriteMax(5, 2);
+            s.setWidth(s.getMaterial().getTexture().getWidth() / 5);
+            s.setHeight(s.getMaterial().getTexture().getHeight() / 2);
+            s.setPositionCenter(true);
+            s.setSelectionAreaLength(15.0f);
+            s.onInit();
+
+            sprite = new GUIOverlay(s, GameClient.getClientState());
             sprite.getSprite().setBillboard(true);
             sprite.getSprite().setDepthTest(false);
             sprite.getSprite().setBlend(true);
             sprite.getSprite().setFlip(true);
-            sprite.getSprite().setScale(new Vector3f(1.15f, 1.15f, 1.15f));
             sprite.setUserPointer(entity.getId());
+
+            subSprite = new EntityIndicatorSubSprite[] {new EntityIndicatorSubSprite(this)};
         }
+
         transform.basis.set(getCamera().lookAt(false).basis);
         transform.basis.invert();
 
-
-        if(entity.isCloakedFor(playerEntity) && entityTransform.equals(entity.getWorldTransform())) entityTransform.set(randomizeTransform(entity.getWorldTransform()));
+        if(entity.isCloakedFor(getCurrentEntity()) && entityTransform.equals(entity.getWorldTransform())) entityTransform.set(randomizeTransform(entity.getWorldTransform()));
         else entityTransform.set(entity.getWorldTransform());
         if(!getSector().equals(Objects.requireNonNull(getCurrentEntity()).getSector(new Vector3i()))) SectorUtils.transformToSector(entityTransform, getCurrentEntity().getSector(new Vector3i()), getSector());
-        sprite.getTransform().set(entityTransform);
-        sprite.getTransform().basis.set(transform.basis);
-        sprite.draw();
+        if(sprite != null) {
+            sprite.getSprite().setSelectedMultiSprite(getSpriteIndex());
+            sprite.setSpriteSubIndex(getSpriteIndex());
+            sprite.getSprite().setSelectedMultiSprite(getSpriteIndex());
+            sprite.getTransform().set(entityTransform);
+            sprite.getTransform().basis.set(transform.basis);
+
+            if(selected) sprite.getSprite().setTint(new Vector4f(1.0f, 1.0f, 0.0f, 1.0f));
+            else sprite.getSprite().setTint(new Vector4f(1.0f, 1.0f, 1.0f, 1.0f));
+            Sprite.draw3D(sprite.getSprite(), subSprite, 0, getCamera());
+            //sprite.draw();
+        }
     }
 
-    public void drawLabel(Transform transform, SegmentController playerEntity) {
+    public void drawLabel(Transform transform) {
         if(labelOverlay == null) {
             (labelOverlay = new GUITextOverlay(32, 32, FontLibrary.FontSize.MEDIUM.getFont(), getHudOverlay().getState())).onInit();
             labelOverlay.getScale().y *= -1;
@@ -153,9 +183,9 @@ public class TacticalMapEntityIndicator extends AbstractMapEntry implements Sele
         transform.basis.set(getCamera().lookAt(false).basis);
         transform.basis.invert();
 
-        labelOverlay.setTextSimple(getEntityDisplay(playerEntity));
+        labelOverlay.setTextSimple(getEntityDisplay(getCurrentEntity()));
         labelOverlay.updateTextSize();
-        if(entity.isCloakedFor(playerEntity) && entityTransform.equals(entity.getWorldTransform())) entityTransform.set(randomizeTransform(entity.getWorldTransform()));
+        if(entity.isCloakedFor(getCurrentEntity()) && entityTransform.equals(entity.getWorldTransform())) entityTransform.set(randomizeTransform(entity.getWorldTransform()));
         else entityTransform.set(entity.getWorldTransform());
         if(!getSector().equals(Objects.requireNonNull(getCurrentEntity()).getSector(new Vector3i()))) SectorUtils.transformToSector(entityTransform, getCurrentEntity().getSector(new Vector3i()), getSector());
         labelOverlay.getTransform().set(entityTransform);
@@ -462,7 +492,6 @@ public class TacticalMapEntityIndicator extends AbstractMapEntry implements Sele
         setDrawIndication(true);
         selectDepth = depth;
         selected = true;
-        needsUpdate = true;
         BetterFleets.getInstance().tacticalMapDrawer.selectedEntities.add(entity);
     }
 
@@ -470,7 +499,6 @@ public class TacticalMapEntityIndicator extends AbstractMapEntry implements Sele
     public void onUnSelect() {
         setDrawIndication(true);
         selected = false;
-        needsUpdate = true;
         BetterFleets.getInstance().tacticalMapDrawer.selectedEntities.remove(entity);
     }
 
@@ -520,40 +548,6 @@ public class TacticalMapEntityIndicator extends AbstractMapEntry implements Sele
         if(GameClient.getCurrentControl() != null && GameClient.getCurrentControl() instanceof SegmentController) {
             return (SegmentController) GameClient.getCurrentControl();
         } else return null;
-    }
-
-    public static void changeLabelOffset(int x, int y, int z) {
-        Vector3f dir = new Vector3f();
-        int m = 0;
-        if(z != 0) {
-            m = z;
-            z = 0;
-            GlUtil.getForwardVector(dir, getCamera().getWorldTransform());
-        }
-
-        if(y != 0) {
-            m = y;
-            y = 0;
-            GlUtil.getUpVector(dir, getCamera().getWorldTransform());
-        }
-
-        if(x != 0) {
-            m = x;
-            x = 0;
-            GlUtil.getRightVector(dir, getCamera().getWorldTransform());
-        }
-
-        if(Math.abs(dir.x) >= Math.abs(dir.y) && Math.abs(dir.x) >= Math.abs(dir.z)) {
-            if(dir.x >= 0) x = m;
-            else x = -m;
-        } else if(Math.abs(dir.y) >= Math.abs(dir.x) && Math.abs(dir.y) >= Math.abs(dir.z)) {
-            if(dir.y >= 0) y = m;
-            else y = -m;
-        } else if(Math.abs(dir.z) >= Math.abs(dir.y) && Math.abs(dir.z) >= Math.abs(dir.x)) {
-            if(dir.z >= 0) z = m;
-            else z = -m;
-        }
-        labelOffset.add(new Vector3f(x, y, z));
     }
 
     private static Camera getCamera() {

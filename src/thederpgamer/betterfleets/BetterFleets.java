@@ -28,7 +28,6 @@ import org.schema.schine.input.KeyboardMappings;
 import thederpgamer.betterfleets.controller.tacticalmap.TacticalMapGUIDrawer;
 import thederpgamer.betterfleets.element.ElementManager;
 import thederpgamer.betterfleets.element.blocks.systems.RepairPasteFabricator;
-import thederpgamer.betterfleets.gui.element.sprite.TacticalMapEntityIndicator;
 import thederpgamer.betterfleets.gui.hud.RepairPasteFabricatorHudOverlay;
 import thederpgamer.betterfleets.network.client.ClientRequestNearbyEntitiesPacket;
 import thederpgamer.betterfleets.network.server.ServerSendNearbyEntitiesPacket;
@@ -143,17 +142,6 @@ public class BetterFleets extends StarMod {
                         if(Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)) {
                             Controller.setCamera(tacticalMapDrawer.getDefaultCamera());
                             tacticalMapDrawer.controlManager.onSwitch(false);
-                        }
-
-                        int key = KeyboardMappings.getEventKeySingle(event.getRawEvent());
-                        int debugAmount = (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) ? 10 : 1;
-                        if(Keyboard.isKeyDown(Keyboard.KEY_LMENU) && ConfigManager.getMainConfig().getBoolean("debug-mode")) {
-                            if(key == KeyboardMappings.FORWARD.getMapping()) TacticalMapEntityIndicator.changeLabelOffset(0, 0, debugAmount);
-                            else if(key == KeyboardMappings.BACKWARDS.getMapping()) TacticalMapEntityIndicator.changeLabelOffset(0, 0, -debugAmount);
-                            else if(key == KeyboardMappings.STRAFE_RIGHT.getMapping()) TacticalMapEntityIndicator.changeLabelOffset(debugAmount, 0, 0);
-                            else if(key == KeyboardMappings.STRAFE_LEFT.getMapping()) TacticalMapEntityIndicator.changeLabelOffset(-debugAmount, 0, 0);
-                            else if(key == KeyboardMappings.UP.getMapping()) TacticalMapEntityIndicator.changeLabelOffset(0, debugAmount, 0);
-                            else if(key == KeyboardMappings.DOWN.getMapping()) TacticalMapEntityIndicator.changeLabelOffset(0, -debugAmount, 0);
                         }
                     }
                 }

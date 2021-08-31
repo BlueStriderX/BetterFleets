@@ -59,6 +59,8 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
     public boolean drawMovementPaths = false;
     public boolean drawTargetingPaths = true;
 
+    private long updateTimer = 0;
+
     public TacticalMapGUIDrawer() {
         toggleDraw = false;
         initialized = false;
@@ -112,19 +114,20 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
     public void draw() {
         if(!initialized) onInit();
         if(toggleDraw && Controller.getCamera() instanceof TacticalMapCamera) {
-            drawGrid(-sectorSize, sectorSize);
+            GlUtil.glEnable(GL11.GL_DEPTH_TEST);
+            GlUtil.glDepthMask(true);
             GlUtil.glEnable(GL11.GL_BLEND);
             GlUtil.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-            //drawGrid(-sectorSize, sectorSize);
+            drawGrid(-sectorSize, sectorSize);
             drawMovementPaths = Keyboard.isKeyDown(Keyboard.KEY_LMENU);
             drawIndicators();
-            GlUtil.glDisable(GL11.GL_BLEND);
-
             if(buttonPane.active) {
                 GUIElement.enableOrthogonal();
                 buttonPane.draw();
                 GUIElement.disableOrthogonal();
             }
+            GlUtil.glDisable(GL11.GL_DEPTH_TEST);
+            GlUtil.glDisable(GL11.GL_BLEND);
         } else cleanUp();
     }
 
@@ -133,9 +136,12 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
         if(!toggleDraw || !(Controller.getCamera() instanceof TacticalMapCamera)) return;
         controlManager.update(timer);
         SegmentController currentEntity = getCurrentEntity();
-        if(currentEntity != null) PacketUtil.sendPacketToServer(new ClientRequestNearbyEntitiesPacket(currentEntity));
+        updateTimer --;
+        if(updateTimer <= 0) {
+            if(currentEntity != null) PacketUtil.sendPacketToServer(new ClientRequestNearbyEntitiesPacket(currentEntity));
+            updateTimer = 500;
+        }
     }
-
 
     @Override
     public void cleanUp() {
@@ -410,8 +416,8 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
             TacticalMapEntityIndicator indicator = entry.getValue();
             if(indicator.getDistance() < maxDrawDistance && indicator.getEntity() != null) {
                 Indication indication = indicator.getIndication(indicator.getSystem());
-                indicator.drawSprite(indication.getCurrentTransform(), getCurrentEntity());
-                indicator.drawLabel(indication.getCurrentTransform(), getCurrentEntity());
+                indicator.drawSprite(indication.getCurrentTransform());
+                indicator.drawLabel(indication.getCurrentTransform());
                 if(drawMovementPaths && indicator.selected) indicator.drawMovementPath(camera, 1.0f);
                 if(drawTargetingPaths && indicator.selected) indicator.drawTargetingPath(camera, 1.0f);
             } else drawMap.remove(entry.getKey());

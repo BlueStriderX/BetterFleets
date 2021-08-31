@@ -14,13 +14,9 @@ import org.schema.schine.graphicsengine.core.Timer;
 import org.schema.schine.input.KeyEventInterface;
 import org.schema.schine.input.KeyboardMappings;
 import thederpgamer.betterfleets.BetterFleets;
-import thederpgamer.betterfleets.gui.element.sprite.TacticalMapEntityIndicator;
 import thederpgamer.betterfleets.utils.ConfigManager;
-import thederpgamer.betterfleets.utils.Inputs;
 
-import javax.vecmath.Vector2f;
 import javax.vecmath.Vector3f;
-import java.util.Map;
 
 /**
  * <Description>
@@ -89,6 +85,7 @@ public class TacticalMapControlManager extends AbstractControlManager {
         move(movement);
 
 
+        /*
         if(Mouse.getEventButtonState() && !Mouse.isGrabbed()) {
             TacticalMapEntityIndicator selected = null;
             for(Map.Entry<Integer, TacticalMapEntityIndicator> entry : guiDrawer.drawMap.entrySet()) {
@@ -96,11 +93,11 @@ public class TacticalMapControlManager extends AbstractControlManager {
                 entry.getValue().sprite.checkMouseInsideWithTransform();
                 if(entry.getValue().getEntity().getFactionId() > 0 || GameClient.getClientPlayerState().getFactionId() > 0) continue;
                 if(entry.getValue().getEntity().getFactionId() == GameClient.getClientPlayerState().getFactionId()) {
-                    int inMinX = (int) (entry.getValue().sprite.getPos().x - 100);
-                    int inMinY = (int) (entry.getValue().sprite.getPos().y - 15);
-                    int inMaxX = (int) (entry.getValue().sprite.getPos().x + 50);
-                    int inMaxY = (int) (entry.getValue().sprite.getPos().y + 15);
-                    Vector2f relMousePos = new Vector2f(Math.abs(entry.getValue().sprite.getRelMousePos().x + entry.getValue().sprite.getPos().x), entry.getValue().sprite.getRelMousePos().y - entry.getValue().sprite.getPos().y);
+                    int inMinX = (int) (entry.getValue().sprite.getWorldTranslation().x - 100);
+                    int inMinY = (int) (entry.getValue().sprite.getWorldTranslation().y - 15);
+                    int inMaxX = (int) (entry.getValue().sprite.getWorldTranslation().x + 50);
+                    int inMaxY = (int) (entry.getValue().sprite.getWorldTranslation().y + 15);
+                    Vector2f relMousePos = new Vector2f(Math.abs(entry.getValue().sprite.getRelMousePos().x + entry.getValue().sprite.getWorldTranslation().x), entry.getValue().sprite.getRelMousePos().y - entry.getValue().sprite.getWorldTranslation().y);
                     if((relMousePos.x >= inMinX && relMousePos.x <= inMaxX) || (relMousePos.y >= inMinY && relMousePos.y <= inMaxY)) {
                         selected = entry.getValue();
                         break;
@@ -113,15 +110,16 @@ public class TacticalMapControlManager extends AbstractControlManager {
                 return;
             }
 
+            if(!Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) guiDrawer.clearSelected(); //Clear current before selecting in single add mode
             if(Mouse.isButtonDown(Inputs.MouseButtons.LEFT_MOUSE.id) && Mouse.getEventButton() == Inputs.MouseButtons.LEFT_MOUSE.id) {
                 if(lastClick >= 15) {
-                    if(!Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) guiDrawer.clearSelected(); //Clear current before selecting in single add mode
                     if(guiDrawer.selectedEntities.contains(selected.getEntity())) selected.onUnSelect(); //Unselect indicator
                     else selected.onSelect(1.0f); //Select indicator
                     lastClick = 0;
                 }
             } else if(Mouse.isButtonDown(Inputs.MouseButtons.RIGHT_MOUSE.id) && Mouse.getEventButton() == Inputs.MouseButtons.RIGHT_MOUSE.id) guiDrawer.recreateButtonPane(selected);
         }
+         */
     }
 
     private void move(Vector3f movement) {
