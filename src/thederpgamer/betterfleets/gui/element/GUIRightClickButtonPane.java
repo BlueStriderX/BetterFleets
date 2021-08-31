@@ -32,11 +32,10 @@ public class GUIRightClickButtonPane extends GUIHorizontalButtonTablePane {
     }
 
     public void moveToMouse() {
+        if(active) cleanUp();
         try {
             setPos(Mouse.getX() - 250, Mouse.getY() * -1, 0.0f);
             active = true;
-        } catch(Exception ignored) {
-            cleanUp();
-        }
+        } catch(Exception ignored) { }
     }
 }

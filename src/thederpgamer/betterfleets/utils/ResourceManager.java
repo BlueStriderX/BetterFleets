@@ -20,7 +20,13 @@ public class ResourceManager {
     };
 
     private static final String[] spriteNames = {
-
+            "entity-indicator-unknown",
+            "entity-indicator-ship-neutral", "entity-indicator-ship-friend", "entity-indicator-ship-enemy",
+            "entity-indicator-ship-neutral-selected", "entity-indicator-ship-friend-selected", "entity-indicator-ship-enemy-selected",
+            "entity-indicator-space-station-neutral", "entity-indicator-space-station-friend", "entity-indicator-space-station-enemy",
+            "entity-indicator-space-station-neutral-selected", "entity-indicator-space-station-friend-selected", "entity-indicator-space-station-enemy-selected",
+            "entity-indicator-pirate-station", "entity-indicator-trade-station",
+            "entity-indicator-shop"
     };
 
     private static final HashMap<String, StarLoaderTexture> textureMap = new HashMap<>();

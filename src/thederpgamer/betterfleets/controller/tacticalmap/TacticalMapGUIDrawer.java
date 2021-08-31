@@ -1,32 +1,35 @@
 package thederpgamer.betterfleets.controller.tacticalmap;
 
 import api.common.GameClient;
+import api.common.GameCommon;
 import api.network.packets.PacketUtil;
 import api.utils.draw.ModWorldDrawer;
+import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 import org.schema.common.util.ByteUtil;
 import org.schema.common.util.linAlg.Vector3i;
 import org.schema.game.client.view.effects.Indication;
 import org.schema.game.common.controller.SegmentController;
-import org.schema.game.common.data.fleet.Fleet;
-import org.schema.game.common.data.fleet.FleetCommandTypes;
+import org.schema.game.common.data.player.faction.FactionRelation;
 import org.schema.game.server.data.ServerConfig;
 import org.schema.schine.graphicsengine.camera.Camera;
 import org.schema.schine.graphicsengine.core.*;
 import org.schema.schine.graphicsengine.core.settings.EngineSettings;
-import org.schema.schine.graphicsengine.forms.gui.*;
+import org.schema.schine.graphicsengine.forms.gui.GUIActivationCallback;
+import org.schema.schine.graphicsengine.forms.gui.GUIAncor;
+import org.schema.schine.graphicsengine.forms.gui.GUICallback;
+import org.schema.schine.graphicsengine.forms.gui.GUIElement;
 import org.schema.schine.graphicsengine.forms.gui.newgui.GUIHorizontalArea;
 import org.schema.schine.input.InputState;
 import thederpgamer.betterfleets.gui.element.GUIRightClickButtonPane;
-import thederpgamer.betterfleets.gui.element.sprite.TacticalMapFleetIndicator;
-import thederpgamer.betterfleets.gui.element.tacticalmap.SelectedFleetsPane;
+import thederpgamer.betterfleets.gui.element.sprite.TacticalMapEntityIndicator;
 import thederpgamer.betterfleets.network.client.ClientRequestNearbyEntitiesPacket;
-import thederpgamer.betterfleets.utils.FleetUtils;
 
+import javax.annotation.Nullable;
 import javax.vecmath.Vector3f;
-import javax.vecmath.Vector4f;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -45,17 +48,16 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
     public final float maxDrawDistance;
     public final Vector3f labelOffset;
 
-    private float time;
     private boolean initialized;
-    public final ConcurrentHashMap<Long, TacticalMapFleetIndicator> drawMap;
-
-    private float updateTimer;
     private boolean firstTime = true;
 
-    public final ArrayList<Long> selectedFleets = new ArrayList<>();
-    private GUIColoredRectangle fleetPanelBackground;
-    private SelectedFleetsPane fleetSelectionList;
-    private GUIRightClickButtonPane fleetActionsList;
+    public final ConcurrentHashMap<Integer, TacticalMapEntityIndicator> drawMap;
+    public final ArrayList<SegmentController> selectedEntities = new ArrayList<>();
+
+    private GUIRightClickButtonPane buttonPane;
+
+    public boolean drawMovementPaths = false;
+    public boolean drawTargetingPaths = true;
 
     public TacticalMapGUIDrawer() {
         toggleDraw = false;
@@ -67,8 +69,8 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
     }
 
     public void clearSelected() {
-        ArrayList<Long> temp = new ArrayList<>(selectedFleets);
-        for(Long l : temp) drawMap.get(l).onUnSelect();
+        ArrayList<SegmentController> temp = new ArrayList<>(selectedEntities);
+        for(SegmentController i : temp) drawMap.get(i.getId()).onUnSelect();
     }
 
     public void toggleDraw() {
@@ -84,7 +86,6 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
                 camera.reset();
                 firstTime = false;
             }
-            updateIndicators();
         } else {
             Controller.setCamera(getDefaultCamera());
             controlManager.onSwitch(false);
@@ -102,70 +103,34 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
         controlManager = new TacticalMapControlManager(this);
         camera = new TacticalMapCamera();
         camera.reset();
-        camera.alwaysAllowWheelZoom = true;
-
-        fleetPanelBackground = new GUIColoredRectangle(GameClient.getClientState(), GLFrame.getWidth() - 150.0f, 230.0f, new Vector4f(0.15f, 0.3f, 0.2f, 0.5f));
-        fleetPanelBackground.rounded = 6;
-        fleetPanelBackground.orientate(GUIElement.ORIENTATION_RIGHT | GUIElement.ORIENTATION_BOTTOM);
-
-        GUIAncor fleetListAnchor = new GUIAncor(GameClient.getClientState(), (GLFrame.getWidth() / 2.0f) - 20.0f, 180.0f);
-        fleetListAnchor.onInit();
-        (fleetSelectionList = new SelectedFleetsPane(GameClient.getClientState())).onInit();
-        fleetListAnchor.attach(fleetSelectionList);
-        GUIScrollablePanel scrollablePanel = new GUIScrollablePanel(fleetListAnchor.getWidth(), fleetListAnchor.getHeight(), fleetListAnchor, GameClient.getClientState());
-        scrollablePanel.setContent(fleetListAnchor);
-        scrollablePanel.setScrollable(GUIScrollablePanel.SCROLLABLE_VERTICAL);
-        scrollablePanel.onInit();
-        fleetSelectionList.setScrollPane(scrollablePanel);
-        fleetPanelBackground.attach(scrollablePanel);
-        fleetSelectionList.setInside(true);
-        fleetSelectionList.setPos(fleetPanelBackground.getPos().x, fleetPanelBackground.getPos().y, 0.0f);
-        fleetPanelBackground.attach(scrollablePanel);
-
-        GUIAncor fleetActionsAnchor = new GUIAncor(GameClient.getClientState(), (fleetPanelBackground.getWidth() / 2.0f) - 50.0f, 180.0f);
-        fleetActionsAnchor.onInit();
-        (fleetActionsList = new GUIRightClickButtonPane(GameClient.getClientState(), 2, 7, fleetActionsAnchor)).onInit();
-        createActionsPane();
-        fleetActionsAnchor.attach(fleetActionsList);
-        fleetPanelBackground.attach(fleetActionsAnchor);
-        fleetActionsList.setInside(true);
-        fleetActionsList.setPos(GLFrame.getWidth() - fleetActionsList.getWidth() - 10.0f, GLFrame.getHeight() - fleetActionsList.getHeight() - 5.0f, 0.0f);
-
+        camera.alwaysAllowWheelZoom = false;
+        recreateButtonPane(null);
         initialized = true;
     }
 
     @Override
     public void draw() {
+        if(!initialized) onInit();
         if(toggleDraw && Controller.getCamera() instanceof TacticalMapCamera) {
+            drawGrid(-sectorSize, sectorSize);
             GlUtil.glEnable(GL11.GL_BLEND);
             GlUtil.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-            drawGrid(-sectorSize, sectorSize);
+            //drawGrid(-sectorSize, sectorSize);
+            drawMovementPaths = Keyboard.isKeyDown(Keyboard.KEY_LMENU);
             drawIndicators();
-
             GlUtil.glDisable(GL11.GL_BLEND);
-            GUIElement.enableOrthogonal();
-            if(!selectedFleets.isEmpty()) {
-                fleetSelectionList.setPos(fleetPanelBackground.getPos().x, fleetPanelBackground.getPos().y, 0.0f);
-                fleetActionsList.setPos(GLFrame.getWidth() - fleetActionsList.getWidth() - 10.0f, GLFrame.getHeight() - fleetActionsList.getHeight() - 5.0f, 0.0f);
-                fleetActionsList.active = true;
 
-                fleetPanelBackground.draw();
-                fleetSelectionList.draw();
-                fleetActionsList.draw();
+            if(buttonPane.active) {
+                GUIElement.enableOrthogonal();
+                buttonPane.draw();
+                GUIElement.disableOrthogonal();
             }
-            GUIElement.disableOrthogonal();
         } else cleanUp();
     }
 
     @Override
     public void update(Timer timer) {
         if(!toggleDraw || !(Controller.getCamera() instanceof TacticalMapCamera)) return;
-        time += timer.getDelta();
-
-        fleetSelectionList.update(timer);
-        updateTimer -= timer.getDelta();
-        if(updateTimer <= 0) updateIndicators();
-
         controlManager.update(timer);
         SegmentController currentEntity = getCurrentEntity();
         if(currentEntity != null) PacketUtil.sendPacketToServer(new ClientRequestNearbyEntitiesPacket(currentEntity));
@@ -174,7 +139,7 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
 
     @Override
     public void cleanUp() {
-        fleetActionsList.active = false;
+
     }
 
     @Override
@@ -182,62 +147,142 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
         return false;
     }
 
-    private void orderCommand(FleetCommandTypes commandType) {
-        ArrayList<Long> temp = new ArrayList<>(selectedFleets);
-        for(Long id : temp) {
-            if(drawMap.containsKey(id)) {
-                if(commandType.args != null && commandType.args.length == 1) drawMap.get(id).getFleet().sendFleetCommand(commandType, drawMap.get(id).getFleet().getFlagShipSector());
-                else drawMap.get(id).getFleet().sendFleetCommand(commandType);
-                drawMap.get(id).onUnSelect();
+    public void recreateButtonPane(@Nullable TacticalMapEntityIndicator indicator) {
+        GUIAncor buttonPaneAnchor = new GUIAncor(GameClient.getClientState(), 150.0f, 300.0f);
+        (buttonPane = new GUIRightClickButtonPane(GameClient.getClientState(), 1, 1, buttonPaneAnchor)).onInit();
+        buttonPaneAnchor.attach(buttonPane);
+        buttonPane.moveToMouse();
+
+        if(indicator != null) {
+            FactionRelation.RType relation = Objects.requireNonNull(GameCommon.getGameState()).getFactionManager().getRelation(Objects.requireNonNull(getCurrentEntity()).getFactionId(), indicator.getEntity().getFactionId());
+            int currentFactionId = getCurrentEntity().getFactionId();
+            int selectedFactionId = indicator.getEntity().getFactionId();
+            int index = 0;
+
+            buttonPane.addRow();
+            buttonPane.addButton(0, index, "MOVE TO", GUIHorizontalArea.HButtonColor.PINK, new GUICallback() {
+                @Override
+                public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
+                    if(mouseEvent.pressedLeftMouse()) {
+                        //Todo: Move to
+                        buttonPane.active = false;
+                        clearSelected();
+                    }
+                }
+
+                @Override
+                public boolean isOccluded() {
+                    return false;
+                }
+            }, new GUIActivationCallback() {
+                @Override
+                public boolean isVisible(InputState inputState) {
+                    return true;
+                }
+
+                @Override
+                public boolean isActive(InputState inputState) {
+                    return true;
+                }
+            });
+            index ++;
+
+            if(relation.equals(FactionRelation.RType.FRIEND)) {
+                buttonPane.addRow();
+                buttonPane.addButton(0, index, "DEFEND", GUIHorizontalArea.HButtonColor.GREEN, new GUICallback() {
+                    @Override
+                    public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
+                        if(mouseEvent.pressedLeftMouse()) {
+                            //Todo: Defend target
+                            buttonPane.active = false;
+                            clearSelected();
+                        }
+                    }
+
+                    @Override
+                    public boolean isOccluded() {
+                        return false;
+                    }
+                }, new GUIActivationCallback() {
+                    @Override
+                    public boolean isVisible(InputState inputState) {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean isActive(InputState inputState) {
+                        return true;
+                    }
+                });
+                index ++;
+
+                buttonPane.addRow();
+                buttonPane.addButton(0, index, "REPAIR", GUIHorizontalArea.HButtonColor.GREEN, new GUICallback() {
+                    @Override
+                    public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
+                        if(mouseEvent.pressedLeftMouse()) {
+                            //Todo: Repair target
+                            buttonPane.active = false;
+                            clearSelected();
+                        }
+                    }
+
+                    @Override
+                    public boolean isOccluded() {
+                        return false;
+                    }
+                }, new GUIActivationCallback() {
+                    @Override
+                    public boolean isVisible(InputState inputState) {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean isActive(InputState inputState) {
+                        return true;
+                    }
+                });
+                index ++;
+            } else if(relation.equals(FactionRelation.RType.NEUTRAL)) {
+
+            } else if(relation.equals(FactionRelation.RType.ENEMY)) {
+                buttonPane.addRow();
+                buttonPane.addButton(0, index, "ATTACK", GUIHorizontalArea.HButtonColor.RED, new GUICallback() {
+                    @Override
+                    public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
+                        if(mouseEvent.pressedLeftMouse()) {
+                            //Todo: Attack target
+                            buttonPane.active = false;
+                            clearSelected();
+                        }
+                    }
+
+                    @Override
+                    public boolean isOccluded() {
+                        return false;
+                    }
+                }, new GUIActivationCallback() {
+                    @Override
+                    public boolean isVisible(InputState inputState) {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean isActive(InputState inputState) {
+                        return true;
+                    }
+                });
+                index ++;
             }
-        }
-    }
 
-    private void orderFormation() {
-        for(Long id : selectedFleets) {
-            if(drawMap.containsKey(id)) {
-                Fleet fleet = drawMap.get(id).getFleet();
-                FleetCommandTypes command = FleetUtils.getCurrentCommand(fleet);
-                if(command.equals(FleetCommandTypes.SENTRY)) fleet.sendFleetCommand(FleetCommandTypes.SENTRY_FORMATION);
-                else if(command.equals(FleetCommandTypes.SENTRY_FORMATION)) fleet.sendFleetCommand(FleetCommandTypes.SENTRY);
-                else if(command.equals(FleetCommandTypes.FLEET_IDLE_FORMATION)) fleet.sendFleetCommand(FleetCommandTypes.IDLE);
-                else fleet.sendFleetCommand(FleetCommandTypes.FLEET_IDLE_FORMATION);
-                drawMap.get(id).onUnSelect();
-            }
-        }
-    }
-
-    private void orderJamming() {
-        for(Long id : selectedFleets) {
-            if(drawMap.containsKey(id)) {
-                Fleet fleet = drawMap.get(id).getFleet();
-                FleetCommandTypes command = FleetUtils.getCurrentCommand(fleet);
-                if(command.equals(FleetCommandTypes.JAM)) fleet.sendFleetCommand(FleetCommandTypes.UNJAM);
-                else fleet.sendFleetCommand(FleetCommandTypes.JAM);
-                drawMap.get(id).onUnSelect();
-            }
-        }
-    }
-
-    private void orderCloaking() {
-        for(Long id : selectedFleets) {
-            if(drawMap.containsKey(id)) {
-                Fleet fleet = drawMap.get(id).getFleet();
-                FleetCommandTypes command = FleetUtils.getCurrentCommand(fleet);
-                if(command.equals(FleetCommandTypes.CLOAK)) fleet.sendFleetCommand(FleetCommandTypes.UNCLOAK);
-                else fleet.sendFleetCommand(FleetCommandTypes.CLOAK);
-                drawMap.get(id).onUnSelect();
-            }
-        }
-    }
-
-    public void createActionsPane() {
-            fleetActionsList.addButton(0, 0, "TOGGLE FORMATION", GUIHorizontalArea.HButtonColor.BLUE, new GUICallback() {
+            buttonPane.addRow();
+            buttonPane.addButton(0, index, "SCAN", GUIHorizontalArea.HButtonColor.ORANGE, new GUICallback() {
                 @Override
                 public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
                     if(mouseEvent.pressedLeftMouse()) {
-                        GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
-                        orderFormation();
+                        //Todo: Scan target
+                        buttonPane.active = false;
+                        clearSelected();
                     }
                 }
 
@@ -256,340 +301,8 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
                     return true;
                 }
             });
-
-            fleetActionsList.addButton(0, 1, "IDLE", GUIHorizontalArea.HButtonColor.BLUE, new GUICallback() {
-                @Override
-                public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
-                    if(mouseEvent.pressedLeftMouse()) {
-                        GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
-                        orderCommand(FleetCommandTypes.IDLE);
-                    }
-                }
-
-                @Override
-                public boolean isOccluded() {
-                    return false;
-                }
-            }, new GUIActivationCallback() {
-                @Override
-                public boolean isVisible(InputState inputState) {
-                    return true;
-                }
-
-                @Override
-                public boolean isActive(InputState inputState) {
-                    return true;
-                }
-            });
-
-            fleetActionsList.addButton(0, 2, "RECALL TO CARRIER", GUIHorizontalArea.HButtonColor.PINK, new GUICallback() {
-                @Override
-                public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
-                    if(mouseEvent.pressedLeftMouse()) {
-                        GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
-                        orderCommand(FleetCommandTypes.CALL_TO_CARRIER);
-                    }
-                }
-
-                @Override
-                public boolean isOccluded() {
-                    return false;
-                }
-            }, new GUIActivationCallback() {
-                @Override
-                public boolean isVisible(InputState inputState) {
-                    return true;
-                }
-
-                @Override
-                public boolean isActive(InputState inputState) {
-                    return true;
-                }
-            });
-
-            fleetActionsList.addButton(0, 3, "ATTACK CURRENT SECTOR", GUIHorizontalArea.HButtonColor.RED, new GUICallback() {
-                @Override
-                public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
-                    if(mouseEvent.pressedLeftMouse()) {
-                        GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
-                        orderCommand(FleetCommandTypes.FLEET_ATTACK);
-                    }
-                }
-
-                @Override
-                public boolean isOccluded() {
-                    return false;
-                }
-            }, new GUIActivationCallback() {
-                @Override
-                public boolean isVisible(InputState inputState) {
-                    return true;
-                }
-
-                @Override
-                public boolean isActive(InputState inputState) {
-                    return true;
-                }
-            });
-
-            fleetActionsList.addButton(0, 4, "ARTILLERY", GUIHorizontalArea.HButtonColor.RED, new GUICallback() {
-                @Override
-                public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
-                    if(mouseEvent.pressedLeftMouse()) {
-                        GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
-                        orderCommand(FleetCommandTypes.ARTILLERY);
-                    }
-                }
-
-                @Override
-                public boolean isOccluded() {
-                    return false;
-                }
-            }, new GUIActivationCallback() {
-                @Override
-                public boolean isVisible(InputState inputState) {
-                    return true;
-                }
-
-                @Override
-                public boolean isActive(InputState inputState) {
-                    return true;
-                }
-            });
-
-            fleetActionsList.addButton(0, 5, "DEFEND CURRENT SECTOR", GUIHorizontalArea.HButtonColor.GREEN, new GUICallback() {
-                @Override
-                public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
-                    if(mouseEvent.pressedLeftMouse()) {
-                        GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
-                        orderCommand(FleetCommandTypes.FLEET_DEFEND);
-                    }
-                }
-
-                @Override
-                public boolean isOccluded() {
-                    return false;
-                }
-            }, new GUIActivationCallback() {
-                @Override
-                public boolean isVisible(InputState inputState) {
-                    return true;
-                }
-
-                @Override
-                public boolean isActive(InputState inputState) {
-                    return true;
-                }
-            });
-
-            fleetActionsList.addButton(0, 6, "INTERCEPT", GUIHorizontalArea.HButtonColor.GREEN, new GUICallback() {
-                @Override
-                public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
-                    if(mouseEvent.pressedLeftMouse()) {
-                        GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
-                        orderCommand(FleetCommandTypes.INTERCEPT);
-                    }
-                }
-
-                @Override
-                public boolean isOccluded() {
-                    return false;
-                }
-            }, new GUIActivationCallback() {
-                @Override
-                public boolean isVisible(InputState inputState) {
-                    return true;
-                }
-
-                @Override
-                public boolean isActive(InputState inputState) {
-                    return true;
-                }
-            });
-
-            fleetActionsList.addButton(1, 0, "SENTRY", GUIHorizontalArea.HButtonColor.ORANGE, new GUICallback() {
-                @Override
-                public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
-                    if(mouseEvent.pressedLeftMouse()) {
-                        GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
-                        orderCommand(FleetCommandTypes.SENTRY);
-                    }
-                }
-
-                @Override
-                public boolean isOccluded() {
-                    return false;
-                }
-            }, new GUIActivationCallback() {
-                @Override
-                public boolean isVisible(InputState inputState) {
-                    return true;
-                }
-
-                @Override
-                public boolean isActive(InputState inputState) {
-                    return true;
-                }
-            });
-
-            fleetActionsList.addButton(1, 1, "SUPPORT", GUIHorizontalArea.HButtonColor.ORANGE, new GUICallback() {
-                @Override
-                public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
-                    if(mouseEvent.pressedLeftMouse()) {
-                        GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
-                        orderCommand(FleetCommandTypes.SUPPORT);
-                    }
-                }
-
-                @Override
-                public boolean isOccluded() {
-                    return false;
-                }
-            }, new GUIActivationCallback() {
-                @Override
-                public boolean isVisible(InputState inputState) {
-                    return true;
-                }
-
-                @Override
-                public boolean isActive(InputState inputState) {
-                    return true;
-                }
-            });
-
-            fleetActionsList.addButton(1, 2, "MINE", GUIHorizontalArea.HButtonColor.ORANGE, new GUICallback() {
-                @Override
-                public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
-                    if(mouseEvent.pressedLeftMouse()) {
-                        GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
-                        orderCommand(FleetCommandTypes.MINE_IN_SECTOR);
-                    }
-                }
-
-                @Override
-                public boolean isOccluded() {
-                    return false;
-                }
-            }, new GUIActivationCallback() {
-                @Override
-                public boolean isVisible(InputState inputState) {
-                    return true;
-                }
-
-                @Override
-                public boolean isActive(InputState inputState) {
-                    return true;
-                }
-            });
-
-            fleetActionsList.addButton(1, 3, "ACTIVATE TURRETS", GUIHorizontalArea.HButtonColor.YELLOW, new GUICallback() {
-                @Override
-                public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
-                    if(mouseEvent.pressedLeftMouse()) {
-                        GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
-                        orderCommand(FleetCommandTypes.ACTIVATE_TURRETS);
-                    }
-                }
-
-                @Override
-                public boolean isOccluded() {
-                    return false;
-                }
-            }, new GUIActivationCallback() {
-                @Override
-                public boolean isVisible(InputState inputState) {
-                    return true;
-                }
-
-                @Override
-                public boolean isActive(InputState inputState) {
-                    return true;
-                }
-            });
-
-            fleetActionsList.addButton(1, 4, "DEACTIVATE TURRETS", GUIHorizontalArea.HButtonColor.YELLOW, new GUICallback() {
-                @Override
-                public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
-                    if(mouseEvent.pressedLeftMouse()) {
-                        GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
-                        orderCommand(FleetCommandTypes.DEACTIVATE_TURRETS);
-                    }
-                }
-
-                @Override
-                public boolean isOccluded() {
-                    return false;
-                }
-            }, new GUIActivationCallback() {
-                @Override
-                public boolean isVisible(InputState inputState) {
-                    return true;
-                }
-
-                @Override
-                public boolean isActive(InputState inputState) {
-                    return true;
-                }
-            });
-
-            fleetActionsList.addButton(1, 5, "TOGGLE JAMMING", GUIHorizontalArea.HButtonColor.YELLOW, new GUICallback() {
-                @Override
-                public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
-                    if(mouseEvent.pressedLeftMouse()) {
-                        GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
-                        orderJamming();
-                    }
-                }
-
-                @Override
-                public boolean isOccluded() {
-                    return false;
-                }
-            }, new GUIActivationCallback() {
-                @Override
-                public boolean isVisible(InputState inputState) {
-                    return true;
-                }
-
-                @Override
-                public boolean isActive(InputState inputState) {
-                    return true;
-                }
-            });
-
-            fleetActionsList.addButton(1, 6, "TOGGLE CLOAK", GUIHorizontalArea.HButtonColor.YELLOW, new GUICallback() {
-                @Override
-                public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
-                    if(mouseEvent.pressedLeftMouse()) {
-                        GameClient.getClientState().getController().queueUIAudio("0022_menu_ui - enter");
-                        orderCloaking();
-                    }
-                }
-
-                @Override
-                public boolean isOccluded() {
-                    return false;
-                }
-            }, new GUIActivationCallback() {
-                @Override
-                public boolean isVisible(InputState inputState) {
-                    return true;
-                }
-
-                @Override
-                public boolean isActive(InputState inputState) {
-                    return true;
-                }
-            });
-    }
-
-    private void updateIndicators() {
-        updateTimer = 1000;
-        for(Map.Entry<Long, TacticalMapFleetIndicator> entry : drawMap.entrySet()) {
-            TacticalMapFleetIndicator indicator = entry.getValue();
-            if(indicator.getDistance() < maxDrawDistance && indicator.getFleet() != null && !indicator.getFleet().isEmpty()) indicator.updateStats();
-            else drawMap.remove(entry.getKey());
-        }
+            index ++;
+        } else buttonPane.cleanUp();
     }
 
     private void drawGrid(float start, float spacing) {
@@ -693,13 +406,14 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
     }
 
     private void drawIndicators() {
-        for(Map.Entry<Long, TacticalMapFleetIndicator> entry : drawMap.entrySet()) {
-            TacticalMapFleetIndicator indicator = entry.getValue();
-            if(indicator.getDistance() < maxDrawDistance && indicator.getFleet() != null && !indicator.getFleet().isEmpty()) {
+        for(Map.Entry<Integer, TacticalMapEntityIndicator> entry : drawMap.entrySet()) {
+            TacticalMapEntityIndicator indicator = entry.getValue();
+            if(indicator.getDistance() < maxDrawDistance && indicator.getEntity() != null) {
                 Indication indication = indicator.getIndication(indicator.getSystem());
-                indicator.drawSprite(indication.getCurrentTransform());
-                indicator.drawLabel(indication.getCurrentTransform());
-                indicator.drawPath(camera, time, sectorSize);
+                indicator.drawSprite(indication.getCurrentTransform(), getCurrentEntity());
+                indicator.drawLabel(indication.getCurrentTransform(), getCurrentEntity());
+                if(drawMovementPaths && indicator.selected) indicator.drawMovementPath(camera, 1.0f);
+                if(drawTargetingPaths && indicator.selected) indicator.drawTargetingPath(camera, 1.0f);
             } else drawMap.remove(entry.getKey());
         }
     }

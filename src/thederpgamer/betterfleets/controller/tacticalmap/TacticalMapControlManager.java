@@ -14,10 +14,11 @@ import org.schema.schine.graphicsengine.core.Timer;
 import org.schema.schine.input.KeyEventInterface;
 import org.schema.schine.input.KeyboardMappings;
 import thederpgamer.betterfleets.BetterFleets;
-import thederpgamer.betterfleets.gui.element.sprite.TacticalMapFleetIndicator;
+import thederpgamer.betterfleets.gui.element.sprite.TacticalMapEntityIndicator;
 import thederpgamer.betterfleets.utils.ConfigManager;
 import thederpgamer.betterfleets.utils.Inputs;
 
+import javax.vecmath.Vector2f;
 import javax.vecmath.Vector3f;
 import java.util.Map;
 
@@ -30,6 +31,7 @@ import java.util.Map;
 public class TacticalMapControlManager extends AbstractControlManager {
 
     private final TacticalMapGUIDrawer guiDrawer;
+    private long lastClick;
     public float viewDistance;
 
     public TacticalMapControlManager(TacticalMapGUIDrawer guiDrawer) {
@@ -56,6 +58,7 @@ public class TacticalMapControlManager extends AbstractControlManager {
         getInteractionManager().getInShipControlManager().getShipControlManager().getShipExternalFlightController().suspend(true);
         getInteractionManager().getInShipControlManager().getShipControlManager().getSegmentBuildController().suspend(true);
         handleInteraction(timer);
+        lastClick ++;
     }
 
     @Override
@@ -85,24 +88,39 @@ public class TacticalMapControlManager extends AbstractControlManager {
         movement.scale(timer.getDelta());
         move(movement);
 
-        if(Mouse.getEventButton() == Inputs.MouseButtons.LEFT_MOUSE.id && Mouse.getEventButtonState() && !Mouse.isGrabbed()) {
-            TacticalMapFleetIndicator selected = null;
-            for(Map.Entry<Long, TacticalMapFleetIndicator> entry : guiDrawer.drawMap.entrySet()) {
-                Vector3f spritePos = new Vector3f(entry.getValue().lastKnownTransform.origin);
-                if(entry.getValue().getFleet().getOwner().equals(GameClient.getClientPlayerState().getName().toLowerCase())) {
-                    if(GameClient.getClientState().getWorldDrawer().getGameMapDrawer().getWorldToScreenConverter().getMousePosition(entry.getValue().sprite.getSprite(), spritePos, new Vector3f(0.689f, 0.689f, 0.689f))) {
+
+        if(Mouse.getEventButtonState() && !Mouse.isGrabbed()) {
+            TacticalMapEntityIndicator selected = null;
+            for(Map.Entry<Integer, TacticalMapEntityIndicator> entry : guiDrawer.drawMap.entrySet()) {
+                entry.getValue().sprite.checkMouseInside();
+                entry.getValue().sprite.checkMouseInsideWithTransform();
+                if(entry.getValue().getEntity().getFactionId() > 0 || GameClient.getClientPlayerState().getFactionId() > 0) continue;
+                if(entry.getValue().getEntity().getFactionId() == GameClient.getClientPlayerState().getFactionId()) {
+                    int inMinX = (int) (entry.getValue().sprite.getPos().x - 100);
+                    int inMinY = (int) (entry.getValue().sprite.getPos().y - 15);
+                    int inMaxX = (int) (entry.getValue().sprite.getPos().x + 50);
+                    int inMaxY = (int) (entry.getValue().sprite.getPos().y + 15);
+                    Vector2f relMousePos = new Vector2f(Math.abs(entry.getValue().sprite.getRelMousePos().x + entry.getValue().sprite.getPos().x), entry.getValue().sprite.getRelMousePos().y - entry.getValue().sprite.getPos().y);
+                    if((relMousePos.x >= inMinX && relMousePos.x <= inMaxX) || (relMousePos.y >= inMinY && relMousePos.y <= inMaxY)) {
                         selected = entry.getValue();
                         break;
                     }
                 }
             }
 
-            if(selected == null) guiDrawer.clearSelected();
-            else {
-                if(!Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) guiDrawer.clearSelected();
-                if(guiDrawer.selectedFleets.contains(selected.getFleet().dbid)) selected.onUnSelect();
-                else selected.onSelect(1.0f);
+            if(selected == null) { //Clicked on nothing, so clear selected and return
+                guiDrawer.clearSelected();
+                return;
             }
+
+            if(Mouse.isButtonDown(Inputs.MouseButtons.LEFT_MOUSE.id) && Mouse.getEventButton() == Inputs.MouseButtons.LEFT_MOUSE.id) {
+                if(lastClick >= 15) {
+                    if(!Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) guiDrawer.clearSelected(); //Clear current before selecting in single add mode
+                    if(guiDrawer.selectedEntities.contains(selected.getEntity())) selected.onUnSelect(); //Unselect indicator
+                    else selected.onSelect(1.0f); //Select indicator
+                    lastClick = 0;
+                }
+            } else if(Mouse.isButtonDown(Inputs.MouseButtons.RIGHT_MOUSE.id) && Mouse.getEventButton() == Inputs.MouseButtons.RIGHT_MOUSE.id) guiDrawer.recreateButtonPane(selected);
         }
     }
 

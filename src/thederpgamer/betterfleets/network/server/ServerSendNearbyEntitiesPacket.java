@@ -7,7 +7,7 @@ import api.network.PacketWriteBuffer;
 import org.schema.game.common.controller.SegmentController;
 import org.schema.game.common.data.player.PlayerState;
 import thederpgamer.betterfleets.BetterFleets;
-import thederpgamer.betterfleets.gui.element.sprite.TacticalMapFleetIndicator;
+import thederpgamer.betterfleets.gui.element.sprite.TacticalMapEntityIndicator;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,11 +44,8 @@ public class ServerSendNearbyEntitiesPacket extends Packet {
     public void processPacketOnClient() {
         for(int id : entities) {
             SegmentController entity = (SegmentController) GameCommon.getGameObject(id);
-            if(entity.isInFleet()) {
-                long dbid = entity.getFleet().dbid;
-                if(!BetterFleets.getInstance().tacticalMapDrawer.drawMap.containsKey(dbid)) BetterFleets.getInstance().tacticalMapDrawer.drawMap.put(dbid, new TacticalMapFleetIndicator(entity.getFleet()));
-                if(BetterFleets.getInstance().tacticalMapDrawer.drawMap.get(dbid).getDistance() > BetterFleets.getInstance().tacticalMapDrawer.maxDrawDistance) BetterFleets.getInstance().tacticalMapDrawer.drawMap.remove(dbid);
-            }
+            if(!BetterFleets.getInstance().tacticalMapDrawer.drawMap.containsKey(id)) BetterFleets.getInstance().tacticalMapDrawer.drawMap.put(id, new TacticalMapEntityIndicator(entity));
+            if(BetterFleets.getInstance().tacticalMapDrawer.drawMap.get(id).getDistance() > BetterFleets.getInstance().tacticalMapDrawer.maxDrawDistance) BetterFleets.getInstance().tacticalMapDrawer.drawMap.remove(id);
         }
     }
 

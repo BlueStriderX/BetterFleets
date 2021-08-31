@@ -17,11 +17,11 @@ import javax.vecmath.Vector4f;
  * @author TheDerpGamer
  * @since 08/24/2021
  */
-public class EntityIndicatorSprite implements PositionableSubColorSprite {
+public class EntityIndicatorSubSprite implements PositionableSubColorSprite {
 
     private final SegmentController entity;
 
-    public EntityIndicatorSprite(SegmentController entity) {
+    public EntityIndicatorSubSprite(SegmentController entity) {
         this.entity = entity;
     }
 
@@ -29,7 +29,7 @@ public class EntityIndicatorSprite implements PositionableSubColorSprite {
     public Vector4f getColor() {
         try {
             FactionRelation.RType rType = GameCommon.getGameState().getFactionManager().getRelation(entity.getFactionId(), getCurrentEntity().getFactionId());
-            return new Vector4f(rType.defaultColor.x, rType.defaultColor.y, rType.defaultColor.z, getAlpha());
+            return new Vector4f(rType.defaultColor.x, rType.defaultColor.y, rType.defaultColor.z, 1.0f);
         } catch (Exception ignored) { }
         return new Vector4f(1, 1, 1, 0);
     }
