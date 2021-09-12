@@ -329,7 +329,7 @@ public class PlayerPanel extends GUIElement {
         }
 
         //INSERTED CODE
-        if (inGameActive() && !mapActive() && !BetterFleets.getInstance().tacticalMapDrawer.toggleDraw) {
+        if (inGameActive() && !mapActive() && !BetterFleets.getInstance().tacticalMapDrawer.controlManager.isActive()) {
         //
             if (isDrawShipSideBar()) {
 
@@ -366,7 +366,7 @@ public class PlayerPanel extends GUIElement {
             }
         }
 
-//		drawChat();
+		//drawChat();
 
         if (getState().getController().getInputController().getDragging() != null && getState().getController().getInputController().getDragging() instanceof InventorySlotOverlayElement) {
 
@@ -425,8 +425,6 @@ public class PlayerPanel extends GUIElement {
         StarLoader.fireEvent(event, false);
         ///
         drawChat();
-
-
 
 
         GUIElement.disableOrthogonal();

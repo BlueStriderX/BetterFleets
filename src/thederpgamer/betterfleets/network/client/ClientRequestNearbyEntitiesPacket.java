@@ -54,9 +54,7 @@ public class ClientRequestNearbyEntitiesPacket extends Packet {
         SegmentController entity = (SegmentController) GameCommon.getGameObject(currentEntity);
         Sector sector = GameServer.getUniverse().getSector(entity.getSectorId());
         for(SimpleTransformableSendableObject<?> e : sector.getEntities()) {
-            if(e instanceof SegmentController && !((SegmentController) e).isCloakedFor(entity) && !((SegmentController) e).isJammingFor(entity)) {
-                if(((SegmentController) e).isInFleet()) entities.add(e.getId());
-            }
+            if(e instanceof SegmentController) entities.add(e.getId());
         }
         PacketUtil.sendPacket(playerState, new ServerSendNearbyEntitiesPacket(entities));
     }

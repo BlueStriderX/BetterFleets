@@ -4,7 +4,6 @@ import api.common.GameClient;
 import api.common.GameCommon;
 import api.network.packets.PacketUtil;
 import api.utils.draw.ModWorldDrawer;
-import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 import org.schema.common.util.ByteUtil;
 import org.schema.common.util.linAlg.Vector3i;
@@ -77,7 +76,7 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
 
     public void toggleDraw() {
         if(!initialized) onInit();
-        if(!(GameClient.getClientState().isInAnyStructureBuildMode() || GameClient.getClientState().isInFlightMode()) || GameClient.getClientState().getWorldDrawer().getGameMapDrawer().isMapActive()) {
+        if(!(GameClient.getClientState().getPlayerInputs().isEmpty() || GameClient.getClientState().isInAnyStructureBuildMode() || GameClient.getClientState().isInFlightMode()) || GameClient.getClientState().getWorldDrawer().getGameMapDrawer().isMapActive()) {
             toggleDraw = false;
         } else toggleDraw = !toggleDraw;
 
@@ -114,19 +113,15 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
     public void draw() {
         if(!initialized) onInit();
         if(toggleDraw && Controller.getCamera() instanceof TacticalMapCamera) {
-            GlUtil.glEnable(GL11.GL_DEPTH_TEST);
-            GlUtil.glDepthMask(true);
             GlUtil.glEnable(GL11.GL_BLEND);
             GlUtil.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
             drawGrid(-sectorSize, sectorSize);
-            drawMovementPaths = Keyboard.isKeyDown(Keyboard.KEY_LMENU);
             drawIndicators();
             if(buttonPane.active) {
                 GUIElement.enableOrthogonal();
                 buttonPane.draw();
                 GUIElement.disableOrthogonal();
             }
-            GlUtil.glDisable(GL11.GL_DEPTH_TEST);
             GlUtil.glDisable(GL11.GL_BLEND);
         } else cleanUp();
     }
@@ -137,6 +132,7 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
         controlManager.update(timer);
         SegmentController currentEntity = getCurrentEntity();
         updateTimer --;
+        for(TacticalMapEntityIndicator indicator : drawMap.values()) indicator.update(timer);
         if(updateTimer <= 0) {
             if(currentEntity != null) PacketUtil.sendPacketToServer(new ClientRequestNearbyEntitiesPacket(currentEntity));
             updateTimer = 500;
@@ -413,14 +409,20 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
 
     private void drawIndicators() {
         for(Map.Entry<Integer, TacticalMapEntityIndicator> entry : drawMap.entrySet()) {
-            TacticalMapEntityIndicator indicator = entry.getValue();
-            if(indicator.getDistance() < maxDrawDistance && indicator.getEntity() != null) {
-                Indication indication = indicator.getIndication(indicator.getSystem());
-                indicator.drawSprite(indication.getCurrentTransform());
-                indicator.drawLabel(indication.getCurrentTransform());
-                if(drawMovementPaths && indicator.selected) indicator.drawMovementPath(camera, 1.0f);
-                if(drawTargetingPaths && indicator.selected) indicator.drawTargetingPath(camera, 1.0f);
-            } else drawMap.remove(entry.getKey());
+            try {
+                TacticalMapEntityIndicator indicator = entry.getValue();
+                if(indicator.getDistance() < maxDrawDistance && indicator.getEntity() != null) {
+                    Indication indication = indicator.getIndication(indicator.getSystem());
+                    indicator.drawSprite(indication.getCurrentTransform());
+                    indicator.drawLabel(indication.getCurrentTransform());
+                    //if(drawMovementPaths && indicator.selected) indicator.drawMovementPath(camera);
+                    if(drawTargetingPaths) indicator.drawTargetingPath(camera);
+                    //if(drawTargetingPaths && indicator.selected) indicator.drawTargetingPath(camera);
+                } else drawMap.remove(entry.getKey());
+            } catch(Exception exception) {
+                exception.printStackTrace();
+                drawMap.remove(entry.getKey());
+            }
         }
     }
 

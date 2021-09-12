@@ -44,8 +44,12 @@ public class ServerSendNearbyEntitiesPacket extends Packet {
     public void processPacketOnClient() {
         for(int id : entities) {
             SegmentController entity = (SegmentController) GameCommon.getGameObject(id);
-            if(!BetterFleets.getInstance().tacticalMapDrawer.drawMap.containsKey(id)) BetterFleets.getInstance().tacticalMapDrawer.drawMap.put(id, new TacticalMapEntityIndicator(entity));
-            if(BetterFleets.getInstance().tacticalMapDrawer.drawMap.get(id).getDistance() > BetterFleets.getInstance().tacticalMapDrawer.maxDrawDistance) BetterFleets.getInstance().tacticalMapDrawer.drawMap.remove(id);
+            if(!entity.isDocked() && !entity.isCoreOverheating()) {
+                if(!BetterFleets.getInstance().tacticalMapDrawer.drawMap.containsKey(id)) {
+                    BetterFleets.getInstance().tacticalMapDrawer.drawMap.put(id, new TacticalMapEntityIndicator(entity));
+                    if(BetterFleets.getInstance().tacticalMapDrawer.drawMap.get(id).getDistance() > BetterFleets.getInstance().tacticalMapDrawer.maxDrawDistance) BetterFleets.getInstance().tacticalMapDrawer.drawMap.remove(id);
+                }
+            } else BetterFleets.getInstance().tacticalMapDrawer.drawMap.remove(entity.getId());
         }
     }
 

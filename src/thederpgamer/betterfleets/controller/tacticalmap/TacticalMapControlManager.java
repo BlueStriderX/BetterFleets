@@ -38,10 +38,10 @@ public class TacticalMapControlManager extends AbstractControlManager {
 
     @Override
     public void onSwitch(boolean active) {
+        guiDrawer.clearSelected();
         getInteractionManager().setActive(!active);
         getInteractionManager().getInShipControlManager().getShipControlManager().getShipExternalFlightController().suspend(active);
         getInteractionManager().getInShipControlManager().getShipControlManager().getSegmentBuildController().suspend(active);
-        guiDrawer.clearSelected();
         super.onSwitch(active);
     }
 
@@ -74,6 +74,7 @@ public class TacticalMapControlManager extends AbstractControlManager {
             if(Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)) amount = 5000;
             else amount = 1000;
         }
+        if(Keyboard.getEventKey() == Keyboard.KEY_LMENU && Keyboard.getEventKeyState()) BetterFleets.getInstance().tacticalMapDrawer.drawMovementPaths = !BetterFleets.getInstance().tacticalMapDrawer.drawMovementPaths;
         if(Keyboard.isKeyDown(Keyboard.KEY_X)) BetterFleets.getInstance().tacticalMapDrawer.camera.reset();
         if(Keyboard.isKeyDown(KeyboardMappings.FORWARD.getMapping())) movement.add(new Vector3f(0, 0, amount));
         if(Keyboard.isKeyDown(KeyboardMappings.BACKWARDS.getMapping())) movement.add(new Vector3f(0, 0, -amount));
@@ -84,8 +85,7 @@ public class TacticalMapControlManager extends AbstractControlManager {
         movement.scale(timer.getDelta());
         move(movement);
 
-
-        /*
+        /* Doesn't work, sprites are cringe and don't like to work with any sort of mouse selection
         if(Mouse.getEventButtonState() && !Mouse.isGrabbed()) {
             TacticalMapEntityIndicator selected = null;
             for(Map.Entry<Integer, TacticalMapEntityIndicator> entry : guiDrawer.drawMap.entrySet()) {

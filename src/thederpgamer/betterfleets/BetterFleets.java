@@ -133,15 +133,14 @@ public class BetterFleets extends StarMod {
         StarLoader.registerListener(KeyPressEvent.class, new Listener<KeyPressEvent>() {
             @Override
             public void onEvent(KeyPressEvent event) {
-                if(event.getChar() == mapKey) {
-                    if(tacticalMapDrawer != null) tacticalMapDrawer.toggleDraw();
-                }
-
-                if(tacticalMapDrawer != null && tacticalMapDrawer.toggleDraw) {
-                    if(KeyboardMappings.getEventKeyState(event.getRawEvent(), GameClient.getClientState())) {
-                        if(Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)) {
-                            Controller.setCamera(tacticalMapDrawer.getDefaultCamera());
-                            tacticalMapDrawer.controlManager.onSwitch(false);
+                if(GameClient.getClientState().getPlayerInputs().isEmpty()) {
+                    if(event.getChar() == mapKey) if(tacticalMapDrawer != null) tacticalMapDrawer.toggleDraw();
+                    if(tacticalMapDrawer != null && tacticalMapDrawer.toggleDraw) {
+                        if(KeyboardMappings.getEventKeyState(event.getRawEvent(), GameClient.getClientState())) {
+                            if(Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)) {
+                                Controller.setCamera(tacticalMapDrawer.getDefaultCamera());
+                                tacticalMapDrawer.controlManager.onSwitch(false);
+                            }
                         }
                     }
                 }

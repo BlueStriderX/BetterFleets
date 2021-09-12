@@ -28,6 +28,7 @@ import org.schema.schine.graphicsengine.camera.Camera;
 import org.schema.schine.graphicsengine.core.Controller;
 import org.schema.schine.graphicsengine.core.GLFrame;
 import org.schema.schine.graphicsengine.core.GlUtil;
+import org.schema.schine.graphicsengine.core.Timer;
 import org.schema.schine.graphicsengine.core.settings.EngineSettings;
 import org.schema.schine.graphicsengine.forms.SelectableSprite;
 import org.schema.schine.graphicsengine.forms.Sprite;
@@ -79,9 +80,9 @@ public class TacticalMapEntityIndicator extends AbstractMapEntry implements Sele
 
     public GUIOverlay sprite;
     public GUITextOverlay labelOverlay;
-    private EntityIndicatorSubSprite[] subSprite;
 
     public final Transform entityTransform = new Transform();
+    private float timer;
     public boolean selected = false;
 
     public TacticalMapEntityIndicator(SegmentController entity) {
@@ -138,8 +139,8 @@ public class TacticalMapEntityIndicator extends AbstractMapEntry implements Sele
     public void drawSprite(Transform transform) {
         if(sprite == null) {
             Sprite s = ResourceManager.getSprite("tactical-map-indicators");
-            s.setMultiSpriteMax(5, 2);
-            s.setWidth(s.getMaterial().getTexture().getWidth() / 5);
+            s.setMultiSpriteMax(8, 2);
+            s.setWidth(s.getMaterial().getTexture().getWidth() / 8);
             s.setHeight(s.getMaterial().getTexture().getHeight() / 2);
             s.setPositionCenter(true);
             s.setSelectionAreaLength(15.0f);
@@ -151,8 +152,6 @@ public class TacticalMapEntityIndicator extends AbstractMapEntry implements Sele
             sprite.getSprite().setBlend(true);
             sprite.getSprite().setFlip(true);
             sprite.setUserPointer(entity.getId());
-
-            subSprite = new EntityIndicatorSubSprite[] {new EntityIndicatorSubSprite(this)};
         }
 
         transform.basis.set(getCamera().lookAt(false).basis);
@@ -161,7 +160,7 @@ public class TacticalMapEntityIndicator extends AbstractMapEntry implements Sele
         if(entity.isCloakedFor(getCurrentEntity()) && entityTransform.equals(entity.getWorldTransform())) entityTransform.set(randomizeTransform(entity.getWorldTransform()));
         else entityTransform.set(entity.getWorldTransform());
         if(!getSector().equals(Objects.requireNonNull(getCurrentEntity()).getSector(new Vector3i()))) SectorUtils.transformToSector(entityTransform, getCurrentEntity().getSector(new Vector3i()), getSector());
-        if(sprite != null) {
+        if(sprite != null && !entity.isCoreOverheating()) {
             sprite.getSprite().setSelectedMultiSprite(getSpriteIndex());
             sprite.setSpriteSubIndex(getSpriteIndex());
             sprite.getSprite().setSelectedMultiSprite(getSpriteIndex());
@@ -170,8 +169,7 @@ public class TacticalMapEntityIndicator extends AbstractMapEntry implements Sele
 
             if(selected) sprite.getSprite().setTint(new Vector4f(1.0f, 1.0f, 0.0f, 1.0f));
             else sprite.getSprite().setTint(new Vector4f(1.0f, 1.0f, 1.0f, 1.0f));
-            Sprite.draw3D(sprite.getSprite(), subSprite, 0, getCamera());
-            //sprite.draw();
+            sprite.draw();
         }
     }
 
@@ -211,32 +209,41 @@ public class TacticalMapEntityIndicator extends AbstractMapEntry implements Sele
         return null;
     }
 
-    public void drawTargetingPath(Camera camera, float speed) {
+    public void drawTargetingPath(Camera camera) {
         SegmentController currentTarget = getCurrentTarget();
         if(currentTarget != null) {
             Vector3f start = new Vector3f(entityTransform.origin);
             Vector3f end = currentTarget.getWorldTransform().origin;
+            try {
+                end.set(BetterFleets.getInstance().tacticalMapDrawer.drawMap.get(currentTarget.getId()).sprite.getPos());
+            } catch(Exception ignored) { }
             if(end.length() != 0 && Math.abs(Vector3fTools.sub(start, end).length()) > 1.0f) {
                 startDrawDottedLine(camera);
-                drawDottedLine(start, end, getPathColor(), speed);
+                drawDottedLine(start, end, getPathColor());
                 endDrawDottedLine();
             }
         }
     }
 
-    public void drawMovementPath(Camera camera, float speed) {
+    public void drawMovementPath(Camera camera) {
         Vector3f start = new Vector3f(entityTransform.origin);
-        Vector3f end = entity.getLinearVelocity(new Vector3f()); //This doesn't seem right...
+        Vector3f end = GlUtil.getForwardVector(new Vector3f(), entity.getWorldTransform());
+        end.scale(entity.getSpeedCurrent());
         if(end.length() != 0 && Math.abs(Vector3fTools.sub(start, end).length()) > 1.0f) {
             startDrawDottedLine(camera);
             Vector4f pathColor = new Vector4f(Color.CYAN.getColorComponents(new float[4]));
             pathColor.w = 1.0f;
-            drawDottedLine(start, end, pathColor, speed);
+            drawDottedLine(start, end, pathColor);
             endDrawDottedLine();
         }
     }
 
     private Vector4f getPathColor() {
+        int playerFaction = GameClient.getClientPlayerState().getFactionId();
+        int entityFaction = entity.getFactionId();
+        FactionRelation.RType relation = Objects.requireNonNull(GameCommon.getGameState()).getFactionManager().getRelation(entityFaction, playerFaction);
+        return new Vector4f(relation.defaultColor.x, relation.defaultColor.y, relation.defaultColor.z, 1.0f);
+        /*
         SegmentController currentTarget = getCurrentTarget();
         if(currentTarget != null) {
             int entityFaction = entity.getFactionId();
@@ -247,6 +254,7 @@ public class TacticalMapEntityIndicator extends AbstractMapEntry implements Sele
             }
         }
         return new Vector4f(1.0f, 1.0f, 1.0f, 1.0f);
+         */
     }
 
     public SegmentControllerAIEntity<?> getAIEntity() {
@@ -318,16 +326,15 @@ public class TacticalMapEntityIndicator extends AbstractMapEntry implements Sele
      * @param from The point to start at
      * @param to The point to end at
      * @param color The line's color
-     * @param speed The speed to move the line at
      * @param sectorSize The world's sector size
      */
-    public void drawDottedLine(Vector3f from, Vector3f to, Vector4f color, float speed, float sectorSize) {
+    public void drawDottedLine(Vector3f from, Vector3f to, Vector4f color, float sectorSize) {
         Vector3f fromPx = new Vector3f();
         Vector3f toPx = new Vector3f();
         float sectorSizeHalf = sectorSize * 0.5f;
         fromPx.set((from.x) * sectorSize + sectorSizeHalf, (from.y) * sectorSize + sectorSizeHalf, (from.z) * sectorSize + sectorSizeHalf);
         toPx.set((to.x) * sectorSize + sectorSizeHalf, (to.y) * sectorSize + sectorSizeHalf, (to.z) * sectorSize + sectorSizeHalf);
-        if(!fromPx.equals(toPx)) drawDottedLine(fromPx, toPx, color, speed);
+        if(!fromPx.equals(toPx)) drawDottedLine(fromPx, toPx, color);
     }
 
     /**
@@ -335,9 +342,8 @@ public class TacticalMapEntityIndicator extends AbstractMapEntry implements Sele
      * @param from The point to start at
      * @param to The point to end at
      * @param color The line's color
-     * @param speed The speed to move the line at
      */
-    public void drawDottedLine(Vector3f from, Vector3f to, Vector4f color, float speed) {
+    public void drawDottedLine(Vector3f from, Vector3f to, Vector4f color) {
         Vector3f dir = new Vector3f();
         Vector3f dirN = new Vector3f();
 
@@ -352,7 +358,7 @@ public class TacticalMapEntityIndicator extends AbstractMapEntry implements Sele
 
         GlUtil.glColor4f(color);
         boolean first = true;
-        float f = ((speed % 1.0f) * dottedSize * 2);
+        float f = ((timer % 1.0f) * dottedSize * 2);
         for(; f < len; f += (dottedSize * 2)) {
             a.set(dirN);
             a.scale(f);
@@ -414,6 +420,10 @@ public class TacticalMapEntityIndicator extends AbstractMapEntry implements Sele
             else builder.append(StringTools.formatDistance(getDistance()));
         }
         return builder.toString().trim();
+    }
+
+    public void update(Timer timer) {
+        this.timer += timer.getDelta();
     }
 
     @Override
