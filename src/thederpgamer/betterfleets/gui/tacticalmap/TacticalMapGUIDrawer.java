@@ -1,4 +1,4 @@
-package thederpgamer.betterfleets.controller.tacticalmap;
+package thederpgamer.betterfleets.gui.tacticalmap;
 
 import api.common.GameClient;
 import api.common.GameCommon;

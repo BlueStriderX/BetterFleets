@@ -123,18 +123,20 @@ public class HudContextHelpManager {
         for(HudContextHelperContainer h : queueMouse) mouseYHeight += h.icon.getHeight();
         return mouseYHeight;
     }
-    //
-    public void addBlock(SegmentPiece p, Object text){
+
+    public HudContextHelperContainer addBlock(SegmentPiece p, Object text){
         HudContextHelperContainer addHelper = addHelper(InputType.BLOCK, queueBlock.size(), text, Hos.BLOCK, ContextFilter.CRUCIAL);
         addHelper.p = p;
+        return addHelper;
     }
-    public void addInfo(Hos position, ContextFilter filter, Object text){
-        addHelper(InputType.BLOCK, queueBlock.size(), text, position, filter);
+    public HudContextHelperContainer addInfo(Hos position, ContextFilter filter, Object text){
+        return addHelper(InputType.BLOCK, queueBlock.size(), text, position, filter);
     }
 
-    public void addHelper(KeyboardMappings m, String text, Hos position, ContextFilter filter){
-        addHelper(InputType.KEYBOARD, m.getMapping(), text, position, filter);
+    public HudContextHelperContainer addHelper(KeyboardMappings m, String text, Hos position, ContextFilter filter){
+        return addHelper(InputType.KEYBOARD, m.getMapping(), text, position, filter);
     }
+
     public HudContextHelperContainer addHelper(InputType type, int key, Object text, Hos position, ContextFilter filter){
         try {
             tmpHelper.set(type, key, text, position, filter);
@@ -161,6 +163,14 @@ public class HudContextHelpManager {
         }
 
     }
+
+    public void addHelper(HudContextHelperContainer helper) {
+        if(!helperCache.containsKey(helper)) helperCache.put(helper, helper);
+        if(!queueMouse.contains(helper) && helper.position.equals(Hos.MOUSE)) queueMouse.add(helper);
+        if(!queueLeft.contains(helper) && helper.position.equals(Hos.LEFT)) queueLeft.add(helper);
+        if(!queueBlock.contains(helper) && helper.position.equals(Hos.BLOCK)) queueBlock.add(helper);
+    }
+    //
 
     private void addBuildAndTake(){
         if(currentPiece != null){

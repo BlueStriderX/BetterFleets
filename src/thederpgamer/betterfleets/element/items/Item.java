@@ -4,7 +4,7 @@ import api.config.BlockConfig;
 import org.schema.game.common.data.element.ElementCategory;
 import org.schema.game.common.data.element.ElementInformation;
 import thederpgamer.betterfleets.BetterFleets;
-import thederpgamer.betterfleets.utils.ResourceManager;
+import thederpgamer.betterfleets.manager.ResourceManager;
 
 /**
  * Abstract Item class.

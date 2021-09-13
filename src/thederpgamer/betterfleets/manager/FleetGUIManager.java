@@ -1,4 +1,4 @@
-package thederpgamer.betterfleets.utils;
+package thederpgamer.betterfleets.manager;
 
 import api.common.GameClient;
 import api.common.GameCommon;
@@ -10,6 +10,7 @@ import org.schema.game.common.data.fleet.Fleet;
 import org.schema.game.common.data.fleet.FleetCommandTypes;
 import org.schema.game.common.data.fleet.FleetMember;
 import org.schema.game.common.data.player.faction.FactionRelation;
+import thederpgamer.betterfleets.utils.FleetUtils;
 
 import javax.vecmath.Vector3f;
 import javax.vecmath.Vector4f;

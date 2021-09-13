@@ -25,14 +25,14 @@ import org.schema.schine.graphicsengine.forms.gui.GUIElement;
 import org.schema.schine.graphicsengine.forms.gui.newgui.GUIHorizontalArea;
 import org.schema.schine.input.InputState;
 import org.schema.schine.input.KeyboardMappings;
-import thederpgamer.betterfleets.controller.tacticalmap.TacticalMapGUIDrawer;
+import thederpgamer.betterfleets.gui.tacticalmap.TacticalMapGUIDrawer;
 import thederpgamer.betterfleets.element.ElementManager;
 import thederpgamer.betterfleets.element.blocks.systems.RepairPasteFabricator;
 import thederpgamer.betterfleets.gui.hud.RepairPasteFabricatorHudOverlay;
+import thederpgamer.betterfleets.manager.*;
 import thederpgamer.betterfleets.network.client.ClientRequestNearbyEntitiesPacket;
 import thederpgamer.betterfleets.network.server.ServerSendNearbyEntitiesPacket;
 import thederpgamer.betterfleets.systems.RepairPasteFabricatorSystem;
-import thederpgamer.betterfleets.utils.*;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -78,6 +78,7 @@ public class BetterFleets extends StarMod {
     //GUI
     public char mapKey;
     public TacticalMapGUIDrawer tacticalMapDrawer;
+    public NPCConversationDrawer conversationDrawer;
     public RepairPasteFabricatorHudOverlay repairPasteHudOverlay;
 
     @Override
@@ -113,6 +114,8 @@ public class BetterFleets extends StarMod {
                     event.getModDrawables().add(tacticalMapDrawer = new TacticalMapGUIDrawer());
                     mapKey = ConfigManager.getMainConfig().getString("tactical-map-toggle-key").charAt(0);
                 }
+
+                if(conversationDrawer == null) event.getModDrawables().add(conversationDrawer = new NPCConversationDrawer());
             }
         }, this);
 

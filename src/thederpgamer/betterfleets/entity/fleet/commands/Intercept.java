@@ -17,7 +17,7 @@ import org.schema.game.server.ai.program.common.TargetProgram;
 import org.schema.game.server.ai.program.fleetcontrollable.states.FleetSeachingForTarget;
 import org.schema.schine.ai.stateMachines.FSMException;
 import org.schema.schine.ai.stateMachines.Transition;
-import thederpgamer.betterfleets.utils.ConfigManager;
+import thederpgamer.betterfleets.manager.ConfigManager;
 import javax.vecmath.Vector3f;
 import java.io.IOException;
 import java.util.ArrayList;

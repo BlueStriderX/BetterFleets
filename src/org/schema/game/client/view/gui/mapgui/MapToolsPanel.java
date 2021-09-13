@@ -16,7 +16,7 @@ import org.schema.schine.graphicsengine.core.settings.StateParameterNotFoundExce
 import org.schema.schine.graphicsengine.forms.gui.*;
 import org.schema.schine.input.InputState;
 import thederpgamer.betterfleets.gui.element.GUIRightClickButtonPane;
-import thederpgamer.betterfleets.utils.FleetGUIManager;
+import thederpgamer.betterfleets.manager.FleetGUIManager;
 import javax.vecmath.Vector4f;
 
 /**

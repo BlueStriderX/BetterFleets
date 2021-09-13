@@ -36,9 +36,9 @@ import org.schema.schine.graphicsengine.forms.font.FontLibrary;
 import org.schema.schine.graphicsengine.forms.gui.GUIOverlay;
 import org.schema.schine.graphicsengine.forms.gui.GUITextOverlay;
 import thederpgamer.betterfleets.BetterFleets;
-import thederpgamer.betterfleets.controller.tacticalmap.TacticalMapGUIDrawer;
-import thederpgamer.betterfleets.utils.LogManager;
-import thederpgamer.betterfleets.utils.ResourceManager;
+import thederpgamer.betterfleets.gui.tacticalmap.TacticalMapGUIDrawer;
+import thederpgamer.betterfleets.manager.LogManager;
+import thederpgamer.betterfleets.manager.ResourceManager;
 import thederpgamer.betterfleets.utils.SectorUtils;
 
 import javax.vecmath.Vector3f;

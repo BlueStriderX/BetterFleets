@@ -19,7 +19,7 @@ import org.schema.schine.input.KeyEventInterface;
 import org.schema.schine.input.KeyboardMappings;
 import org.schema.schine.input.Mouse;
 import thederpgamer.betterfleets.BetterFleets;
-import thederpgamer.betterfleets.utils.FleetGUIManager;
+import thederpgamer.betterfleets.manager.FleetGUIManager;
 
 import java.util.ArrayList;
 import java.util.HashSet;

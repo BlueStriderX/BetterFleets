@@ -8,7 +8,7 @@ import org.schema.game.common.controller.elements.ManagerContainer;
 import org.schema.schine.graphicsengine.core.Timer;
 import thederpgamer.betterfleets.BetterFleets;
 import thederpgamer.betterfleets.element.ElementManager;
-import thederpgamer.betterfleets.utils.ConfigManager;
+import thederpgamer.betterfleets.manager.ConfigManager;
 import java.io.IOException;
 
 /**

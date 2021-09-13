@@ -1,4 +1,4 @@
-package thederpgamer.betterfleets.controller.tacticalmap;
+package thederpgamer.betterfleets.gui.tacticalmap;
 
 import api.common.GameClient;
 import org.lwjgl.input.Keyboard;
@@ -14,7 +14,7 @@ import org.schema.schine.graphicsengine.core.Timer;
 import org.schema.schine.input.KeyEventInterface;
 import org.schema.schine.input.KeyboardMappings;
 import thederpgamer.betterfleets.BetterFleets;
-import thederpgamer.betterfleets.utils.ConfigManager;
+import thederpgamer.betterfleets.manager.ConfigManager;
 
 import javax.vecmath.Vector3f;
 

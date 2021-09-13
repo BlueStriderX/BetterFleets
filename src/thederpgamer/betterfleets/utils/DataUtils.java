@@ -3,6 +3,8 @@ package thederpgamer.betterfleets.utils;
 import api.common.GameClient;
 import api.common.GameCommon;
 import thederpgamer.betterfleets.BetterFleets;
+import thederpgamer.betterfleets.manager.LogManager;
+import thederpgamer.betterfleets.manager.MessageType;
 
 /**
  * DataUtils

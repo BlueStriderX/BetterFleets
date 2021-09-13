@@ -7,7 +7,7 @@ import org.schema.game.common.data.element.FactoryResource;
 import org.schema.schine.graphicsengine.core.GraphicsContext;
 import thederpgamer.betterfleets.element.ElementManager;
 import thederpgamer.betterfleets.element.blocks.Block;
-import thederpgamer.betterfleets.utils.ResourceManager;
+import thederpgamer.betterfleets.manager.ResourceManager;
 
 /**
  * Repair Paste Fabricator that slowly generates material that can be used by Astrotech systems to repair ships instead

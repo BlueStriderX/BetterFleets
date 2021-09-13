@@ -1,8 +1,9 @@
-package thederpgamer.betterfleets.utils;
+package thederpgamer.betterfleets.manager;
 
 import api.utils.textures.StarLoaderTexture;
 import org.schema.schine.graphicsengine.forms.Sprite;
 import thederpgamer.betterfleets.BetterFleets;
+
 import java.util.HashMap;
 
 /**

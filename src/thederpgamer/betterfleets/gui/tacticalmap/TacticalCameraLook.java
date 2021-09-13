@@ -1,4 +1,4 @@
-package thederpgamer.betterfleets.controller.tacticalmap;
+package thederpgamer.betterfleets.gui.tacticalmap;
 
 import com.bulletphysics.linearmath.Transform;
 import org.schema.common.FastMath;
