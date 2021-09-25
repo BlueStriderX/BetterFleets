@@ -17,6 +17,7 @@ import thederpgamer.betterfleets.BetterFleets;
 import thederpgamer.betterfleets.manager.ConfigManager;
 
 import javax.vecmath.Vector3f;
+import java.nio.FloatBuffer;
 
 /**
  * <Description>
@@ -29,6 +30,8 @@ public class TacticalMapControlManager extends AbstractControlManager {
     private final TacticalMapGUIDrawer guiDrawer;
     private long lastClick;
     public float viewDistance;
+
+    private FloatBuffer depthBuffer;
 
     public TacticalMapControlManager(TacticalMapGUIDrawer guiDrawer) {
         super(GameClient.getClientState());
@@ -85,22 +88,14 @@ public class TacticalMapControlManager extends AbstractControlManager {
         movement.scale(timer.getDelta());
         move(movement);
 
-        /* Doesn't work, sprites are cringe and don't like to work with any sort of mouse selection
+        /*
         if(Mouse.getEventButtonState() && !Mouse.isGrabbed()) {
             TacticalMapEntityIndicator selected = null;
             for(Map.Entry<Integer, TacticalMapEntityIndicator> entry : guiDrawer.drawMap.entrySet()) {
-                entry.getValue().sprite.checkMouseInside();
-                entry.getValue().sprite.checkMouseInsideWithTransform();
-                if(entry.getValue().getEntity().getFactionId() > 0 || GameClient.getClientPlayerState().getFactionId() > 0) continue;
+                if(entry.getValue().getEntity().getFactionId() == 0 || GameClient.getClientPlayerState().getFactionId() == 0) continue;
                 if(entry.getValue().getEntity().getFactionId() == GameClient.getClientPlayerState().getFactionId()) {
-                    int inMinX = (int) (entry.getValue().sprite.getWorldTranslation().x - 100);
-                    int inMinY = (int) (entry.getValue().sprite.getWorldTranslation().y - 15);
-                    int inMaxX = (int) (entry.getValue().sprite.getWorldTranslation().x + 50);
-                    int inMaxY = (int) (entry.getValue().sprite.getWorldTranslation().y + 15);
-                    Vector2f relMousePos = new Vector2f(Math.abs(entry.getValue().sprite.getRelMousePos().x + entry.getValue().sprite.getWorldTranslation().x), entry.getValue().sprite.getRelMousePos().y - entry.getValue().sprite.getWorldTranslation().y);
-                    if((relMousePos.x >= inMinX && relMousePos.x <= inMaxX) || (relMousePos.y >= inMinY && relMousePos.y <= inMaxY)) {
+                    if(Sprite.getMousePosition(entry.getValue().sprite.getSprite(), (float) Mouse.getX(), (float) Mouse.getY(), 0.1f)) {
                         selected = entry.getValue();
-                        break;
                     }
                 }
             }

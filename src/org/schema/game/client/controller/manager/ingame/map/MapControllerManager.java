@@ -75,10 +75,10 @@ public class MapControllerManager extends AbstractControlManager {
                 if(!FleetGUIManager.getPanel().fleetActionsList.active) {
                     boolean doubleClick = System.currentTimeMillis() - lastClick < 300L;
                     if(!doubleClick) {
-                        ArrayList<Fleet> toRemove = new ArrayList<>(FleetGUIManager.selectedFleets);
-                        for(Fleet fleet : toRemove) removeFleet(fleet);
-                        FleetGUIManager.selectedFleets.clear();
-                        FleetGUIManager.getPanel().updateFleetList();
+                        //ArrayList<Fleet> toRemove = new ArrayList<>(FleetGUIManager.selectedFleets);
+                        //for(Fleet fleet : toRemove) removeFleet(fleet);
+                        //FleetGUIManager.selectedFleets.clear();
+                        //FleetGUIManager.getPanel().updateFleetList();
                     } else {
                         for(SelectableMapEntry selectableEntry : selected) {
                             System.err.println("[CLIENT][MAPMANAGER] clicked on " + selectableEntry);

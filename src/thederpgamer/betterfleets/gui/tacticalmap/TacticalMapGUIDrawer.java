@@ -7,6 +7,7 @@ import api.utils.draw.ModWorldDrawer;
 import org.lwjgl.opengl.GL11;
 import org.schema.common.util.ByteUtil;
 import org.schema.common.util.linAlg.Vector3i;
+import org.schema.game.client.view.SegmentDrawer;
 import org.schema.game.client.view.effects.Indication;
 import org.schema.game.common.controller.SegmentController;
 import org.schema.game.common.data.player.faction.FactionRelation;
@@ -19,9 +20,11 @@ import org.schema.schine.graphicsengine.forms.gui.GUIAncor;
 import org.schema.schine.graphicsengine.forms.gui.GUICallback;
 import org.schema.schine.graphicsengine.forms.gui.GUIElement;
 import org.schema.schine.graphicsengine.forms.gui.newgui.GUIHorizontalArea;
+import org.schema.schine.graphicsengine.shader.ShaderLibrary;
 import org.schema.schine.input.InputState;
 import thederpgamer.betterfleets.gui.element.GUIRightClickButtonPane;
 import thederpgamer.betterfleets.gui.element.sprite.TacticalMapEntityIndicator;
+import thederpgamer.betterfleets.manager.LogManager;
 import thederpgamer.betterfleets.network.client.ClientRequestNearbyEntitiesPacket;
 
 import javax.annotation.Nullable;
@@ -39,6 +42,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
 
+    private SegmentDrawer segmentDrawer;
     public TacticalMapControlManager controlManager;
     public TacticalMapCamera camera;
     public boolean toggleDraw;
@@ -55,6 +59,8 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
 
     private GUIRightClickButtonPane buttonPane;
 
+    private FrameBufferObjects outlinesFBO;
+
     public boolean drawMovementPaths = false;
     public boolean drawTargetingPaths = true;
 
@@ -67,6 +73,7 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
         maxDrawDistance = sectorSize * 4.0f;
         labelOffset = new Vector3f(0.0f, -20.0f, 0.0f);
         drawMap = new ConcurrentHashMap<>();
+        outlinesFBO = new FrameBufferObjects("SELECTED_ENTITY_DRAWER", GLFrame.getWidth(), GLFrame.getHeight());
     }
 
     public void clearSelected() {
@@ -113,16 +120,18 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
     public void draw() {
         if(!initialized) onInit();
         if(toggleDraw && Controller.getCamera() instanceof TacticalMapCamera) {
-            GlUtil.glEnable(GL11.GL_BLEND);
-            GlUtil.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+            //GlUtil.glEnable(GL11.GL_BLEND);
+            //GlUtil.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+            GameClient.getClientPlayerState().getNetworkObject().selectedEntityId.set(-1);
             drawGrid(-sectorSize, sectorSize);
             drawIndicators();
+            drawOutlines();
             if(buttonPane.active) {
                 GUIElement.enableOrthogonal();
                 buttonPane.draw();
                 GUIElement.disableOrthogonal();
             }
-            GlUtil.glDisable(GL11.GL_BLEND);
+            //GlUtil.glDisable(GL11.GL_BLEND);
         } else cleanUp();
     }
 
@@ -418,12 +427,74 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
                     //if(drawMovementPaths && indicator.selected) indicator.drawMovementPath(camera);
                     if(drawTargetingPaths) indicator.drawTargetingPath(camera);
                     //if(drawTargetingPaths && indicator.selected) indicator.drawTargetingPath(camera);
-                } else drawMap.remove(entry.getKey());
+                } else {
+                    indicator.sprite.cleanUp();
+                    indicator.labelOverlay.cleanUp();
+                    drawMap.remove(entry.getKey());
+                }
             } catch(Exception exception) {
                 exception.printStackTrace();
                 drawMap.remove(entry.getKey());
             }
         }
+    }
+
+    private void drawOutlines() {
+        if(GameCommon.isClientConnectedToServer() || GameCommon.isOnSinglePlayer()) {
+            for(Map.Entry<Integer, TacticalMapEntityIndicator> entry : drawMap.entrySet()) {
+                try {
+                    if(entry.getValue().selected || selectedEntities.contains(entry.getValue().getEntity())) {
+                        SegmentController entity = (SegmentController) GameCommon.getGameObject(entry.getValue().getEntityId());
+                        outlinesFBO.enable();
+                        ShaderLibrary.cubeShader13SimpleWhite.loadWithoutUpdate();
+                        GlUtil.updateShaderVector4f(ShaderLibrary.cubeShader13SimpleWhite, "col", entry.getValue().getColor());
+                        ShaderLibrary.cubeShader13SimpleWhite.unloadWithoutExit();
+                        int drawn = getSegmentDrawer().drawSegmentController(entity, ShaderLibrary.cubeShader13SimpleWhite);
+                        outlinesFBO.disable();
+
+                        if(drawn > 0) {
+                            outlinesFBO.enable();
+                            GlUtil.glDisable(GL11.GL_BLEND);
+                            GlUtil.glDisable(GL11.GL_DEPTH_TEST);
+                            GlUtil.glEnable(GL11.GL_BLEND);
+                            GlUtil.glBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_ALPHA);
+                            getSegmentDrawer().drawElementCollectionsFromFrameBuffer(outlinesFBO, 0.5f);
+                            GlUtil.glDisable(GL11.GL_BLEND);
+                            outlinesFBO.disable();
+                        }
+                    }
+                } catch(Exception exception) {
+                    LogManager.logException("Something went wrong while trying to draw entity outlines", exception);
+                }
+                //if(true) {
+
+                /*
+                Vector3f pos = new Vector3f(entry.getValue().entityTransform.origin);
+                Vector3f min = entry.getValue().getEntity().getBoundingBox().min;
+                Vector3f max = entry.getValue().getEntity().getBoundingBox().max;
+                Vector3f half = new Vector3f(SegmentData.SEG_HALF, SegmentData.SEG_HALF, SegmentData.SEG_HALF);
+                Transform t = new Transform(entry.getValue().entityTransform);
+                Vector3f p = new Vector3f();
+                p.set(pos.x, pos.y, pos.z);
+                p.x -= SegmentData.SEG_HALF;
+                p.y -= SegmentData.SEG_HALF;
+                p.z -= SegmentData.SEG_HALF;
+                t.basis.transform(p);
+                t.origin.add(p);
+                Vector4f color = entry.getValue().getColor();
+                min.sub(half);
+                max.sub(half);
+                DebugBoundingBox boundingBox = new DebugBoundingBox(min, max, color.x, color.y, color.z, 0.75f);
+                boundingBox.LIFETIME = 200;
+                DebugDrawer.boundingBoxes.add(boundingBox);
+                DebugDrawer.drawBoundingBoxes();
+                 */
+            }
+        }
+    }
+
+    private SegmentDrawer getSegmentDrawer() {
+        return GameClient.getClientState().getWorldDrawer().getSegmentDrawer();
     }
 
     private SegmentController getCurrentEntity() {

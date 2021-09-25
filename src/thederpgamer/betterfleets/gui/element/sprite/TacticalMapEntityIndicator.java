@@ -8,7 +8,7 @@ import org.lwjgl.opengl.GL11;
 import org.schema.common.util.StringTools;
 import org.schema.common.util.linAlg.Vector3fTools;
 import org.schema.common.util.linAlg.Vector3i;
-import org.schema.game.client.data.gamemap.entry.AbstractMapEntry;
+import org.schema.game.client.data.gamemap.entry.SelectableMapEntry;
 import org.schema.game.client.view.effects.ConstantIndication;
 import org.schema.game.client.view.effects.Indication;
 import org.schema.game.client.view.gamemap.GameMapDrawer;
@@ -30,6 +30,7 @@ import org.schema.schine.graphicsengine.core.GLFrame;
 import org.schema.schine.graphicsengine.core.GlUtil;
 import org.schema.schine.graphicsengine.core.Timer;
 import org.schema.schine.graphicsengine.core.settings.EngineSettings;
+import org.schema.schine.graphicsengine.forms.PositionableSubColorSprite;
 import org.schema.schine.graphicsengine.forms.SelectableSprite;
 import org.schema.schine.graphicsengine.forms.Sprite;
 import org.schema.schine.graphicsengine.forms.font.FontLibrary;
@@ -44,9 +45,6 @@ import thederpgamer.betterfleets.utils.SectorUtils;
 import javax.vecmath.Vector3f;
 import javax.vecmath.Vector4f;
 import java.awt.*;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Random;
@@ -57,7 +55,7 @@ import java.util.Random;
  * @author TheDerpGamer
  * @since 08/24/2021
  */
-public class TacticalMapEntityIndicator extends AbstractMapEntry implements SelectableSprite {
+public class TacticalMapEntityIndicator implements PositionableSubColorSprite, SelectableSprite, SelectableMapEntry {
 
     public enum SpriteTypes {
         UNKNOWN,
@@ -169,6 +167,9 @@ public class TacticalMapEntityIndicator extends AbstractMapEntry implements Sele
 
             if(selected) sprite.getSprite().setTint(new Vector4f(1.0f, 1.0f, 0.0f, 1.0f));
             else sprite.getSprite().setTint(new Vector4f(1.0f, 1.0f, 1.0f, 1.0f));
+
+            //sprite.getSprite().setTransform(entityTransform);
+            //Sprite.draw3D(sprite.getSprite(), new PositionableSubSprite[] {this}, getCamera());
             sprite.draw();
         }
     }
@@ -203,8 +204,10 @@ public class TacticalMapEntityIndicator extends AbstractMapEntry implements Sele
     private SegmentController getCurrentTarget() {
         SegmentControllerAIEntity<?> aiEntity = getAIEntity();
         if(aiEntity != null) {
-            SimpleGameObject obj = ((TargetProgram<?>) aiEntity.getCurrentProgram()).getTarget();
-            if(obj instanceof SegmentController) return (SegmentController) obj;
+            try {
+                SimpleGameObject obj = ((TargetProgram<?>) aiEntity.getCurrentProgram()).getTarget();
+                if(obj instanceof SegmentController) return (SegmentController) obj;
+            } catch(Exception ignored) { }
         }
         return null;
     }
@@ -273,19 +276,6 @@ public class TacticalMapEntityIndicator extends AbstractMapEntry implements Sele
         return randomizedTransform;
     }
 
-    @Override
-    public void drawPoint(boolean colored, int filter, Vector3i selectedSector) {
-        if(colored) {
-            float alpha = 1.0f;
-            if(!include(filter, selectedSector)) alpha = 0.1f;
-            GlUtil.glColor4f(0.9f, 0.1f, 0.1f, alpha);
-        }
-        GL11.glBegin(GL11.GL_POINTS);
-        GL11.glVertex3f(getPos().x, getPos().y, getPos().z);
-        GL11.glEnd();
-    }
-
-    @Override
     public Indication getIndication(Vector3i system) {
         Vector3f indicatorPos = getPos();
         if(indication == null) {
@@ -400,8 +390,8 @@ public class TacticalMapEntityIndicator extends AbstractMapEntry implements Sele
 
     private String getEntityDisplay(SegmentController playerEntity) {
         StringBuilder builder = new StringBuilder();
-        if(entity.isJammingFor(playerEntity) || entity.isCloakedFor(playerEntity)) builder.append(distortString(entity.getName()));
-        else builder.append(entity.getName());
+        if(entity.isJammingFor(playerEntity) || entity.isCloakedFor(playerEntity)) builder.append(distortString(entity.getRealName()));
+        else builder.append(entity.getRealName());
         builder.append("\n");
         ArrayList<PlayerState> attachedPlayers = SegmentControllerUtils.getAttachedPlayers(entity);
         if(!attachedPlayers.isEmpty() && !entity.isJammingFor(playerEntity) && !entity.isCloakedFor(playerEntity)) {
@@ -424,21 +414,6 @@ public class TacticalMapEntityIndicator extends AbstractMapEntry implements Sele
 
     public void update(Timer timer) {
         this.timer += timer.getDelta();
-    }
-
-    @Override
-    public int getType() {
-        return SimpleTransformableSendableObject.EntityType.SHIP.ordinal();
-    }
-
-    @Override
-    public void setType(byte type) {
-
-    }
-
-    @Override
-    public boolean include(int filter, Vector3i selectedSector) {
-        return true;
     }
 
     @Override
@@ -481,15 +456,6 @@ public class TacticalMapEntityIndicator extends AbstractMapEntry implements Sele
     @Override
     public void setDrawIndication(boolean drawIndication) {
         this.drawIndication = drawIndication;
-    }
-
-    @Override
-    protected void decodeEntryImpl(DataInputStream stream) throws IOException {
-    }
-
-    @Override
-    public void encodeEntryImpl(DataOutputStream buffer) throws IOException {
-
     }
 
     @Override
