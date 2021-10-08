@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * World drawer for tactical map GUI.
@@ -55,7 +56,7 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
     private boolean firstTime = true;
 
     public final ConcurrentHashMap<Integer, TacticalMapEntityIndicator> drawMap;
-    public final ArrayList<SegmentController> selectedEntities = new ArrayList<>();
+    public final ConcurrentLinkedQueue<SegmentController> selectedEntities = new ConcurrentLinkedQueue<>();
 
     private GUIRightClickButtonPane buttonPane;
 
@@ -83,7 +84,7 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
 
     public void toggleDraw() {
         if(!initialized) onInit();
-        if(!(GameClient.getClientState().getPlayerInputs().isEmpty() || GameClient.getClientState().isInAnyStructureBuildMode() || GameClient.getClientState().isInFlightMode()) || GameClient.getClientState().getWorldDrawer().getGameMapDrawer().isMapActive()) {
+        if(!(GameClient.getClientState().getPlayerInputs().isEmpty() || GameClient.getClientState().getController().isChatActive() || GameClient.getClientState().isInAnyStructureBuildMode() || GameClient.getClientState().isInFlightMode()) || GameClient.getClientState().getWorldDrawer().getGameMapDrawer().isMapActive()) {
             toggleDraw = false;
         } else toggleDraw = !toggleDraw;
 
@@ -313,6 +314,7 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
                 }
             });
             index ++;
+            buttonPane.moveToMouse();
         } else buttonPane.cleanUp();
     }
 
@@ -440,7 +442,7 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
     }
 
     private void drawOutlines() {
-        if(GameCommon.isClientConnectedToServer() || GameCommon.isOnSinglePlayer()) {
+        if((GameCommon.isClientConnectedToServer() || GameCommon.isOnSinglePlayer()) && GameClient.getClientState() != null) {
             for(Map.Entry<Integer, TacticalMapEntityIndicator> entry : drawMap.entrySet()) {
                 try {
                     if(entry.getValue().selected || selectedEntities.contains(entry.getValue().getEntity())) {

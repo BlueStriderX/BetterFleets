@@ -14,10 +14,13 @@ import org.schema.schine.graphicsengine.core.Timer;
 import org.schema.schine.input.KeyEventInterface;
 import org.schema.schine.input.KeyboardMappings;
 import thederpgamer.betterfleets.BetterFleets;
+import thederpgamer.betterfleets.gui.element.sprite.TacticalMapEntityIndicator;
 import thederpgamer.betterfleets.manager.ConfigManager;
+import thederpgamer.betterfleets.utils.Inputs;
 
 import javax.vecmath.Vector3f;
 import java.nio.FloatBuffer;
+import java.util.Map;
 
 /**
  * <Description>
@@ -28,7 +31,6 @@ import java.nio.FloatBuffer;
 public class TacticalMapControlManager extends AbstractControlManager {
 
     private final TacticalMapGUIDrawer guiDrawer;
-    private long lastClick;
     public float viewDistance;
 
     private FloatBuffer depthBuffer;
@@ -57,7 +59,6 @@ public class TacticalMapControlManager extends AbstractControlManager {
         getInteractionManager().getInShipControlManager().getShipControlManager().getShipExternalFlightController().suspend(true);
         getInteractionManager().getInShipControlManager().getShipControlManager().getSegmentBuildController().suspend(true);
         handleInteraction(timer);
-        lastClick ++;
     }
 
     @Override
@@ -88,14 +89,15 @@ public class TacticalMapControlManager extends AbstractControlManager {
         movement.scale(timer.getDelta());
         move(movement);
 
-        /*
+        TacticalMapEntityIndicator selected = null;
+
         if(Mouse.getEventButtonState() && !Mouse.isGrabbed()) {
-            TacticalMapEntityIndicator selected = null;
             for(Map.Entry<Integer, TacticalMapEntityIndicator> entry : guiDrawer.drawMap.entrySet()) {
                 if(entry.getValue().getEntity().getFactionId() == 0 || GameClient.getClientPlayerState().getFactionId() == 0) continue;
                 if(entry.getValue().getEntity().getFactionId() == GameClient.getClientPlayerState().getFactionId()) {
-                    if(Sprite.getMousePosition(entry.getValue().sprite.getSprite(), (float) Mouse.getX(), (float) Mouse.getY(), 0.1f)) {
+                    if(Mouse.getEventButton() == Inputs.MouseButtons.LEFT_MOUSE.id && entry.getValue().selected) {
                         selected = entry.getValue();
+                        break;
                     }
                 }
             }
@@ -106,15 +108,7 @@ public class TacticalMapControlManager extends AbstractControlManager {
             }
 
             if(!Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) guiDrawer.clearSelected(); //Clear current before selecting in single add mode
-            if(Mouse.isButtonDown(Inputs.MouseButtons.LEFT_MOUSE.id) && Mouse.getEventButton() == Inputs.MouseButtons.LEFT_MOUSE.id) {
-                if(lastClick >= 15) {
-                    if(guiDrawer.selectedEntities.contains(selected.getEntity())) selected.onUnSelect(); //Unselect indicator
-                    else selected.onSelect(1.0f); //Select indicator
-                    lastClick = 0;
-                }
-            } else if(Mouse.isButtonDown(Inputs.MouseButtons.RIGHT_MOUSE.id) && Mouse.getEventButton() == Inputs.MouseButtons.RIGHT_MOUSE.id) guiDrawer.recreateButtonPane(selected);
         }
-         */
     }
 
     private void move(Vector3f movement) {

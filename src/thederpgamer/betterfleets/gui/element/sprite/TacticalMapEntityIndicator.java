@@ -31,10 +31,10 @@ import org.schema.schine.graphicsengine.core.GlUtil;
 import org.schema.schine.graphicsengine.core.Timer;
 import org.schema.schine.graphicsengine.core.settings.EngineSettings;
 import org.schema.schine.graphicsengine.forms.PositionableSubColorSprite;
+import org.schema.schine.graphicsengine.forms.PositionableSubSprite;
 import org.schema.schine.graphicsengine.forms.SelectableSprite;
 import org.schema.schine.graphicsengine.forms.Sprite;
 import org.schema.schine.graphicsengine.forms.font.FontLibrary;
-import org.schema.schine.graphicsengine.forms.gui.GUIOverlay;
 import org.schema.schine.graphicsengine.forms.gui.GUITextOverlay;
 import thederpgamer.betterfleets.BetterFleets;
 import thederpgamer.betterfleets.gui.tacticalmap.TacticalMapGUIDrawer;
@@ -76,7 +76,7 @@ public class TacticalMapEntityIndicator implements PositionableSubColorSprite, S
     private boolean drawIndication;
     private float selectDepth;
 
-    public GUIOverlay sprite;
+    public Sprite sprite;
     public GUITextOverlay labelOverlay;
 
     public final Transform entityTransform = new Transform();
@@ -136,41 +136,30 @@ public class TacticalMapEntityIndicator implements PositionableSubColorSprite, S
 
     public void drawSprite(Transform transform) {
         if(sprite == null) {
-            Sprite s = ResourceManager.getSprite("tactical-map-indicators");
-            s.setMultiSpriteMax(8, 2);
-            s.setWidth(s.getMaterial().getTexture().getWidth() / 8);
-            s.setHeight(s.getMaterial().getTexture().getHeight() / 2);
-            s.setPositionCenter(true);
-            s.setSelectionAreaLength(15.0f);
-            s.onInit();
-
-            sprite = new GUIOverlay(s, GameClient.getClientState());
-            sprite.getSprite().setBillboard(true);
-            sprite.getSprite().setDepthTest(false);
-            sprite.getSprite().setBlend(true);
-            sprite.getSprite().setFlip(true);
-            sprite.setUserPointer(entity.getId());
+            sprite = ResourceManager.getSprite("tactical-map-indicators");
+            sprite.setMultiSpriteMax(8, 2);
+            sprite.setWidth(sprite.getMaterial().getTexture().getWidth() / 8);
+            sprite.setHeight(sprite.getMaterial().getTexture().getHeight() / 2);
+            sprite.setPositionCenter(true);
+            sprite.setSelectionAreaLength(15.0f);
+            sprite.setBillboard(true);
+            sprite.setDepthTest(false);
+            sprite.setBlend(true);
+            sprite.setFlip(true);
+            sprite.onInit();
         }
-
-        transform.basis.set(getCamera().lookAt(false).basis);
-        transform.basis.invert();
 
         if(entity.isCloakedFor(getCurrentEntity()) && entityTransform.equals(entity.getWorldTransform())) entityTransform.set(randomizeTransform(entity.getWorldTransform()));
         else entityTransform.set(entity.getWorldTransform());
         if(!getSector().equals(Objects.requireNonNull(getCurrentEntity()).getSector(new Vector3i()))) SectorUtils.transformToSector(entityTransform, getCurrentEntity().getSector(new Vector3i()), getSector());
         if(sprite != null && !entity.isCoreOverheating()) {
-            sprite.getSprite().setSelectedMultiSprite(getSpriteIndex());
-            sprite.setSpriteSubIndex(getSpriteIndex());
-            sprite.getSprite().setSelectedMultiSprite(getSpriteIndex());
-            sprite.getTransform().set(entityTransform);
-            sprite.getTransform().basis.set(transform.basis);
+            sprite.setSelectedMultiSprite(getSpriteIndex());
+            sprite.setTransform(entityTransform);
 
-            if(selected) sprite.getSprite().setTint(new Vector4f(1.0f, 1.0f, 0.0f, 1.0f));
-            else sprite.getSprite().setTint(new Vector4f(1.0f, 1.0f, 1.0f, 1.0f));
+            if(selected) sprite.setTint(new Vector4f(1.0f, 1.0f, 0.0f, 1.0f));
+            else sprite.setTint(new Vector4f(1.0f, 1.0f, 1.0f, 1.0f));
 
-            //sprite.getSprite().setTransform(entityTransform);
-            //Sprite.draw3D(sprite.getSprite(), new PositionableSubSprite[] {this}, getCamera());
-            sprite.draw();
+            Sprite.draw3D(sprite, new PositionableSubSprite[] {this}, getCamera());
         }
     }
 
@@ -277,16 +266,16 @@ public class TacticalMapEntityIndicator implements PositionableSubColorSprite, S
     }
 
     public Indication getIndication(Vector3i system) {
-        Vector3f indicatorPos = getPos();
+        Vector3f indicatorPos = new Vector3f(entityTransform.origin);
         if(indication == null) {
-            Transform transform = new Transform();
-            transform.setIdentity();
+            Transform transform = new Transform(entityTransform);
+            transform.basis.set(getCamera().lookAt(false).basis);
+            transform.basis.invert();
             indication = new ConstantIndication(transform, getEntityDisplay((SegmentController) GameClient.getCurrentControl()));
         }
         indication.setText(getEntityDisplay((SegmentController) GameClient.getCurrentControl()));
         indication.getCurrentTransform().origin.set(indicatorPos.x - GameMapDrawer.halfsize, indicatorPos.y - GameMapDrawer.halfsize, indicatorPos.z - GameMapDrawer.halfsize);
         return indication;
-
     }
 
     private void startDrawDottedLine(Camera camera) {
@@ -418,17 +407,17 @@ public class TacticalMapEntityIndicator implements PositionableSubColorSprite, S
 
     @Override
     public Vector4f getColor() {
-        return sprite.getSprite().getTint();
+        return sprite.getTint();
     }
 
     @Override
     public float getScale(long time) {
-        return 0.1f;
+        return 1.15f;
     }
 
     @Override
     public int getSubSprite(Sprite sprite) {
-        return SimpleTransformableSendableObject.EntityType.SHIP.mapSprite;
+        return getSpriteIndex();
     }
 
     @Override
@@ -438,8 +427,7 @@ public class TacticalMapEntityIndicator implements PositionableSubColorSprite, S
 
     @Override
     public Vector3f getPos() {
-        pos.set((getSector().x / VoidSystem.SYSTEM_SIZEf) * 100f, (getSector().y / VoidSystem.SYSTEM_SIZEf) * 100f, (getSector().z / VoidSystem.SYSTEM_SIZEf)*100f);
-        return pos;
+        return entityTransform.origin;
     }
 
     /**
@@ -468,14 +456,14 @@ public class TacticalMapEntityIndicator implements PositionableSubColorSprite, S
         setDrawIndication(true);
         selectDepth = depth;
         selected = true;
-        BetterFleets.getInstance().tacticalMapDrawer.selectedEntities.add(entity);
+        //BetterFleets.getInstance().tacticalMapDrawer.selectedEntities.add(entity);
     }
 
     @Override
     public void onUnSelect() {
         setDrawIndication(true);
         selected = false;
-        BetterFleets.getInstance().tacticalMapDrawer.selectedEntities.remove(entity);
+        //BetterFleets.getInstance().tacticalMapDrawer.selectedEntities.remove(entity);
     }
 
     @Override
