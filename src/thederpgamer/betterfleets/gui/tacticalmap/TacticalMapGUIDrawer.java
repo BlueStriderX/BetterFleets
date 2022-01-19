@@ -10,28 +10,19 @@ import org.schema.common.util.linAlg.Vector3i;
 import org.schema.game.client.view.SegmentDrawer;
 import org.schema.game.client.view.effects.Indication;
 import org.schema.game.common.controller.SegmentController;
-import org.schema.game.common.data.player.faction.FactionRelation;
 import org.schema.game.server.data.ServerConfig;
 import org.schema.schine.graphicsengine.camera.Camera;
 import org.schema.schine.graphicsengine.core.*;
 import org.schema.schine.graphicsengine.core.settings.EngineSettings;
-import org.schema.schine.graphicsengine.forms.gui.GUIActivationCallback;
-import org.schema.schine.graphicsengine.forms.gui.GUIAncor;
-import org.schema.schine.graphicsengine.forms.gui.GUICallback;
 import org.schema.schine.graphicsengine.forms.gui.GUIElement;
-import org.schema.schine.graphicsengine.forms.gui.newgui.GUIHorizontalArea;
 import org.schema.schine.graphicsengine.shader.ShaderLibrary;
-import org.schema.schine.input.InputState;
-import thederpgamer.betterfleets.gui.element.GUIRightClickButtonPane;
 import thederpgamer.betterfleets.gui.element.sprite.TacticalMapEntityIndicator;
 import thederpgamer.betterfleets.manager.LogManager;
 import thederpgamer.betterfleets.network.client.ClientRequestNearbyEntitiesPacket;
 
-import javax.annotation.Nullable;
 import javax.vecmath.Vector3f;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -58,7 +49,8 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
     public final ConcurrentHashMap<Integer, TacticalMapEntityIndicator> drawMap;
     public final ConcurrentLinkedQueue<SegmentController> selectedEntities = new ConcurrentLinkedQueue<>();
 
-    private GUIRightClickButtonPane buttonPane;
+    //private GUIRightClickButtonPane buttonPane;
+    private TacticalMapSelectionOverlay selectionOverlay;
 
     private FrameBufferObjects outlinesFBO;
 
@@ -75,6 +67,18 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
         labelOffset = new Vector3f(0.0f, -20.0f, 0.0f);
         drawMap = new ConcurrentHashMap<>();
         outlinesFBO = new FrameBufferObjects("SELECTED_ENTITY_DRAWER", GLFrame.getWidth(), GLFrame.getHeight());
+    }
+
+    public void addSelection(TacticalMapEntityIndicator indicator) {
+        selectionOverlay.addEntity(indicator.getEntity());
+    }
+
+    public void removeSelection(TacticalMapEntityIndicator indicator) {
+        selectionOverlay.removeEntity(indicator.getEntity());
+    }
+
+    public void removeAll() {
+        selectionOverlay.removeAll();
     }
 
     public void clearSelected() {
@@ -113,7 +117,8 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
         camera = new TacticalMapCamera();
         camera.reset();
         camera.alwaysAllowWheelZoom = false;
-        recreateButtonPane(null);
+        //recreateButtonPane(null);
+        recreateSelectionOverlay();
         initialized = true;
     }
 
@@ -126,12 +131,19 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
             GameClient.getClientPlayerState().getNetworkObject().selectedEntityId.set(-1);
             drawGrid(-sectorSize, sectorSize);
             drawIndicators();
-            drawOutlines();
+            //drawOutlines();
+            if(!selectedEntities.isEmpty()) {
+                GUIElement.enableOrthogonal();
+                selectionOverlay.draw();
+                GUIElement.disableOrthogonal();
+            } else selectionOverlay.cleanUp();
+            /*
             if(buttonPane.active) {
                 GUIElement.enableOrthogonal();
                 buttonPane.draw();
                 GUIElement.disableOrthogonal();
             }
+             */
             //GlUtil.glDisable(GL11.GL_BLEND);
         } else cleanUp();
     }
@@ -159,6 +171,13 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
         return false;
     }
 
+    public void recreateSelectionOverlay() {
+        (selectionOverlay = new TacticalMapSelectionOverlay(controlManager.getState(), this)).onInit();
+        selectionOverlay.orientate(GUIElement.ORIENTATION_LEFT | GUIElement.ORIENTATION_VERTICAL_MIDDLE);
+        selectionOverlay.getPos().x += 10.0f;
+    }
+
+    /*
     public void recreateButtonPane(@Nullable TacticalMapEntityIndicator indicator) {
         GUIAncor buttonPaneAnchor = new GUIAncor(GameClient.getClientState(), 150.0f, 300.0f);
         (buttonPane = new GUIRightClickButtonPane(GameClient.getClientState(), 1, 1, buttonPaneAnchor)).onInit();
@@ -317,6 +336,7 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
             buttonPane.moveToMouse();
         } else buttonPane.cleanUp();
     }
+     */
 
     private void drawGrid(float start, float spacing) {
         GlUtil.glMatrixMode(GL11.GL_PROJECTION);
@@ -442,7 +462,7 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
     }
 
     private void drawOutlines() {
-        if((GameCommon.isClientConnectedToServer() || GameCommon.isOnSinglePlayer()) && GameClient.getClientState() != null) {
+        if(GameClient.getClientState() != null) {
             for(Map.Entry<Integer, TacticalMapEntityIndicator> entry : drawMap.entrySet()) {
                 try {
                     if(entry.getValue().selected || selectedEntities.contains(entry.getValue().getEntity())) {

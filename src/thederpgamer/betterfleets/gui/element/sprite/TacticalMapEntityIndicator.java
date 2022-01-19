@@ -4,6 +4,8 @@ import api.common.GameClient;
 import api.common.GameCommon;
 import api.utils.game.SegmentControllerUtils;
 import com.bulletphysics.linearmath.Transform;
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 import org.schema.common.util.StringTools;
 import org.schema.common.util.linAlg.Vector3fTools;
@@ -40,6 +42,7 @@ import thederpgamer.betterfleets.BetterFleets;
 import thederpgamer.betterfleets.gui.tacticalmap.TacticalMapGUIDrawer;
 import thederpgamer.betterfleets.manager.LogManager;
 import thederpgamer.betterfleets.manager.ResourceManager;
+import thederpgamer.betterfleets.utils.Inputs;
 import thederpgamer.betterfleets.utils.SectorUtils;
 
 import javax.vecmath.Vector3f;
@@ -156,7 +159,7 @@ public class TacticalMapEntityIndicator implements PositionableSubColorSprite, S
             sprite.setSelectedMultiSprite(getSpriteIndex());
             sprite.setTransform(entityTransform);
 
-            if(selected) sprite.setTint(new Vector4f(1.0f, 1.0f, 0.0f, 1.0f));
+            if(selected || getDrawer().selectedEntities.contains(getEntity())) sprite.setTint(new Vector4f(1.0f, 1.0f, 0.0f, 1.0f));
             else sprite.setTint(new Vector4f(1.0f, 1.0f, 1.0f, 1.0f));
 
             Sprite.draw3D(sprite, new PositionableSubSprite[] {this}, getCamera());
@@ -456,14 +459,24 @@ public class TacticalMapEntityIndicator implements PositionableSubColorSprite, S
         setDrawIndication(true);
         selectDepth = depth;
         selected = true;
-        //BetterFleets.getInstance().tacticalMapDrawer.selectedEntities.add(entity);
+        if(Mouse.getEventButton() == Inputs.MouseButtons.LEFT_MOUSE.id && Mouse.getEventButtonState() && getDrawer().selectedEntities.size() < 10) {
+            if(!Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
+                getDrawer().selectedEntities.clear();
+                getDrawer().removeAll();
+            }
+            getDrawer().selectedEntities.add(entity);
+            getDrawer().addSelection(this);
+        }
     }
 
     @Override
     public void onUnSelect() {
         setDrawIndication(true);
         selected = false;
-        //BetterFleets.getInstance().tacticalMapDrawer.selectedEntities.remove(entity);
+        if(Mouse.getEventButton() == Inputs.MouseButtons.LEFT_MOUSE.id && Mouse.getEventButtonState() && !Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
+            getDrawer().selectedEntities.remove(entity);
+            getDrawer().removeSelection(this);
+        }
     }
 
     @Override

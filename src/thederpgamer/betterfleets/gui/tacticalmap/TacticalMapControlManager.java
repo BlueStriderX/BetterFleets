@@ -14,13 +14,10 @@ import org.schema.schine.graphicsengine.core.Timer;
 import org.schema.schine.input.KeyEventInterface;
 import org.schema.schine.input.KeyboardMappings;
 import thederpgamer.betterfleets.BetterFleets;
-import thederpgamer.betterfleets.gui.element.sprite.TacticalMapEntityIndicator;
 import thederpgamer.betterfleets.manager.ConfigManager;
-import thederpgamer.betterfleets.utils.Inputs;
 
 import javax.vecmath.Vector3f;
 import java.nio.FloatBuffer;
-import java.util.Map;
 
 /**
  * <Description>
@@ -88,27 +85,6 @@ public class TacticalMapControlManager extends AbstractControlManager {
         if(Keyboard.isKeyDown(KeyboardMappings.DOWN.getMapping())) movement.add(new Vector3f(0, -amount, 0));
         movement.scale(timer.getDelta());
         move(movement);
-
-        TacticalMapEntityIndicator selected = null;
-
-        if(Mouse.getEventButtonState() && !Mouse.isGrabbed()) {
-            for(Map.Entry<Integer, TacticalMapEntityIndicator> entry : guiDrawer.drawMap.entrySet()) {
-                if(entry.getValue().getEntity().getFactionId() == 0 || GameClient.getClientPlayerState().getFactionId() == 0) continue;
-                if(entry.getValue().getEntity().getFactionId() == GameClient.getClientPlayerState().getFactionId()) {
-                    if(Mouse.getEventButton() == Inputs.MouseButtons.LEFT_MOUSE.id && entry.getValue().selected) {
-                        selected = entry.getValue();
-                        break;
-                    }
-                }
-            }
-
-            if(selected == null) { //Clicked on nothing, so clear selected and return
-                guiDrawer.clearSelected();
-                return;
-            }
-
-            if(!Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) guiDrawer.clearSelected(); //Clear current before selecting in single add mode
-        }
     }
 
     private void move(Vector3f movement) {
