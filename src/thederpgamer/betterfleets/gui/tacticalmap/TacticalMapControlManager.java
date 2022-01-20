@@ -6,6 +6,8 @@ import org.lwjgl.input.Mouse;
 import org.schema.common.util.linAlg.Vector3fTools;
 import org.schema.game.client.controller.manager.AbstractControlManager;
 import org.schema.game.client.controller.manager.ingame.PlayerInteractionControlManager;
+import org.schema.game.client.view.gui.PlayerPanel;
+import org.schema.game.client.view.gui.shiphud.newhud.BottomBarBuild;
 import org.schema.game.common.controller.SegmentController;
 import org.schema.game.server.data.ServerConfig;
 import org.schema.schine.graphicsengine.camera.CameraMouseState;
@@ -15,9 +17,9 @@ import org.schema.schine.input.KeyEventInterface;
 import org.schema.schine.input.KeyboardMappings;
 import thederpgamer.betterfleets.BetterFleets;
 import thederpgamer.betterfleets.manager.ConfigManager;
+import thederpgamer.betterfleets.utils.Inputs;
 
 import javax.vecmath.Vector3f;
-import java.nio.FloatBuffer;
 
 /**
  * <Description>
@@ -29,8 +31,7 @@ public class TacticalMapControlManager extends AbstractControlManager {
 
     private final TacticalMapGUIDrawer guiDrawer;
     public float viewDistance;
-
-    private FloatBuffer depthBuffer;
+    private float defaultHotbarPos = 0;
 
     public TacticalMapControlManager(TacticalMapGUIDrawer guiDrawer) {
         super(GameClient.getClientState());
@@ -45,6 +46,11 @@ public class TacticalMapControlManager extends AbstractControlManager {
         getInteractionManager().getInShipControlManager().getShipControlManager().getShipExternalFlightController().suspend(active);
         getInteractionManager().getInShipControlManager().getShipControlManager().getSegmentBuildController().suspend(active);
         super.onSwitch(active);
+
+        if(active) { //Hide build hotbar
+            if(defaultHotbarPos == 0) defaultHotbarPos = ((BottomBarBuild) getPlayerPanel().getBuildSideBar()).getPos().y;
+            ((BottomBarBuild) getPlayerPanel().getBuildSideBar()).getPos().y = -1000;
+       } else ((BottomBarBuild) getPlayerPanel().getBuildSideBar()).getPos().y = defaultHotbarPos;
     }
 
     @Override
@@ -75,8 +81,8 @@ public class TacticalMapControlManager extends AbstractControlManager {
             if(Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)) amount = 5000;
             else amount = 1000;
         }
-        if(Keyboard.getEventKey() == Keyboard.KEY_LMENU && Keyboard.getEventKeyState()) BetterFleets.getInstance().tacticalMapDrawer.drawMovementPaths = !BetterFleets.getInstance().tacticalMapDrawer.drawMovementPaths;
-        if(Keyboard.isKeyDown(Keyboard.KEY_X)) BetterFleets.getInstance().tacticalMapDrawer.camera.reset();
+        if(Keyboard.getEventKey() == Keyboard.KEY_LMENU && Keyboard.getEventKeyState()) guiDrawer.drawMovementPaths = !BetterFleets.getInstance().tacticalMapDrawer.drawMovementPaths;
+        if(Keyboard.isKeyDown(Keyboard.KEY_X)) guiDrawer.camera.reset();
         if(Keyboard.isKeyDown(KeyboardMappings.FORWARD.getMapping())) movement.add(new Vector3f(0, 0, amount));
         if(Keyboard.isKeyDown(KeyboardMappings.BACKWARDS.getMapping())) movement.add(new Vector3f(0, 0, -amount));
         if(Keyboard.isKeyDown(KeyboardMappings.STRAFE_LEFT.getMapping())) movement.add(new Vector3f(amount, 0, 0));
@@ -85,6 +91,15 @@ public class TacticalMapControlManager extends AbstractControlManager {
         if(Keyboard.isKeyDown(KeyboardMappings.DOWN.getMapping())) movement.add(new Vector3f(0, -amount, 0));
         movement.scale(timer.getDelta());
         move(movement);
+
+        if(Mouse.isButtonDown(Inputs.MouseButtons.RIGHT_MOUSE.id) && Mouse.getEventButtonState() && !Mouse.isGrabbed() && !guiDrawer.selectedEntities.isEmpty()) {
+            guiDrawer.recreateButtonPane();
+        }
+
+        if(Mouse.hasWheel() && Mouse.getDWheel() != 0) {
+            if(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) guiDrawer.selectedRange = Math.abs(guiDrawer.selectedRange + (Mouse.getDWheel() * 10));
+            else guiDrawer.selectedRange = Math.abs(guiDrawer.selectedRange + Mouse.getDWheel());
+        }
     }
 
     private void move(Vector3f movement) {
@@ -123,5 +138,9 @@ public class TacticalMapControlManager extends AbstractControlManager {
 
     private PlayerInteractionControlManager getInteractionManager() {
         return GameClient.getClientState().getGlobalGameControlManager().getIngameControlManager().getPlayerGameControlManager().getPlayerIntercationManager();
+    }
+
+    private PlayerPanel getPlayerPanel() {
+        return GameClient.getClientState().getWorldDrawer().getGuiDrawer().getPlayerPanel();
     }
 }

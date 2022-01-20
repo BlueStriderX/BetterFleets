@@ -3,6 +3,7 @@ package thederpgamer.betterfleets.gui.tacticalmap;
 import org.schema.game.common.controller.SegmentController;
 import org.schema.schine.graphicsengine.forms.font.FontLibrary;
 import org.schema.schine.graphicsengine.forms.gui.GUIAncor;
+import org.schema.schine.graphicsengine.forms.gui.GUIElementList;
 import org.schema.schine.graphicsengine.forms.gui.GUIListElement;
 import org.schema.schine.graphicsengine.forms.gui.GUITextOverlay;
 import org.schema.schine.input.InputState;
@@ -19,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TacticalMapSelectionOverlay extends GUIAncor {
 
     private TacticalMapGUIDrawer drawer;
-    private MapEntityElementList selectedEntityList;
+    private GUIElementList selectedEntityList;
     private ConcurrentHashMap<Integer, String> selectedEntities;
 
     public TacticalMapSelectionOverlay(InputState inputState, TacticalMapGUIDrawer drawer) {
@@ -29,7 +30,7 @@ public class TacticalMapSelectionOverlay extends GUIAncor {
 
     @Override
     public void onInit() {
-        (selectedEntityList = new MapEntityElementList(getState())).onInit();
+        (selectedEntityList = new GUIElementList(getState())).onInit();
         attach(selectedEntityList);
         selectedEntities = new ConcurrentHashMap<>();
     }

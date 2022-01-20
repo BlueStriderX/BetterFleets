@@ -568,7 +568,7 @@ public class BetterFleets extends StarMod {
                                         return true;
                                     }
                                 });
-                                FleetGUIManager.getPanel().fleetActionsList.moveToMouse();
+                                FleetGUIManager.getPanel().fleetActionsList.moveToMouse(null);
                                 FleetGUIManager.getPanel().fleetActionsList.draw();
                             } else FleetGUIManager.getPanel().updateFleetList();
                         }

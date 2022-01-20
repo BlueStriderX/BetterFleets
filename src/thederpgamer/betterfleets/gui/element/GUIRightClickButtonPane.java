@@ -1,9 +1,14 @@
 package thederpgamer.betterfleets.gui.element;
 
+import org.lwjgl.input.Mouse;
 import org.schema.schine.graphicsengine.forms.gui.GUIElement;
 import org.schema.schine.graphicsengine.forms.gui.newgui.GUIHorizontalButtonTablePane;
+import org.schema.schine.graphicsengine.util.WorldToScreenConverter;
 import org.schema.schine.input.InputState;
-import org.schema.schine.input.Mouse;
+import thederpgamer.betterfleets.gui.element.sprite.TacticalMapEntityIndicator;
+
+import javax.annotation.Nullable;
+import javax.vecmath.Vector3f;
 
 /**
  * ButtonTablePane that appears next to the mouse on right click.
@@ -31,10 +36,15 @@ public class GUIRightClickButtonPane extends GUIHorizontalButtonTablePane {
         active = false;
     }
 
-    public void moveToMouse() {
+    public void moveToMouse(@Nullable TacticalMapEntityIndicator indicator) {
         if(active) cleanUp();
         try {
-            setPos(Mouse.getX() - 250, Mouse.getY() * -1, 0.0f);
+            if(indicator == null)  setPos(Mouse.getX() - 250, Mouse.getY() * -1, 0.0f);
+            else {
+                WorldToScreenConverter converter = new WorldToScreenConverter();
+                Vector3f middle = converter.getMiddleOfScreen(new Vector3f());
+                setPos(middle.x - (getWidth() / 2), middle.y + 50, 0.0f);
+            }
             active = true;
         } catch(Exception ignored) { }
     }

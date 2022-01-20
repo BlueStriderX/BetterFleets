@@ -206,7 +206,7 @@ public class TacticalMapEntityIndicator implements PositionableSubColorSprite, S
 
     public void drawTargetingPath(Camera camera) {
         SegmentController currentTarget = getCurrentTarget();
-        if(currentTarget != null) {
+        if(currentTarget != null && currentTarget.isOnServer()) {
             Vector3f start = new Vector3f(entityTransform.origin);
             Vector3f end = currentTarget.getWorldTransform().origin;
             try {
@@ -459,7 +459,7 @@ public class TacticalMapEntityIndicator implements PositionableSubColorSprite, S
         setDrawIndication(true);
         selectDepth = depth;
         selected = true;
-        if(Mouse.getEventButton() == Inputs.MouseButtons.LEFT_MOUSE.id && Mouse.getEventButtonState() && getDrawer().selectedEntities.size() < 10) {
+        if(Mouse.getEventButton() == Inputs.MouseButtons.LEFT_MOUSE.id && Mouse.getEventButtonState() && getDrawer().selectedEntities.size() < 10 && entity.getFactionId() == GameClient.getClientPlayerState().getFactionId()) {
             if(!Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
                 getDrawer().selectedEntities.clear();
                 getDrawer().removeAll();
