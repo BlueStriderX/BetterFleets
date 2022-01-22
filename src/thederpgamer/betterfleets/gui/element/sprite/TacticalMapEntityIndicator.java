@@ -152,8 +152,12 @@ public class TacticalMapEntityIndicator implements PositionableSubColorSprite, S
             sprite.onInit();
         }
 
+        /*
         if(entity.isCloakedFor(getCurrentEntity()) && entityTransform.equals(entity.getWorldTransform())) entityTransform.set(randomizeTransform(entity.getWorldTransform()));
         else entityTransform.set(entity.getWorldTransform());
+
+         */
+        entityTransform.set(entity.getWorldTransform());
         if(!getSector().equals(Objects.requireNonNull(getCurrentEntity()).getSector(new Vector3i()))) SectorUtils.transformToSector(entityTransform, getCurrentEntity().getSector(new Vector3i()), getSector());
         if(sprite != null && !entity.isCoreOverheating()) {
             sprite.setSelectedMultiSprite(getSpriteIndex());
@@ -176,8 +180,11 @@ public class TacticalMapEntityIndicator implements PositionableSubColorSprite, S
 
         labelOverlay.setTextSimple(getEntityDisplay(getCurrentEntity()));
         labelOverlay.updateTextSize();
+        /*
         if(entity.isCloakedFor(getCurrentEntity()) && entityTransform.equals(entity.getWorldTransform())) entityTransform.set(randomizeTransform(entity.getWorldTransform()));
         else entityTransform.set(entity.getWorldTransform());
+         */
+        entityTransform.set(entity.getWorldTransform());
         if(!getSector().equals(Objects.requireNonNull(getCurrentEntity()).getSector(new Vector3i()))) SectorUtils.transformToSector(entityTransform, getCurrentEntity().getSector(new Vector3i()), getSector());
         labelOverlay.getTransform().set(entityTransform);
         labelOverlay.getTransform().basis.set(transform.basis);
@@ -193,7 +200,7 @@ public class TacticalMapEntityIndicator implements PositionableSubColorSprite, S
         labelOverlay.draw();
     }
 
-    private SegmentController getCurrentTarget() {
+    public SegmentController getCurrentTarget() {
         SegmentControllerAIEntity<?> aiEntity = getAIEntity();
         if(aiEntity != null) {
             try {
@@ -202,6 +209,15 @@ public class TacticalMapEntityIndicator implements PositionableSubColorSprite, S
             } catch(Exception ignored) { }
         }
         return null;
+    }
+
+    public void setCurrentTarget(SegmentController target) {
+        SegmentControllerAIEntity<?> aiEntity = getAIEntity();
+        if(aiEntity != null && !getEntity().isConrolledByActivePlayer()) {
+            try {
+                ((TargetProgram<?>) aiEntity.getCurrentProgram()).setTarget(target);
+            } catch(Exception ignored) { }
+        }
     }
 
     public void drawTargetingPath(Camera camera) {
@@ -263,7 +279,7 @@ public class TacticalMapEntityIndicator implements PositionableSubColorSprite, S
     private Transform randomizeTransform(Transform transform) {
         Transform randomizedTransform = new Transform(transform);
         Random random = new Random();
-        Vector3f randomVector = new Vector3f((float) random.nextInt(150), (float) random.nextInt(150), (float) random.nextInt(150));
+        Vector3f randomVector = new Vector3f((float) random.nextInt(100), (float) random.nextInt(100), (float) random.nextInt(100));
         randomizedTransform.origin.add(randomVector);
         return randomizedTransform;
     }

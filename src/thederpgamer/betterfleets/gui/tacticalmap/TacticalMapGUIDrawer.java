@@ -204,13 +204,14 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
 
         if(target != null) {
             FactionRelation.RType relation = GameCommon.getGameState().getFactionManager().getRelation(target.getEntity().getFactionId(), getCurrentEntity().getFactionId());
+            final TacticalMapEntityIndicator finalTarget = target;
             switch(relation) {
                 case NEUTRAL:
                     buttonPane.addButton(0, 0, "ATTACK" + getSelectedRange(), GUIHorizontalArea.HButtonColor.RED, new GUICallback() {
                         @Override
                         public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
                             if(mouseEvent.pressedLeftMouse()) {
-                                commandSelected(ATTACK);
+                                commandSelected(ATTACK, finalTarget);
                                 buttonPane.cleanUp();
                             }
                         }
@@ -231,12 +232,13 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
                         }
                     });
 
+                    /*
                     buttonPane.addRow();
                     buttonPane.addButton(0, 1, "DEFEND" + getSelectedRange(), GUIHorizontalArea.HButtonColor.GREEN, new GUICallback() {
                         @Override
                         public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
                             if(mouseEvent.pressedLeftMouse()) {
-                                commandSelected(DEFEND);
+                                commandSelected(DEFEND, finalTarget);
                                 buttonPane.cleanUp();
                             }
                         }
@@ -256,13 +258,14 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
                             return true;
                         }
                     });
+                     */
                     break;
                 case ENEMY:
                     buttonPane.addButton(0, 0, "ATTACK" + getSelectedRange(), GUIHorizontalArea.HButtonColor.RED, new GUICallback() {
                         @Override
                         public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
                             if(mouseEvent.pressedLeftMouse()) {
-                                commandSelected(ATTACK);
+                                commandSelected(ATTACK, finalTarget);
                                 buttonPane.cleanUp();
                             }
                         }
@@ -284,11 +287,12 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
                     });
                     break;
                 case FRIEND:
+                    /*
                     buttonPane.addButton(0, 0, "DEFEND" + getSelectedRange(), GUIHorizontalArea.HButtonColor.GREEN, new GUICallback() {
                         @Override
                         public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
                             if(mouseEvent.pressedLeftMouse()) {
-                                commandSelected(DEFEND);
+                                commandSelected(DEFEND, finalTarget);
                                 buttonPane.cleanUp();
                             }
                         }
@@ -308,14 +312,23 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
                             return true;
                         }
                     });
+                     */
                     break;
             }
             buttonPane.moveToMouse(target);
         } else buttonPane.cleanUp();
     }
 
-    private void commandSelected(int mode) {
-
+    private void commandSelected(int mode, TacticalMapEntityIndicator target) {
+        for(TacticalMapEntityIndicator indicator : drawMap.values()) {
+            if(selectedEntities.contains(indicator.getEntity()) && indicator.getEntity().getFactionId() == GameClient.getClientPlayerState().getFactionId() && GameClient.getClientPlayerState().getFactionId() != 0) {
+                switch(mode) {
+                    case ATTACK:
+                        indicator.setCurrentTarget(target.getEntity());
+                        break;
+                }
+            }
+        }
     }
 
     private String getSelectedRange() {
