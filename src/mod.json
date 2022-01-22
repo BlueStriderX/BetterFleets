@@ -2,7 +2,7 @@
   "name": "BetterFleets",
   "author": "TheDerpGamer",
   "description": "Improves vanilla fleet mechanics and expands upon their functionality.",
-  "version": "1.3.6",
+  "version": "1.3.7",
   "starmade_version": "0.203.108",
   "client_mod": false,
   "server_mod": false,

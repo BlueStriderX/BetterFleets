@@ -126,8 +126,7 @@ public class TacticalMapEntityIndicator implements PositionableSubColorSprite, S
                         }
                     }
                 } else if(entity.getType().equals(SimpleTransformableSendableObject.EntityType.SHOP)) {
-                    if(!selected) return SpriteTypes.SHOP.ordinal();
-                    else throw new IllegalStateException("Shops should never be selectable!");
+                    return SpriteTypes.SHOP.ordinal();
                 }
             } catch(Exception exception) {
                 LogManager.logException("Encountered an exception while trying to pick a map sprite for entity \"" + entity.getName() + "\"", exception);

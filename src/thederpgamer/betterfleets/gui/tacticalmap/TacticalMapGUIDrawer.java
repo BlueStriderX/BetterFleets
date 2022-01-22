@@ -440,15 +440,15 @@ public class TacticalMapGUIDrawer extends ModWorldDrawer implements Drawable {
         for(Map.Entry<Integer, TacticalMapEntityIndicator> entry : drawMap.entrySet()) {
             try {
                 TacticalMapEntityIndicator indicator = entry.getValue();
-                if(indicator.getDistance() < maxDrawDistance && indicator.getEntity() != null && indicator.getEntity().isOnServer() && GameCommon.getGameObject(indicator.getEntityId()) instanceof SegmentController) {
+                if(indicator.getDistance() < maxDrawDistance && indicator.getEntity() != null && GameCommon.getGameObject(indicator.getEntityId()) instanceof SegmentController) {
                     Indication indication = indicator.getIndication(indicator.getSystem());
                     indicator.drawSprite(indication.getCurrentTransform());
                     indicator.drawLabel(indication.getCurrentTransform());
                     //if(drawMovementPaths && indicator.selected) indicator.drawMovementPath(camera);
                     if(drawTargetingPaths && (indicator.selected || selectedEntities.contains(indicator.getEntity()))) indicator.drawTargetingPath(camera);
                 } else {
-                    indicator.sprite.cleanUp();
-                    indicator.labelOverlay.cleanUp();
+                    if(indicator.sprite != null) indicator.sprite.cleanUp();
+                    if(indicator.labelOverlay != null) indicator.labelOverlay.cleanUp();
                     drawMap.remove(entry.getKey());
                 }
             } catch(Exception exception) {

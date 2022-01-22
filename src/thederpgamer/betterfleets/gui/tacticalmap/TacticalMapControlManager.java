@@ -65,40 +65,42 @@ public class TacticalMapControlManager extends AbstractControlManager {
     }
 
     @Override
-    public void handleMouseEvent(MouseEvent mouseEvent) {
-        super.handleMouseEvent(mouseEvent);
+    public void handleKeyEvent(KeyEventInterface keyEvent) {
+        if(isActive() && !isSuspended() && !isHinderedInteraction() && getState().getPlayerInputs().isEmpty()) super.handleKeyEvent(keyEvent);
     }
 
     @Override
-    public void handleKeyEvent(KeyEventInterface keyEvent) {
-        super.handleKeyEvent(keyEvent);
+    public void handleMouseEvent(MouseEvent mouseEvent) {
+        if(isActive() && !isSuspended() && !isHinderedInteraction() && getState().getPlayerInputs().isEmpty()) super.handleMouseEvent(mouseEvent);
     }
 
     private void handleInteraction(Timer timer) {
-        Vector3f movement = new Vector3f();
-        int amount = 100;
-        if(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
-            if(Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)) amount = 5000;
-            else amount = 1000;
-        }
-        if(Keyboard.getEventKey() == Keyboard.KEY_LMENU && Keyboard.getEventKeyState()) guiDrawer.drawMovementPaths = !BetterFleets.getInstance().tacticalMapDrawer.drawMovementPaths;
-        if(Keyboard.isKeyDown(Keyboard.KEY_X)) guiDrawer.camera.reset();
-        if(Keyboard.isKeyDown(KeyboardMappings.FORWARD.getMapping())) movement.add(new Vector3f(0, 0, amount));
-        if(Keyboard.isKeyDown(KeyboardMappings.BACKWARDS.getMapping())) movement.add(new Vector3f(0, 0, -amount));
-        if(Keyboard.isKeyDown(KeyboardMappings.STRAFE_LEFT.getMapping())) movement.add(new Vector3f(amount, 0, 0));
-        if(Keyboard.isKeyDown(KeyboardMappings.STRAFE_RIGHT.getMapping())) movement.add(new Vector3f(-amount, 0, 0));
-        if(Keyboard.isKeyDown(KeyboardMappings.UP.getMapping())) movement.add(new Vector3f(0, amount, 0));
-        if(Keyboard.isKeyDown(KeyboardMappings.DOWN.getMapping())) movement.add(new Vector3f(0, -amount, 0));
-        movement.scale(timer.getDelta());
-        move(movement);
+        if(isActive() && !isSuspended() && !isHinderedInteraction() && getState().getPlayerInputs().isEmpty()) {
+            Vector3f movement = new Vector3f();
+            int amount = 100;
+            if(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
+                if(Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)) amount = 5000;
+                else amount = 1000;
+            }
+            if(Keyboard.getEventKey() == Keyboard.KEY_LMENU && Keyboard.getEventKeyState()) guiDrawer.drawMovementPaths = !BetterFleets.getInstance().tacticalMapDrawer.drawMovementPaths;
+            if(Keyboard.isKeyDown(Keyboard.KEY_X)) guiDrawer.camera.reset();
+            if(Keyboard.isKeyDown(KeyboardMappings.FORWARD.getMapping())) movement.add(new Vector3f(0, 0, amount));
+            if(Keyboard.isKeyDown(KeyboardMappings.BACKWARDS.getMapping())) movement.add(new Vector3f(0, 0, -amount));
+            if(Keyboard.isKeyDown(KeyboardMappings.STRAFE_LEFT.getMapping())) movement.add(new Vector3f(amount, 0, 0));
+            if(Keyboard.isKeyDown(KeyboardMappings.STRAFE_RIGHT.getMapping())) movement.add(new Vector3f(-amount, 0, 0));
+            if(Keyboard.isKeyDown(KeyboardMappings.UP.getMapping())) movement.add(new Vector3f(0, amount, 0));
+            if(Keyboard.isKeyDown(KeyboardMappings.DOWN.getMapping())) movement.add(new Vector3f(0, -amount, 0));
+            movement.scale(timer.getDelta());
+            move(movement);
 
-        if(Mouse.isButtonDown(Inputs.MouseButtons.RIGHT_MOUSE.id) && Mouse.getEventButtonState() && !Mouse.isGrabbed() && !guiDrawer.selectedEntities.isEmpty()) {
-            guiDrawer.recreateButtonPane();
-        }
+            if(Mouse.isButtonDown(Inputs.MouseButtons.RIGHT_MOUSE.id) && Mouse.getEventButtonState() && !Mouse.isGrabbed() && !guiDrawer.selectedEntities.isEmpty()) {
+                guiDrawer.recreateButtonPane();
+            }
 
-        if(Mouse.hasWheel() && Mouse.getDWheel() != 0) {
-            if(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) guiDrawer.selectedRange = Math.abs(guiDrawer.selectedRange + (Mouse.getDWheel() * 10));
-            else guiDrawer.selectedRange = Math.abs(guiDrawer.selectedRange + Mouse.getDWheel());
+            if(Mouse.hasWheel() && Mouse.getDWheel() != 0) {
+                if(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) guiDrawer.selectedRange = Math.abs(guiDrawer.selectedRange + (Mouse.getDWheel() * 10));
+                else guiDrawer.selectedRange = Math.abs(guiDrawer.selectedRange + Mouse.getDWheel());
+            }
         }
     }
 
