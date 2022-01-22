@@ -75,7 +75,7 @@ public class TacticalMapControlManager extends AbstractControlManager {
     }
 
     private void handleInteraction(Timer timer) {
-        if(isActive() && !isSuspended() && !isHinderedInteraction() && getState().getPlayerInputs().isEmpty()) {
+        if(!getState().getController().isChatActive()) {
             Vector3f movement = new Vector3f();
             int amount = 100;
             if(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
