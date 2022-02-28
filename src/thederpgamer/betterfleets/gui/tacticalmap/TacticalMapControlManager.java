@@ -75,7 +75,7 @@ public class TacticalMapControlManager extends AbstractControlManager {
     }
 
     private void handleInteraction(Timer timer) {
-        if(!getState().getController().isChatActive()) {
+        if(!getState().getGlobalGameControlManager().getIngameControlManager().isAnyMenuOrChatActive()) {
             Vector3f movement = new Vector3f();
             int amount = 100;
             if(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
@@ -94,12 +94,18 @@ public class TacticalMapControlManager extends AbstractControlManager {
             move(movement);
 
             if(Mouse.isButtonDown(Inputs.MouseButtons.RIGHT_MOUSE.id) && Mouse.getEventButtonState() && !Mouse.isGrabbed() && !guiDrawer.selectedEntities.isEmpty()) {
-                guiDrawer.recreateButtonPane();
+                guiDrawer.recreateButtonPane(false);
             }
 
-            if(Mouse.hasWheel() && Mouse.getDWheel() != 0) {
-                if(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) guiDrawer.selectedRange = Math.abs(guiDrawer.selectedRange + (Mouse.getDWheel() * 10));
-                else guiDrawer.selectedRange = Math.abs(guiDrawer.selectedRange + Mouse.getDWheel());
+            if(Mouse.hasWheel() && Mouse.getEventDWheel() != 0) {
+                float wheelAmount = (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) ? 1000 : 100;
+                if(Mouse.getEventDWheel() == 0) wheelAmount = 0;
+                else if(Mouse.getEventDWheel() < 0) wheelAmount *= -1;
+                float newRange = guiDrawer.selectedRange + wheelAmount;
+                if(newRange > 20000) newRange = 20000;
+                else if(newRange < 100) newRange = 100;
+                guiDrawer.selectedRange = newRange;
+                guiDrawer.recreateButtonPane(true);
             }
         }
     }

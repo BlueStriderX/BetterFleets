@@ -31,6 +31,8 @@ import thederpgamer.betterfleets.gui.hud.RepairPasteFabricatorHudOverlay;
 import thederpgamer.betterfleets.gui.tacticalmap.TacticalMapGUIDrawer;
 import thederpgamer.betterfleets.manager.*;
 import thederpgamer.betterfleets.network.client.ClientRequestNearbyEntitiesPacket;
+import thederpgamer.betterfleets.network.client.SendCommandPacket;
+import thederpgamer.betterfleets.network.server.SendCommandUpdatePacket;
 import thederpgamer.betterfleets.network.server.ServerSendNearbyEntitiesPacket;
 import thederpgamer.betterfleets.systems.RepairPasteFabricatorSystem;
 
@@ -72,7 +74,8 @@ public class BetterFleets extends StarMod {
             "FleetStateType",
             "FleetCommandTypes",
             "Transition",
-            "HudContextHelpManager"
+            "HudContextHelpManager",
+            "ShipAIEntity"
     };
 
     //GUI
@@ -88,6 +91,7 @@ public class BetterFleets extends StarMod {
         ResourceManager.loadResources(this);
         registerListeners();
         registerPackets();
+        CommandUpdateManager.initialize();
         LogManager.logMessage(MessageType.INFO, "Successfully loaded mod data.");
     }
 
@@ -126,7 +130,8 @@ public class BetterFleets extends StarMod {
         StarLoader.registerListener(HudCreateEvent.class, new Listener<HudCreateEvent>() {
             @Override
             public void onEvent(HudCreateEvent event) {
-                event.addElement(repairPasteHudOverlay = new RepairPasteFabricatorHudOverlay(event.getInputState()));
+                if(repairPasteHudOverlay == null) (repairPasteHudOverlay = new RepairPasteFabricatorHudOverlay(event.getInputState())).onInit();
+                event.addElement(repairPasteHudOverlay);
             }
         }, this);
 
@@ -581,7 +586,12 @@ public class BetterFleets extends StarMod {
     }
 
     private void registerPackets() {
+        //Client
+        PacketUtil.registerPacket(SendCommandPacket.class);
         PacketUtil.registerPacket(ClientRequestNearbyEntitiesPacket.class);
+
+        //Server
+        PacketUtil.registerPacket(SendCommandUpdatePacket.class);
         PacketUtil.registerPacket(ServerSendNearbyEntitiesPacket.class);
     }
 

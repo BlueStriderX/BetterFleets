@@ -34,7 +34,7 @@ public class RepairPasteFabricatorHudOverlay extends GUIAncor {
     }
 
     public void updateText(SegmentController segmentController, float current, float max) {
-        if(segmentController.isOnServer()) {
+        if(GameClient.getClientState() != null && segmentController.isFullyLoadedWithDock()) {
             try {
                 if(max > 0) {
                     if(GameClient.getClientState().isInFlightMode() && segmentController.getSegmentBuffer().getPointUnsave(segmentController.getSlotAssignment().getAsIndex(GameClient.getClientPlayerState().getCurrentShipControllerSlot())).getType() == ElementKeyMap.REPAIR_CONTROLLER_ID) {
@@ -45,7 +45,9 @@ public class RepairPasteFabricatorHudOverlay extends GUIAncor {
                         setTextPos(2);
                     } else textOverlay.setTextSimple("");
                 }
-            } catch(Exception ignored) { }
+            } catch(Exception exception) {
+                exception.printStackTrace();
+            }
         }
     }
 

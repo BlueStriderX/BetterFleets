@@ -8,6 +8,8 @@ import org.schema.game.common.controller.elements.weapon.WeaponCollectionManager
 import org.schema.game.common.data.fleet.Fleet;
 import org.schema.game.common.data.fleet.FleetCommandTypes;
 import org.schema.game.common.data.fleet.FleetMember;
+import thederpgamer.betterfleets.element.ElementManager;
+import thederpgamer.betterfleets.systems.RepairPasteFabricatorSystem;
 
 /**
  * Fleet utility functions.
@@ -16,6 +18,15 @@ import org.schema.game.common.data.fleet.FleetMember;
  * @since 07/06/2021
  */
 public class FleetUtils {
+
+    public static RepairPasteFabricatorSystem getSupportSystem(Ship ship) {
+        try {
+            return (RepairPasteFabricatorSystem) ship.getManagerContainer().getModMCModule(ElementManager.getBlock("Repair Paste Fabricator").getId());
+        } catch(Exception exception) {
+            exception.printStackTrace();
+            return null;
+        }
+    }
 
     public static FleetCommandTypes getCurrentCommand(Fleet fleet) {
         for(FleetMember member : fleet.getMembers()) {

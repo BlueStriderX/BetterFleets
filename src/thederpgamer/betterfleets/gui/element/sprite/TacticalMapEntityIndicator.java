@@ -18,7 +18,6 @@ import org.schema.game.client.view.gui.shiphud.HudIndicatorOverlay;
 import org.schema.game.common.controller.SegmentController;
 import org.schema.game.common.controller.Ship;
 import org.schema.game.common.controller.SpaceStation;
-import org.schema.game.common.data.SimpleGameObject;
 import org.schema.game.common.data.player.PlayerState;
 import org.schema.game.common.data.player.faction.FactionManager;
 import org.schema.game.common.data.player.faction.FactionRelation;
@@ -39,12 +38,15 @@ import org.schema.schine.graphicsengine.forms.Sprite;
 import org.schema.schine.graphicsengine.forms.font.FontLibrary;
 import org.schema.schine.graphicsengine.forms.gui.GUITextOverlay;
 import thederpgamer.betterfleets.BetterFleets;
+import thederpgamer.betterfleets.data.TargetData;
 import thederpgamer.betterfleets.gui.tacticalmap.TacticalMapGUIDrawer;
+import thederpgamer.betterfleets.manager.CommandUpdateManager;
 import thederpgamer.betterfleets.manager.LogManager;
 import thederpgamer.betterfleets.manager.ResourceManager;
 import thederpgamer.betterfleets.utils.Inputs;
 import thederpgamer.betterfleets.utils.SectorUtils;
 
+import javax.annotation.Nullable;
 import javax.vecmath.Vector3f;
 import javax.vecmath.Vector4f;
 import java.awt.*;
@@ -78,6 +80,7 @@ public class TacticalMapEntityIndicator implements PositionableSubColorSprite, S
     private final Vector3f pos = new Vector3f();
     private boolean drawIndication;
     private float selectDepth;
+    private TargetData targetData;
 
     public Sprite sprite;
     public GUITextOverlay labelOverlay;
@@ -199,33 +202,28 @@ public class TacticalMapEntityIndicator implements PositionableSubColorSprite, S
         labelOverlay.draw();
     }
 
-    public SegmentController getCurrentTarget() {
-        SegmentControllerAIEntity<?> aiEntity = getAIEntity();
-        if(aiEntity != null) {
-            try {
-                SimpleGameObject obj = ((TargetProgram<?>) aiEntity.getCurrentProgram()).getTarget();
-                if(obj instanceof SegmentController) return (SegmentController) obj;
-            } catch(Exception ignored) { }
-        }
-        return null;
+    public TargetData getCurrentTarget() {
+        return targetData;
     }
 
-    public void setCurrentTarget(SegmentController target) {
-        SegmentControllerAIEntity<?> aiEntity = getAIEntity();
-        if(aiEntity != null && !getEntity().isConrolledByActivePlayer()) {
-            try {
-                ((TargetProgram<?>) aiEntity.getCurrentProgram()).setTarget(target);
-            } catch(Exception ignored) { }
+    public void setCurrentTarget(@Nullable TargetData targetData) {
+        this.targetData = targetData;
+        if(targetData != null) {
+            switch(targetData.mode) {
+                case CommandUpdateManager.ATTACK:
+                    if(getAIEntity().getCurrentProgram().isSuspended()) getAIEntity().getCurrentProgram().suspend(false);
+                    ((TargetProgram<?>) getAIEntity().getCurrentProgram()).setTarget(targetData.target);
+                    break;
+            }
         }
     }
 
     public void drawTargetingPath(Camera camera) {
-        SegmentController currentTarget = getCurrentTarget();
-        if(currentTarget != null && currentTarget.isOnServer()) {
+        if(targetData != null && GameCommon.getGameObject(targetData.target.getId()) instanceof SegmentController) {
             Vector3f start = new Vector3f(entityTransform.origin);
-            Vector3f end = currentTarget.getWorldTransform().origin;
+            Vector3f end = targetData.target.getWorldTransform().origin;
             try {
-                end.set(BetterFleets.getInstance().tacticalMapDrawer.drawMap.get(currentTarget.getId()).sprite.getPos());
+                end.set(BetterFleets.getInstance().tacticalMapDrawer.drawMap.get(targetData.target.getId()).sprite.getPos());
             } catch(Exception ignored) { }
             if(end.length() != 0 && Math.abs(Vector3fTools.sub(start, end).length()) > 1.0f) {
                 startDrawDottedLine(camera);
@@ -249,22 +247,11 @@ public class TacticalMapEntityIndicator implements PositionableSubColorSprite, S
     }
 
     private Vector4f getPathColor() {
-        int playerFaction = GameClient.getClientPlayerState().getFactionId();
+        int targetFaction = GameClient.getClientPlayerState().getFactionId();
+        if(targetData != null && targetData.target != null) targetFaction = targetData.target.getFactionId();
         int entityFaction = entity.getFactionId();
-        FactionRelation.RType relation = Objects.requireNonNull(GameCommon.getGameState()).getFactionManager().getRelation(entityFaction, playerFaction);
+        FactionRelation.RType relation = Objects.requireNonNull(GameCommon.getGameState()).getFactionManager().getRelation(entityFaction, targetFaction);
         return new Vector4f(relation.defaultColor.x, relation.defaultColor.y, relation.defaultColor.z, 1.0f);
-        /*
-        SegmentController currentTarget = getCurrentTarget();
-        if(currentTarget != null) {
-            int entityFaction = entity.getFactionId();
-            int targetFaction = currentTarget.getFactionId();
-            if(!(entityFaction == -1 && targetFaction == -1)) {
-                FactionRelation.RType relation = Objects.requireNonNull(GameCommon.getGameState()).getFactionManager().getRelation(entityFaction, targetFaction);
-                return new Vector4f(relation.defaultColor.x, relation.defaultColor.y, relation.defaultColor.z, 1.0f);
-            }
-        }
-        return new Vector4f(1.0f, 1.0f, 1.0f, 1.0f);
-         */
     }
 
     public SegmentControllerAIEntity<?> getAIEntity() {
@@ -413,8 +400,26 @@ public class TacticalMapEntityIndicator implements PositionableSubColorSprite, S
         if(entity.isJammingFor(playerEntity) || entity.isCloakedFor(playerEntity)) builder.append("??? mass\n");
         else builder.append(StringTools.massFormat(entity.getTotalPhysicalMass())).append(" mass\n");
         if(!entity.equals(getCurrentEntity())) {
-            if(entity.isJammingFor(playerEntity) || entity.isCloakedFor(playerEntity)) builder.append("???km");
-            else builder.append(StringTools.formatDistance(getDistance()));
+            if(entity.isJammingFor(playerEntity) || entity.isCloakedFor(playerEntity)) builder.append("???km\n");
+            else builder.append(StringTools.formatDistance(getDistance())).append("\n");
+        }
+        if(targetData != null && targetData.mode != CommandUpdateManager.NONE && !entity.isJammingFor(playerEntity) && !entity.isCloakedFor(playerEntity) && GameCommon.getGameState().getFactionManager().getRelation(playerEntity.getFactionId(), entity.getFactionId()).equals(FactionRelation.RType.FRIEND)) {
+            String targetName = StringTools.limit(targetData.target.getRealName(), 30);
+            switch(targetData.mode) {
+                case CommandUpdateManager.MOVE:
+                    builder.append("Moving to ");
+                    break;
+                case CommandUpdateManager.ATTACK:
+                    builder.append("Attacking ");
+                    break;
+                case CommandUpdateManager.DEFEND:
+                    builder.append("Defending ");
+                    break;
+                case CommandUpdateManager.ESCORT:
+                    builder.append("Escorting ");
+                    break;
+            }
+            builder.append(targetName);
         }
         return builder.toString().trim();
     }

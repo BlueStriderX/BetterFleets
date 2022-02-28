@@ -1,15 +1,13 @@
 package thederpgamer.betterfleets.systems;
 
-import api.network.PacketReadBuffer;
-import api.network.PacketWriteBuffer;
-import api.utils.game.module.ModManagerContainerModule;
+import api.utils.game.module.util.SimpleDataStorageMCModule;
 import org.schema.game.common.controller.SegmentController;
 import org.schema.game.common.controller.elements.ManagerContainer;
 import org.schema.schine.graphicsengine.core.Timer;
 import thederpgamer.betterfleets.BetterFleets;
+import thederpgamer.betterfleets.data.system.RepairPasteSystemData;
 import thederpgamer.betterfleets.element.ElementManager;
 import thederpgamer.betterfleets.manager.ConfigManager;
-import java.io.IOException;
 
 /**
  * ModuleContainerManager for Repair Paste Fabricator system.
@@ -17,47 +15,36 @@ import java.io.IOException;
  * @author TheDerpGamer
  * @since 07/03/2021
  */
-public class RepairPasteFabricatorSystem extends ModManagerContainerModule {
+public class RepairPasteFabricatorSystem extends SimpleDataStorageMCModule {
 
-    private float repairPasteCapacity = 0f;
-    private float repairPasteCapacityMax = 0f;
+    public static final float UPDATE_TIMER = 50.0f;
     private float timer;
 
     public RepairPasteFabricatorSystem(SegmentController ship, ManagerContainer<?> managerContainer) {
         super(ship, managerContainer, BetterFleets.getInstance(), ElementManager.getBlock("Repair Paste Fabricator").getId());
         this.timer = 10f;
+        if(data == null || !(data instanceof RepairPasteSystemData)) data = new RepairPasteSystemData();
     }
 
     @Override
     public void handle(Timer timer) {
-        //updateGUI();
-        this.timer = Math.max(0f, this.timer - 1);
         if(this.timer <= 0) {
-            setRepairPasteCapacity(repairPasteCapacity + (ConfigManager.getSystemConfig().getInt("repair-paste-regen-per-block") * getSize()));
-            this.timer = 10f;
-        }
+            setRepairPasteCapacity(getRepairPasteCapacity() + (ConfigManager.getSystemConfig().getInt("repair-paste-regen-per-block") * getSize()));
+            this.timer = UPDATE_TIMER;
+        } else this.timer --;
     }
 
     @Override
     public void handlePlace(long abs, byte orientation) {
         super.handlePlace(abs, orientation);
-        setRepairPasteCapacityMax(repairPasteCapacityMax + ConfigManager.getSystemConfig().getInt("repair-paste-capacity-per-block"));
+        setRepairPasteCapacityMax(getRepairPasteCapacityMax() + ConfigManager.getSystemConfig().getInt("repair-paste-capacity-per-block"));
     }
 
     @Override
     public void handleRemove(long abs) {
         super.handleRemove(abs);
-        setRepairPasteCapacityMax(repairPasteCapacityMax - ConfigManager.getSystemConfig().getInt("repair-paste-capacity-per-block"));
-    }
-
-    @Override
-    public void onTagSerialize(PacketWriteBuffer packetWriteBuffer) throws IOException {
-
-    }
-
-    @Override
-    public void onTagDeserialize(PacketReadBuffer packetReadBuffer) throws IOException {
-
+        setRepairPasteCapacityMax(getRepairPasteCapacityMax() - ConfigManager.getSystemConfig().getInt("repair-paste-capacity-per-block"));
+        if(getRepairPasteCapacityMax() < 0) setRepairPasteCapacityMax(0);
     }
 
     @Override
@@ -80,12 +67,17 @@ public class RepairPasteFabricatorSystem extends ModManagerContainerModule {
         setRepairPasteCapacity(0);
     }
 
+    private RepairPasteSystemData getSystemData() {
+        if(data == null || !(data instanceof RepairPasteSystemData)) data = new RepairPasteSystemData();
+        return (RepairPasteSystemData) data;
+    }
+
     public float getRepairPasteCapacity() {
-        return repairPasteCapacity;
+        return getSystemData().repairPasteCapacity;
     }
 
     public float getRepairPasteCapacityMax() {
-        return repairPasteCapacityMax;
+        return getSystemData().repairPasteCapacityMax;
     }
 
     public float getRepairPasteRegen() {
@@ -94,14 +86,16 @@ public class RepairPasteFabricatorSystem extends ModManagerContainerModule {
 
     public void setRepairPasteCapacity(float repairPasteCapacity) {
         if(repairPasteCapacity < 0) repairPasteCapacity = 0;
-        this.repairPasteCapacity = Math.min(repairPasteCapacity, repairPasteCapacityMax);
+        getSystemData().repairPasteCapacity = Math.min(repairPasteCapacity, getRepairPasteCapacityMax());
         try {
-            BetterFleets.getInstance().repairPasteHudOverlay.updateText(segmentController, this.repairPasteCapacity, this.repairPasteCapacityMax);
+            BetterFleets.getInstance().repairPasteHudOverlay.updateText(segmentController, getRepairPasteCapacity(), getRepairPasteCapacityMax());
         } catch(Exception ignored) { }
+        flagUpdatedData();
     }
 
     public void setRepairPasteCapacityMax(float repairPasteCapacityMax) {
-        if(repairPasteCapacity > repairPasteCapacityMax) repairPasteCapacity = repairPasteCapacityMax;
-        this.repairPasteCapacityMax = repairPasteCapacityMax;
+        if(getRepairPasteCapacity() > repairPasteCapacityMax) setRepairPasteCapacity(getRepairPasteCapacityMax());
+        getSystemData().repairPasteCapacityMax = repairPasteCapacityMax;
+        flagUpdatedData();
     }
 }

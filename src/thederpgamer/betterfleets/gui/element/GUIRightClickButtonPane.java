@@ -48,4 +48,8 @@ public class GUIRightClickButtonPane extends GUIHorizontalButtonTablePane {
             active = true;
         } catch(Exception ignored) { }
     }
+
+    public void clearButtons() {
+        super.onInit();
+    }
 }
