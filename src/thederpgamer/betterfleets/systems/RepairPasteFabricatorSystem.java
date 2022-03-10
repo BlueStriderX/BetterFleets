@@ -17,12 +17,12 @@ import thederpgamer.betterfleets.manager.ConfigManager;
  */
 public class RepairPasteFabricatorSystem extends SimpleDataStorageMCModule {
 
-    public static final float UPDATE_TIMER = 50.0f;
+    public static final float UPDATE_TIMER = 10.0f;
     private float timer;
 
     public RepairPasteFabricatorSystem(SegmentController ship, ManagerContainer<?> managerContainer) {
         super(ship, managerContainer, BetterFleets.getInstance(), ElementManager.getBlock("Repair Paste Fabricator").getId());
-        this.timer = 10f;
+        this.timer = UPDATE_TIMER;
         if(data == null || !(data instanceof RepairPasteSystemData)) data = new RepairPasteSystemData();
     }
 
@@ -31,7 +31,7 @@ public class RepairPasteFabricatorSystem extends SimpleDataStorageMCModule {
         if(this.timer <= 0) {
             setRepairPasteCapacity(getRepairPasteCapacity() + (ConfigManager.getSystemConfig().getInt("repair-paste-regen-per-block") * getSize()));
             this.timer = UPDATE_TIMER;
-        } else this.timer --;
+        } else this.timer -= timer.getDelta();
     }
 
     @Override
@@ -59,7 +59,7 @@ public class RepairPasteFabricatorSystem extends SimpleDataStorageMCModule {
 
     @Override
     public String getName() {
-        return "RepairPasteFabricatorElementManager";
+        return "Repair Paste Fabricator";
     }
 
     @Override

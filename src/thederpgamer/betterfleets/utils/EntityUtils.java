@@ -3,6 +3,7 @@ package thederpgamer.betterfleets.utils;
 import api.common.GameClient;
 import api.common.GameServer;
 import com.bulletphysics.linearmath.Transform;
+import org.schema.common.util.linAlg.Quat4fTools;
 import org.schema.game.client.controller.manager.ingame.PlayerInteractionControlManager;
 import org.schema.game.common.controller.SegmentController;
 import org.schema.game.common.controller.Ship;
@@ -10,7 +11,9 @@ import org.schema.game.common.data.world.SimpleTransformableSendableObject;
 import org.schema.game.server.ai.ShipAIEntity;
 import org.schema.schine.graphicsengine.core.GlUtil;
 import org.schema.schine.graphicsengine.forms.BoundingBox;
+import thederpgamer.betterfleets.manager.ConfigManager;
 
+import javax.vecmath.Quat4f;
 import javax.vecmath.Vector3f;
 
 /**
@@ -20,6 +23,32 @@ import javax.vecmath.Vector3f;
  * @version 1.0 - [09/12/2021]
  */
 public class EntityUtils {
+
+    public static float calculateFlankingBonus(SegmentController damaged, SegmentController damager) {
+        float angle = EntityUtils.getRelativeFacingAngle(damaged, damager);
+        float distance = EntityUtils.getDistance(damaged, damager);
+        float modifier = ConfigManager.getSystemConfig().getConfigurableFloat("flanking-damage-bonus-multiplier", 1.15f);
+
+        if(distance <= 500) modifier *= 1.5f;
+        else if(distance <= 1000) modifier *= 1.3f;
+        else if(distance <= 3000) modifier *= 1.15f;
+        else if(distance <= 10000) modifier *= 1.05f;
+        else return 0;
+
+        if((angle <= -100 && angle >= -260) || (angle >= 100 && angle <= 260)) return modifier;
+        else return 0;
+    }
+
+    public static float getRelativeFacingAngle(SegmentController from, SegmentController to) {
+        Transform fromTransform = new Transform(from.getWorldTransform());
+        Transform toTransform = new Transform(to.getWorldTransform());
+        if(getDistance(from, to) < ConfigManager.getSystemConfig().getConfigurableFloat("flanking-damage-bonus-max-distance", 10000)) {
+            Quat4f fromRotation = new Quat4f(fromTransform.getRotation(new Quat4f()));
+            Quat4f toRotation = new Quat4f(toTransform.getRotation(new Quat4f()));
+            return Quat4fTools.angularDifference(fromRotation, toRotation);
+        }
+        return 0;
+    }
 
     public static void moveToPosition(Ship ship, Transform position) {
         ShipAIEntity aiEntity = ship.getAiConfiguration().getAiEntityState();

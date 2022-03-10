@@ -8,13 +8,19 @@ import api.listener.events.gui.HudCreateEvent;
 import api.listener.events.input.KeyPressEvent;
 import api.listener.events.input.MousePressEvent;
 import api.listener.events.register.ManagerContainerRegisterEvent;
+import api.listener.events.register.RegisterAddonsEvent;
+import api.listener.events.systems.ShieldHitEvent;
+import api.listener.fastevents.FastListenerCommon;
 import api.mod.StarLoader;
 import api.mod.StarMod;
 import api.network.packets.PacketUtil;
+import api.utils.registry.UniversalRegistry;
+import com.bulletphysics.linearmath.Transform;
 import org.apache.commons.io.IOUtils;
 import org.lwjgl.input.Keyboard;
 import org.schema.common.util.linAlg.Vector3i;
 import org.schema.game.client.view.gamemap.GameMapDrawer;
+import org.schema.game.common.controller.SegmentController;
 import org.schema.game.common.data.fleet.Fleet;
 import org.schema.game.common.data.fleet.FleetCommandTypes;
 import org.schema.schine.graphicsengine.core.Controller;
@@ -27,14 +33,19 @@ import org.schema.schine.input.InputState;
 import org.schema.schine.input.KeyboardMappings;
 import thederpgamer.betterfleets.element.ElementManager;
 import thederpgamer.betterfleets.element.blocks.systems.RepairPasteFabricator;
+import thederpgamer.betterfleets.gui.drawer.CriticalIndicatorDrawer;
 import thederpgamer.betterfleets.gui.hud.RepairPasteFabricatorHudOverlay;
 import thederpgamer.betterfleets.gui.tacticalmap.TacticalMapGUIDrawer;
+import thederpgamer.betterfleets.listener.CannonListener;
+import thederpgamer.betterfleets.listener.DamageBeamListener;
 import thederpgamer.betterfleets.manager.*;
 import thederpgamer.betterfleets.network.client.ClientRequestNearbyEntitiesPacket;
 import thederpgamer.betterfleets.network.client.SendCommandPacket;
 import thederpgamer.betterfleets.network.server.SendCommandUpdatePacket;
 import thederpgamer.betterfleets.network.server.ServerSendNearbyEntitiesPacket;
 import thederpgamer.betterfleets.systems.RepairPasteFabricatorSystem;
+import thederpgamer.betterfleets.systems.remotecontrol.RemoteControlAddOn;
+import thederpgamer.betterfleets.utils.EntityUtils;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -82,6 +93,7 @@ public class BetterFleets extends StarMod {
     public char mapKey;
     public TacticalMapGUIDrawer tacticalMapDrawer;
     public RepairPasteFabricatorHudOverlay repairPasteHudOverlay;
+    public CriticalIndicatorDrawer criticalIndicatorDrawer;
 
     @Override
     public void onEnable() {
@@ -90,6 +102,7 @@ public class BetterFleets extends StarMod {
         LogManager.initialize();
         ResourceManager.loadResources(this);
         registerListeners();
+        //registerFastListeners();
         registerPackets();
         CommandUpdateManager.initialize();
         LogManager.logMessage(MessageType.INFO, "Successfully loaded mod data.");
@@ -105,8 +118,14 @@ public class BetterFleets extends StarMod {
     public void onBlockConfigLoad(BlockConfig blockConfig) {
         //Systems
         ElementManager.addBlock(new RepairPasteFabricator());
+        //ElementManager.addBlock(new AIRemoteController());
 
         ElementManager.initialize();
+    }
+
+    @Override
+    public void onUniversalRegistryLoad() {
+        UniversalRegistry.registerURV(UniversalRegistry.RegistryType.PLAYER_USABLE_ID, getSkeleton(), RemoteControlAddOn.UID);
     }
 
     private void registerListeners() {
@@ -117,6 +136,15 @@ public class BetterFleets extends StarMod {
                     event.getModDrawables().add(tacticalMapDrawer = new TacticalMapGUIDrawer());
                     mapKey = ConfigManager.getMainConfig().getString("tactical-map-toggle-key").charAt(0);
                 }
+
+                if(criticalIndicatorDrawer == null) event.getModDrawables().add(criticalIndicatorDrawer = new CriticalIndicatorDrawer());
+            }
+        }, this);
+
+        StarLoader.registerListener(RegisterAddonsEvent.class, new Listener<RegisterAddonsEvent>() {
+            @Override
+            public void onEvent(RegisterAddonsEvent event) {
+                //event.addModule(new RemoteControlAddOn(event.getContainer()));
             }
         }, this);
 
@@ -124,14 +152,17 @@ public class BetterFleets extends StarMod {
             @Override
             public void onEvent(ManagerContainerRegisterEvent event) {
                 event.addModMCModule(new RepairPasteFabricatorSystem(event.getSegmentController(), event.getContainer()));
+                //event.addModMCModule(new RemoteControlModule(event.getSegmentController(), event.getContainer()));
             }
         }, this);
 
         StarLoader.registerListener(HudCreateEvent.class, new Listener<HudCreateEvent>() {
             @Override
             public void onEvent(HudCreateEvent event) {
-                if(repairPasteHudOverlay == null) (repairPasteHudOverlay = new RepairPasteFabricatorHudOverlay(event.getInputState())).onInit();
-                event.addElement(repairPasteHudOverlay);
+                if(repairPasteHudOverlay == null) {
+                    (repairPasteHudOverlay = new RepairPasteFabricatorHudOverlay(event.getInputState())).onInit();
+                    event.addElement(repairPasteHudOverlay);
+                }
             }
         }, this);
 
@@ -583,6 +614,51 @@ public class BetterFleets extends StarMod {
                 }
             }
         }, this);
+
+        StarLoader.registerListener(ShieldHitEvent.class, new Listener<ShieldHitEvent>() {
+            @Override
+            public void onEvent(ShieldHitEvent event) {
+                SegmentController damager = (SegmentController) event.getShieldHit().damager;
+                SegmentController damaged = event.getHitController();
+                float damageBonus = EntityUtils.calculateFlankingBonus(damaged, damager);
+                if(damageBonus > 0) {
+                    double damage = event.getShieldHit().getDamage() * damageBonus;
+                    event.setDamage(damage);
+                    Transform transform = new Transform();
+                    transform.setIdentity();
+                    transform.origin.set(event.getWorldHit());
+                    damaged.getWorldTransform().transform(transform.origin);
+                    transform.basis.set(Controller.getCamera().lookAt(false).basis);
+                    transform.basis.invert();
+                    criticalIndicatorDrawer.addOverlay(transform, damage);
+                }
+            }
+        }, this);
+
+        /*
+        StarLoader.registerListener(SegmentHitByProjectileEvent.class, new Listener<SegmentHitByProjectileEvent>() {
+            @Override
+            public void onEvent(SegmentHitByProjectileEvent event) {
+                if(event.getShotHandler().hitSegController instanceof ManagedUsableSegmentController<?>) {
+                    SegmentController damager = (SegmentController) event.getDamager();
+                    ManagedUsableSegmentController<?> damaged = (ManagedUsableSegmentController<?>) event.getShotHandler().hitSegController;
+                    ShieldAddOn shieldAddOn = ((ShieldContainerInterface) damaged.getManagerContainer()).getShieldAddOn();
+                    if(shieldAddOn != null && shieldAddOn.getShields() <= 0) {
+                        float damageBonus = EntityUtils.calculateFlankingBonus(damaged, damager);
+                        if(damageBonus > 0) {
+                            event.getShotHandler().initialDamage *= damageBonus;
+                            //Todo: Display some sort of visual indicator
+                        }
+                    }
+                }
+            }
+        }, this);
+         */
+    }
+
+    private void registerFastListeners() {
+        FastListenerCommon.cannonProjectileHitHandlerListeners.add(new CannonListener());
+        FastListenerCommon.damageBeamHitListeners.add(new DamageBeamListener());
     }
 
     private void registerPackets() {
