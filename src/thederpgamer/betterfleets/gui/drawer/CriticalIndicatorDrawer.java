@@ -2,9 +2,12 @@ package thederpgamer.betterfleets.gui.drawer;
 
 import api.common.GameClient;
 import api.utils.draw.ModWorldDrawer;
+import api.utils.textures.StarLoaderTexture;
 import com.bulletphysics.linearmath.Transform;
+import org.schema.schine.graphicsengine.core.GlUtil;
 import org.schema.schine.graphicsengine.core.Timer;
 
+import javax.vecmath.Vector3f;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -16,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class CriticalIndicatorDrawer extends ModWorldDrawer {
 
-	private final ConcurrentHashMap<CriticalIndicatorOverlay, Float> overlayMap = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<Integer, CriticalIndicatorOverlay> overlayMap = new ConcurrentHashMap<>();
 
 	@Override
 	public void onInit() {
@@ -25,11 +28,12 @@ public class CriticalIndicatorDrawer extends ModWorldDrawer {
 
 	@Override
 	public void update(Timer timer) {
-		for(Map.Entry<CriticalIndicatorOverlay, Float> entry : overlayMap.entrySet()) {
-			if(entry.getValue() > 0) {
-				entry.getKey().draw();
-				entry.getKey().setOpacity(entry.getValue());
-				entry.setValue(entry.getValue() - timer.getDelta());
+		for(Map.Entry<Integer, CriticalIndicatorOverlay> entry : overlayMap.entrySet()) {
+			if(entry.getValue().getOpacity() > 0) {
+				entry.getValue().draw();
+				entry.getValue().setOpacity(entry.getValue().getOpacity() - 0.01f);
+				Vector3f up = GlUtil.getUpVector(new Vector3f(), entry.getValue().getTransform());
+				entry.getValue().getTransform().origin.add(up);
 			} else overlayMap.remove(entry.getKey());
 		}
 	}
@@ -44,11 +48,18 @@ public class CriticalIndicatorDrawer extends ModWorldDrawer {
 		return false;
 	}
 
-	public void addOverlay(Transform transform, double damage) {
-		CriticalIndicatorOverlay overlay = new CriticalIndicatorOverlay(GameClient.getClientState(), damage);
-		overlay.onInit();
-		overlay.setTransform(transform);
-		overlay.setOpacity(100.0f);
-		overlayMap.put(overlay, 100.0f);
+	public void addOverlay(final Transform transform, final double damage, final int id) {
+		StarLoaderTexture.runOnGraphicsThread(new Runnable() {
+			@Override
+			public void run() {
+				if(!overlayMap.containsKey(id)) {
+					CriticalIndicatorOverlay overlay = new CriticalIndicatorOverlay(GameClient.getClientState(), damage);
+					overlay.onInit();
+					overlay.setTransform(transform);
+					overlay.setOpacity(1.0f);
+					overlayMap.put(id, overlay);
+				}
+			}
+		});
 	}
 }

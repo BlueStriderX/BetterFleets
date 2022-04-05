@@ -8,7 +8,6 @@ import org.schema.schine.graphicsengine.core.GraphicsContext;
 import thederpgamer.betterfleets.element.ElementManager;
 import thederpgamer.betterfleets.element.blocks.Block;
 import thederpgamer.betterfleets.manager.ResourceManager;
-import thederpgamer.betterfleets.utils.BlockIconUtils;
 
 /**
  * <Description>
@@ -28,7 +27,6 @@ public class AIRemoteController extends Block {
 			short[] aiModuleTextures = ElementKeyMap.getInfo(ElementKeyMap.AI_ELEMENT).getTextureIds();
 			short frontTexture = (short) ResourceManager.getTexture("ai-remote-controller-front").getTextureId();
 			blockInfo.setTextureId(new short[] {frontTexture, aiModuleTextures[1], aiModuleTextures[2], aiModuleTextures[3], aiModuleTextures[4], aiModuleTextures[5]});
-			BlockIconUtils.createBlockIcon(blockInfo);
 		}
 
 		blockInfo.setDescription("Used to remotely control ai drones from a distance.");

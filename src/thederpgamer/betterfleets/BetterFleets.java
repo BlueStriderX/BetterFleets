@@ -3,24 +3,30 @@ package thederpgamer.betterfleets;
 import api.common.GameClient;
 import api.config.BlockConfig;
 import api.listener.Listener;
+import api.listener.events.block.SegmentPieceAddByMetadataEvent;
+import api.listener.events.block.SegmentPieceAddEvent;
+import api.listener.events.block.SegmentPieceKillEvent;
+import api.listener.events.block.SegmentPieceRemoveEvent;
 import api.listener.events.draw.RegisterWorldDrawersEvent;
 import api.listener.events.gui.HudCreateEvent;
 import api.listener.events.input.KeyPressEvent;
 import api.listener.events.input.MousePressEvent;
 import api.listener.events.register.ManagerContainerRegisterEvent;
 import api.listener.events.register.RegisterAddonsEvent;
-import api.listener.events.systems.ShieldHitEvent;
 import api.listener.fastevents.FastListenerCommon;
 import api.mod.StarLoader;
 import api.mod.StarMod;
 import api.network.packets.PacketUtil;
+import api.utils.game.module.ModManagerContainerModule;
 import api.utils.registry.UniversalRegistry;
-import com.bulletphysics.linearmath.Transform;
 import org.apache.commons.io.IOUtils;
 import org.lwjgl.input.Keyboard;
 import org.schema.common.util.linAlg.Vector3i;
 import org.schema.game.client.view.gamemap.GameMapDrawer;
 import org.schema.game.common.controller.SegmentController;
+import org.schema.game.common.data.ManagedSegmentController;
+import org.schema.game.common.data.SegmentPiece;
+import org.schema.game.common.data.element.ElementCollection;
 import org.schema.game.common.data.fleet.Fleet;
 import org.schema.game.common.data.fleet.FleetCommandTypes;
 import org.schema.schine.graphicsengine.core.Controller;
@@ -45,7 +51,7 @@ import thederpgamer.betterfleets.network.server.SendCommandUpdatePacket;
 import thederpgamer.betterfleets.network.server.ServerSendNearbyEntitiesPacket;
 import thederpgamer.betterfleets.systems.RepairPasteFabricatorSystem;
 import thederpgamer.betterfleets.systems.remotecontrol.RemoteControlAddOn;
-import thederpgamer.betterfleets.utils.EntityUtils;
+import thederpgamer.betterfleets.utils.BlockIconUtils;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -94,6 +100,8 @@ public class BetterFleets extends StarMod {
     public TacticalMapGUIDrawer tacticalMapDrawer;
     public RepairPasteFabricatorHudOverlay repairPasteHudOverlay;
     public CriticalIndicatorDrawer criticalIndicatorDrawer;
+    public BlockIconUtils iconUtils;
+
 
     @Override
     public void onEnable() {
@@ -138,6 +146,8 @@ public class BetterFleets extends StarMod {
                 }
 
                 if(criticalIndicatorDrawer == null) event.getModDrawables().add(criticalIndicatorDrawer = new CriticalIndicatorDrawer());
+
+                if(iconUtils == null) event.getModDrawables().add(iconUtils = new BlockIconUtils());
             }
         }, this);
 
@@ -615,6 +625,7 @@ public class BetterFleets extends StarMod {
             }
         }, this);
 
+        /*
         StarLoader.registerListener(ShieldHitEvent.class, new Listener<ShieldHitEvent>() {
             @Override
             public void onEvent(ShieldHitEvent event) {
@@ -624,13 +635,85 @@ public class BetterFleets extends StarMod {
                 if(damageBonus > 0) {
                     double damage = event.getShieldHit().getDamage() * damageBonus;
                     event.setDamage(damage);
-                    Transform transform = new Transform();
-                    transform.setIdentity();
-                    transform.origin.set(event.getWorldHit());
-                    damaged.getWorldTransform().transform(transform.origin);
-                    transform.basis.set(Controller.getCamera().lookAt(false).basis);
-                    transform.basis.invert();
-                    criticalIndicatorDrawer.addOverlay(transform, damage);
+                    if(GameClient.getClientState() != null) {
+                        if(PlayerUtils.getCurrentControl(GameClient.getClientPlayerState()).equals(damager)) {
+                            AudioUtils.clientPlaySound("0022_spaceship user - laser impact with shields enabled synthetic hit small", 1, 1);
+                        } else if(PlayerUtils.getCurrentControl(GameClient.getClientPlayerState()).equals(damaged)) {
+                            GameClient.getClientState().getWorldDrawer().getGuiDrawer().getHud().notifyEffectHit(damaged, EffectElementManager.OffensiveEffects.PIERCING);
+                            AudioUtils.clientPlaySound("0022_spaceship user - laser impact with shields disabled metallic hit small", 1, 1);
+                        }
+                    }
+                }
+            }
+        }, this);
+         */
+
+        StarLoader.registerListener(SegmentPieceAddByMetadataEvent.class, new Listener<SegmentPieceAddByMetadataEvent>() {
+            @Override
+            public void onEvent(SegmentPieceAddByMetadataEvent event) {
+                SegmentPiece segmentPiece = event.getAsSegmentPiece(new SegmentPiece());
+                SegmentController segmentController = segmentPiece.getSegmentController();
+                if(segmentController instanceof ManagedSegmentController<?>) {
+                    ManagedSegmentController<?> entity = (ManagedSegmentController<?>) segmentController;
+                    if(event.getType() == ElementManager.getBlock("Repair Paste Fabricator").getId()) {
+                        ModManagerContainerModule module = entity.getManagerContainer().getModMCModule(event.getType());
+                        if(module instanceof RepairPasteFabricatorSystem) {
+                            RepairPasteFabricatorSystem repairPasteSystem = (RepairPasteFabricatorSystem) module;
+                            repairPasteSystem.handlePlace(segmentPiece.getAbsoluteIndex(), segmentPiece.getOrientation());
+                        }
+                    }
+                }
+            }
+        }, this);
+
+        StarLoader.registerListener(SegmentPieceAddEvent.class, new Listener<SegmentPieceAddEvent>() {
+            @Override
+            public void onEvent(SegmentPieceAddEvent event) {
+                SegmentPiece segmentPiece = event.getSegmentController().getSegmentBuffer().getPointUnsave(event.getAbsIndex());
+                SegmentController segmentController = event.getSegmentController();
+                if(segmentController instanceof ManagedSegmentController<?>) {
+                    ManagedSegmentController<?> entity = (ManagedSegmentController<?>) segmentController;
+                    if(event.getNewType() == ElementManager.getBlock("Repair Paste Fabricator").getId()) {
+                        ModManagerContainerModule module = entity.getManagerContainer().getModMCModule(event.getNewType());
+                        if(module instanceof RepairPasteFabricatorSystem) {
+                            RepairPasteFabricatorSystem repairPasteSystem = (RepairPasteFabricatorSystem) module;
+                            repairPasteSystem.handlePlace(segmentPiece.getAbsoluteIndex(), segmentPiece.getOrientation());
+                        }
+                    }
+                }
+            }
+        }, this);
+
+        StarLoader.registerListener(SegmentPieceRemoveEvent.class, new Listener<SegmentPieceRemoveEvent>() {
+            @Override
+            public void onEvent(SegmentPieceRemoveEvent event) {
+                SegmentController segmentController = event.getSegment().getSegmentController();
+                if(segmentController instanceof ManagedSegmentController<?>) {
+                    ManagedSegmentController<?> entity = (ManagedSegmentController<?>) segmentController;
+                    if(event.getType() == ElementManager.getBlock("Repair Paste Fabricator").getId()) {
+                        ModManagerContainerModule module = entity.getManagerContainer().getModMCModule(event.getType());
+                        if(module instanceof RepairPasteFabricatorSystem) {
+                            RepairPasteFabricatorSystem repairPasteSystem = (RepairPasteFabricatorSystem) module;
+                            repairPasteSystem.handleRemove(ElementCollection.getIndex(event.getX(), event.getY(), event.getZ()));
+                        }
+                    }
+                }
+            }
+        }, this);
+
+        StarLoader.registerListener(SegmentPieceKillEvent.class, new Listener<SegmentPieceKillEvent>() {
+            @Override
+            public void onEvent(SegmentPieceKillEvent event) {
+                SegmentController segmentController = event.getController();
+                if(segmentController instanceof ManagedSegmentController<?>) {
+                    ManagedSegmentController<?> entity = (ManagedSegmentController<?>) segmentController;
+                    if(event.getPiece().getType() == ElementManager.getBlock("Repair Paste Fabricator").getId()) {
+                        ModManagerContainerModule module = entity.getManagerContainer().getModMCModule(event.getPiece().getType());
+                        if(module instanceof RepairPasteFabricatorSystem) {
+                            RepairPasteFabricatorSystem repairPasteSystem = (RepairPasteFabricatorSystem) module;
+                            repairPasteSystem.handleRemove(event.getPiece().getAbsoluteIndex());
+                        }
+                    }
                 }
             }
         }, this);

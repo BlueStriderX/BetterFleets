@@ -8,7 +8,6 @@ import org.schema.schine.graphicsengine.core.GraphicsContext;
 import thederpgamer.betterfleets.element.ElementManager;
 import thederpgamer.betterfleets.element.blocks.Block;
 import thederpgamer.betterfleets.manager.ResourceManager;
-import thederpgamer.betterfleets.utils.BlockIconUtils;
 
 /**
  * Repair Paste Fabricator that slowly generates material that can be used by Astrotech systems to repair ships instead
@@ -29,7 +28,7 @@ public class RepairPasteFabricator extends Block {
             short capsId = (short) ResourceManager.getTexture("repair-paste-fabricator-caps").getTextureId();
             short sidesId = (short) ResourceManager.getTexture("repair-paste-fabricator-sides").getTextureId();
             blockInfo.setTextureId(new short[] {sidesId, sidesId, capsId, capsId, sidesId, sidesId});
-            BlockIconUtils.createBlockIcon(blockInfo);
+            blockInfo.setBuildIconNum(ResourceManager.getTexture("repair-paste-fabricator-icon").getTextureId());
         }
         blockInfo.setDescription("Slowly generates Repair Paste over time that can be used in Astrotech systems as an alternative to blocks and resources.");
         blockInfo.setInRecipe(true);

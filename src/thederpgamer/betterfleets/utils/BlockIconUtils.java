@@ -1,132 +1,211 @@
 package thederpgamer.betterfleets.utils;
 
-import api.utils.textures.StarLoaderTexture;
+import api.utils.draw.ModWorldDrawer;
 import com.bulletphysics.linearmath.Transform;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.util.vector.Matrix4f;
 import org.schema.game.client.view.cubes.shapes.BlockStyle;
+import org.schema.game.client.view.gui.GUI3DBlockElement;
 import org.schema.game.client.view.tools.SingleBlockDrawer;
 import org.schema.game.common.data.element.ElementInformation;
-import org.schema.game.common.data.element.ElementKeyMap;
 import org.schema.schine.graphicsengine.core.*;
 import org.schema.schine.graphicsengine.core.settings.EngineSettings;
 import org.schema.schine.graphicsengine.forms.gui.GUIElement;
+import thederpgamer.betterfleets.element.ElementManager;
+import thederpgamer.betterfleets.element.blocks.Block;
+import thederpgamer.betterfleets.manager.ConfigManager;
 
-import javax.imageio.ImageIO;
 import javax.vecmath.Matrix3f;
-import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
 
 /**
  * <Description>
  *
  * @author TheDerpGamer
- * @version 1.0 - [03/07/2022]
+ * @version 1.0 - [03/30/2022]
  */
-public class BlockIconUtils {
+public class BlockIconUtils extends ModWorldDrawer {
 
-	private final Transform orientation = new Transform();
-	private final Transform orientationTmp = new Transform();
-	private final Matrix3f rot = new Matrix3f();
-	private final Transform mView = new Transform();
-	private final FloatBuffer fb = BufferUtils.createFloatBuffer(16);
-	private final float[] ff = new float[16];
-	int xMod, yMod;
-	private boolean write = false;
+	private Transform orientation = new Transform();
+	private Transform orientationTmp = new Transform();
+	private Matrix3f rot = new Matrix3f();
+	private Transform mView = new Transform();
+	private FloatBuffer fb = BufferUtils.createFloatBuffer(16);
+	private float[] ff = new float[16];
+
+	private boolean initialized = false;
 
 	public BlockIconUtils() {
 		orientation.setIdentity();
 		orientationTmp.setIdentity();
 	}
 
-	public static void createBlockIcon(final ElementInformation elementInfo) {
-		StarLoaderTexture.runOnGraphicsThread(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					BufferedImage image = (new BlockIconUtils()).bake(elementInfo.id);
-					StarLoaderTexture texture = StarLoaderTexture.newIconTexture(image);
-					elementInfo.setBuildIconNum(texture.getTextureId());
-				} catch(Exception exception) {
-					exception.printStackTrace();
-				}
-			}
-		});
+	@Override
+	public void update(Timer timer) {
+
 	}
 
-	public BufferedImage bake(short id) throws GLException, IOException {
-		FrameBufferObjects fb = new FrameBufferObjects("IconBakery", 1024, 1024);
-		fb.initialize();
-		fb.enable();
+	@Override
+	public void cleanUp() {
+
+	}
+
+	@Override
+	public boolean isInvisible() {
+		return false;
+	}
+
+	@Override
+	public void onInit() {
+		if(initialized) return;
+		initialized = true;
+		ArrayList<ElementInformation> types = new ArrayList<>();
+		for(Block block : ElementManager.getBlockList()) types.add(block.getBlockInfo());
+
+		/*
+		FrameBufferObjects fbo = new FrameBufferObjects("ModIconBakery", 1024, 1024);
+		try {
+			fbo.initialize();
+		} catch(GLException exception) {
+			exception.printStackTrace();
+		}
+		fbo.enable();
 		GL11.glClearColor(0, 0, 0, 0);
 		GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT | GL11.GL_COLOR_BUFFER_BIT);
-		int sizeX = (Integer) EngineSettings.ICON_BAKERY_SINGLE_RESOLUTION.getCurrentState();
-		int sizeY = (Integer) EngineSettings.ICON_BAKERY_SINGLE_RESOLUTION.getCurrentState();
-		xMod = sizeX / 2;
-		yMod = sizeY / 2;
-		GL11.glViewport(0, 0, sizeX, sizeY);
-		ElementInformation info = ElementKeyMap.getInfo(id);
-		write = true;
-		GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT | GL11.GL_COLOR_BUFFER_BIT);
-		drawSingle(id, sizeX / 2, sizeX, sizeY);
-		write = false;
+		GL11.glViewport(0, 0, 1024, 1024);
 
-		String path = DataUtils.getResourcesPath() + "/" + info.getName().replaceAll(" ", "_");
-		GlUtil.writeScreenToDisk(path, "png", sizeX, sizeY, 4, fb);
-		GL11.glViewport(0, 0, GLFrame.getWidth(), GLFrame.getHeight());
-		fb.disable();
-		fb.cleanUp();
-		File imageFile = new File(path + ".png");
-		if(imageFile.exists()) {
-			BufferedImage bufferedImage = ImageIO.read(imageFile);
-			imageFile.delete();
-			return bufferedImage;
-		}
-		return null;
-	}
-
-	private void drawSingle(short e, float size, int width, int height) {
-		Matrix4f modelviewMatrix = Controller.modelviewMatrix;
-		fb.rewind();
-		modelviewMatrix.store(fb);
-		fb.rewind();
-		fb.get(ff);
-		mView.setFromOpenGLMatrix(ff);
-		mView.origin.set(0, 0, 0);
-		GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT);
-
-		if(write) GUIElement.enableOrthogonal3d(width, height);
-		else GUIElement.enableOrthogonal3d();
+		GlUtil.glEnable(GL11.GL_LIGHTING);
 		GlUtil.glDisable(GL11.GL_DEPTH_TEST);
 		GlUtil.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
-		GlUtil.glPushMatrix();
-		GlUtil.translateModelview(xMod, yMod, 0);
-		GlUtil.scaleModelview(size, -size, size);
-		if(ElementKeyMap.getInfo(e).getBlockStyle() == BlockStyle.SPRITE) {
-			orientationTmp.basis.set(mView.basis);
-			mView.basis.setIdentity();
-		} else {
-			rot.set(orientation.basis);
-			mView.basis.mul(rot);
+
+		int x = 0;
+		int y = 0;
+
+		 */
+
+		File iconsFolder = new File(DataUtils.getWorldDataPath() + "/block-icons");
+		if(!iconsFolder.exists()) iconsFolder.mkdirs();
+
+		for(ElementInformation e : types) {
+			if(e.getName().contains("environmental")) continue;
+			FrameBufferObjects fbo = new FrameBufferObjects(e.getName(), 64, 64);
+			try {
+				fbo.initialize();
+			} catch(GLException exception) {
+				exception.printStackTrace();
+			}
+			fbo.enable();
+			GL11.glClearColor(0, 0, 0, 0);
+			GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT | GL11.GL_COLOR_BUFFER_BIT);
+			GL11.glViewport(0, 0, 64, 64);
+			GlUtil.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+			GlUtil.glDisable(GL11.GL_DEPTH_TEST);
+
+			GUI3DBlockElement.setMatrix();
+			Matrix4f modelviewMatrix = Controller.modelviewMatrix;
+			fb.rewind();
+			modelviewMatrix.store(fb);
+			fb.rewind();
+			fb.get(ff);
+			mView.setFromOpenGLMatrix(ff);
+			mView.origin.set(0, 0, 0);
+			GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT);
+			//GUIElement.enableOrthogonal3d(1024, 1024);
+			GUIElement.enableOrthogonal3d(64, 64);
+			GlUtil.glPushMatrix();
+			//GlUtil.translateModelview(32 + (x * 64), 32 + (y * 64), 0f);
+			GlUtil.translateModelview(32, 32, 0f);
+			GlUtil.scaleModelview(32f, -32f, 32f);
+			if(e.getBlockStyle() == BlockStyle.SPRITE) {
+				orientationTmp.basis.set(mView.basis);
+				mView.basis.setIdentity();
+			} else {
+				rot.set(orientation.basis);
+				mView.basis.mul(rot);
+			}
+
+			GlUtil.glMultMatrix(mView);
+			if(e.getBlockStyle() == BlockStyle.SPRITE) mView.basis.set(orientationTmp.basis);
+			SingleBlockDrawer drawer = new SingleBlockDrawer();
+			drawer.setLightAll(false);
+			GlUtil.glPushMatrix();
+			if(e.getBlockStyle() != BlockStyle.NORMAL) GlUtil.rotateModelview((Float) EngineSettings.ICON_BAKERY_BLOCKSTYLE_ROTATE_DEG.getCurrentState(), 0, 1, 0);
+			GlUtil.rotateModelview(45.0f / 2.0f, 1, 0, 0);
+			GlUtil.rotateModelview(45, 0, -1, 0);
+			if(e.isController()) GlUtil.rotateModelview(180, 0, 1, 0);
+			drawer.drawType(e.getId());
+			GlUtil.glPopMatrix();
+			GUIElement.disableOrthogonal();
+			/*
+			if(x >= 16) {
+				x = 0;
+				y ++;
+			} else x ++;
+
+			 */
+			//AbstractScene.mainLight.draw();
+			GlUtil.glDisable(GL11.GL_NORMALIZE);
+			GlUtil.glEnable(GL11.GL_DEPTH_TEST);
+
+			try {
+				String path = DataUtils.getWorldDataPath() + "/block-icons/" + e.getName().toLowerCase().replaceAll(" ", "-") + "-icon";
+				if(e.isReactorChamberAny()) {
+					Block root = ElementManager.getBlock((short) e.chamberRoot);
+					if(root != null) path = root.getBlockInfo().getName().toLowerCase().replaceAll(" ", "-") + "-icon";
+				}
+
+				File outputFile = new File(path + ".png");
+				if(!outputFile.exists()) outputFile.createNewFile();
+				GlUtil.writeScreenToDisk(path, "png", 64, 64, 4, fbo);
+				/*
+				//e.setBuildIconNum(texture.getTextureId());
+				//BufferedImage sheet = TextureSwapper.getImageFromSprite(TextureSwapper.getSpriteFromName("build-icons-" + StringTools.formatTwoZero(sheetNum) + "-16x16-gui-"));
+				//BufferedImage image = (BufferedImage) ResourceManager.getTexture(e.getName().toLowerCase().replaceAll(" ", "-") + "-icon").res64;
+				BufferedImage source = IconBakeryUtils.writeFBOToBufferedImage(64, 64, 4, fbo);
+				StarLoaderTexture target = ResourceManager.getTexture(path);
+				//TextureSwapper.setIconTexture(source, e.getBuildIconNum(), target);
+				//ImageIO.write(source, "png", outputFile);
+				//TextureSwapper.swapSpriteTexture(TextureSwapper.getSpriteFromName(path), source);
+				//target.res64.getGraphics().drawImage(source, 0, 0, null);
+				 */
+			} catch(Exception ex) {
+				ex.printStackTrace();
+			}
+
+			fbo.disable();
+			fbo.cleanUp();
+		}
+		GL11.glViewport(0, 0, GLFrame.getWidth(), GLFrame.getHeight());
+
+		/*
+		File file = null;
+		try {
+			file = new File(DataUtils.getWorldDataPath() + "/block-icons.png");
+			if(file.exists()) file.delete();
+			file.createNewFile();
+			GlUtil.writeScreenToDisk(DataUtils.getWorldDataPath() + "/block-icons", "png", 1024, 1024, 4, fbo);
+			BufferedImage image = ImageIO.read(file);
+			StarLoaderTexture texture = StarLoaderTexture.newIconTexture(image);
+			int textureId = texture.getTextureId();
+			for(ElementInformation e : types) {
+				e.setBuildIconNum(textureId);
+				textureId ++;
+			}
+		} catch(Exception exception) {
+			exception.printStackTrace();
 		}
 
-		GlUtil.glMultMatrix(mView);
-		if(ElementKeyMap.getInfo(e).getBlockStyle() == BlockStyle.SPRITE) mView.basis.set(orientationTmp.basis);
-		SingleBlockDrawer drawer = new SingleBlockDrawer();
-		drawer.setLightAll(false);
-		GlUtil.glPushMatrix();
-		if(ElementKeyMap.getInfo(e).getBlockStyle() != BlockStyle.NORMAL) GlUtil.rotateModelview((Float) EngineSettings.ICON_BAKERY_BLOCKSTYLE_ROTATE_DEG.getCurrentState(), 0, 1, 0);
-		drawer.drawType(e);
-		GlUtil.glPopMatrix();
-		GlUtil.glPopMatrix();
-
-		GUIElement.disableOrthogonal();
-		GlUtil.glEnable(GL11.GL_LIGHTING);
-		GlUtil.glDisable(GL11.GL_NORMALIZE);
-		GlUtil.glEnable(GL11.GL_DEPTH_TEST);
+		GL11.glViewport(0, 0, GLFrame.getWidth(), GLFrame.getHeight());
+		fbo.disable();
+		fbo.cleanUp();
+		if(!ConfigManager.getMainConfig().getBoolean("debug-mode")) file.deleteOnExit();
+		 */
+		if(ConfigManager.getMainConfig().getBoolean("debug-mode")) iconsFolder.deleteOnExit();
+		else iconsFolder.delete();
+		//System.exit(0);
 	}
 }

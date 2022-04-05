@@ -1,6 +1,7 @@
 package thederpgamer.betterfleets.gui.hud;
 
 import api.common.GameClient;
+import api.utils.game.PlayerUtils;
 import org.schema.common.util.StringTools;
 import org.schema.game.client.view.BuildModeDrawer;
 import org.schema.game.common.controller.SegmentController;
@@ -34,8 +35,8 @@ public class RepairPasteFabricatorHudOverlay extends GUIAncor {
     }
 
     public void updateText(SegmentController segmentController, float current, float max) {
-        if(GameClient.getClientState() != null && segmentController.isFullyLoadedWithDock()) {
-            try {
+        try {
+            if(GameClient.getClientState() != null && segmentController.isFullyLoadedWithDock() && PlayerUtils.getCurrentControl(GameClient.getClientPlayerState()).equals(segmentController)) {
                 if(max > 0) {
                     if(GameClient.getClientState().isInFlightMode() && segmentController.getSegmentBuffer().getPointUnsave(segmentController.getSlotAssignment().getAsIndex(GameClient.getClientPlayerState().getCurrentShipControllerSlot())).getType() == ElementKeyMap.REPAIR_CONTROLLER_ID) {
                         textOverlay.setTextSimple(StringTools.formatPointZero(current) + " / " + StringTools.formatPointZero(max));
@@ -45,9 +46,9 @@ public class RepairPasteFabricatorHudOverlay extends GUIAncor {
                         setTextPos(2);
                     } else textOverlay.setTextSimple("");
                 }
-            } catch(Exception exception) {
-                exception.printStackTrace();
-            }
+            } else textOverlay.setTextSimple("");
+        } catch(Exception exception) {
+            exception.printStackTrace();
         }
     }
 

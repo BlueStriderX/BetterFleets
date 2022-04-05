@@ -43,8 +43,7 @@ import java.util.Collection;
  */
 public class RepairBeamHandler extends BeamHandler {
 
-    public RepairBeamHandler(SegmentController s,
-                             BeamHandlerContainer owner) {
+    public RepairBeamHandler(SegmentController s, BeamHandlerContainer owner) {
         super(s, owner);
     }
     private Object2ObjectOpenHashMap<Inventory, IntOpenHashSet> connectedInventories = new Object2ObjectOpenHashMap<Inventory, IntOpenHashSet>();

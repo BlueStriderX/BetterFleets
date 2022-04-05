@@ -2,8 +2,8 @@ package thederpgamer.betterfleets.utils;
 
 import api.common.GameClient;
 import api.common.GameServer;
+import com.bulletphysics.linearmath.QuaternionUtil;
 import com.bulletphysics.linearmath.Transform;
-import org.schema.common.util.linAlg.Quat4fTools;
 import org.schema.game.client.controller.manager.ingame.PlayerInteractionControlManager;
 import org.schema.game.common.controller.SegmentController;
 import org.schema.game.common.controller.Ship;
@@ -29,10 +29,10 @@ public class EntityUtils {
         float distance = EntityUtils.getDistance(damaged, damager);
         float modifier = ConfigManager.getSystemConfig().getConfigurableFloat("flanking-damage-bonus-multiplier", 1.15f);
 
-        if(distance <= 500) modifier *= 1.5f;
-        else if(distance <= 1000) modifier *= 1.3f;
-        else if(distance <= 3000) modifier *= 1.15f;
-        else if(distance <= 10000) modifier *= 1.05f;
+        if(distance <= 500) modifier += 1.75f;
+        else if(distance <= 1000) modifier += 1.5f;
+        else if(distance <= 3000) modifier += 1.3f;
+        else if(distance <= 10000) modifier += 1.15f;
         else return 0;
 
         if((angle <= -100 && angle >= -260) || (angle >= 100 && angle <= 260)) return modifier;
@@ -45,7 +45,9 @@ public class EntityUtils {
         if(getDistance(from, to) < ConfigManager.getSystemConfig().getConfigurableFloat("flanking-damage-bonus-max-distance", 10000)) {
             Quat4f fromRotation = new Quat4f(fromTransform.getRotation(new Quat4f()));
             Quat4f toRotation = new Quat4f(toTransform.getRotation(new Quat4f()));
-            return Quat4fTools.angularDifference(fromRotation, toRotation);
+            toRotation.negate();
+            fromRotation.add(toRotation);
+            return (float) Math.toDegrees(QuaternionUtil.getAngle(fromRotation));
         }
         return 0;
     }

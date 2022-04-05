@@ -31,7 +31,7 @@ public class ElementManager {
         for(Item item : itemList) item.initialize();
     }
 
-    public static ArrayList<Block> getAllBlocks() {
+    public static ArrayList<Block> getBlockList() {
         return blockList;
     }
 
@@ -44,19 +44,19 @@ public class ElementManager {
     }
 
     public static Block getBlock(short id) {
-        for(Block blockElement : getAllBlocks()) if(blockElement.getBlockInfo().getId() == id) return blockElement;
+        for(Block blockElement : getBlockList()) if(blockElement.getBlockInfo().getId() == id) return blockElement;
         return null;
     }
 
     public static Block getBlock(String blockName) {
-        for(Block block : getAllBlocks()) {
+        for(Block block : getBlockList()) {
             if(block.getBlockInfo().getName().equalsIgnoreCase(blockName)) return block;
         }
         return null;
     }
 
     public static Block getBlock(SegmentPiece segmentPiece) {
-        for(Block block : getAllBlocks()) if(block.getId() == segmentPiece.getType()) return block;
+        for(Block block : getBlockList()) if(block.getId() == segmentPiece.getType()) return block;
         return null;
     }
 

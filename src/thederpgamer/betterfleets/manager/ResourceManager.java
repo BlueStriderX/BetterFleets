@@ -15,9 +15,9 @@ import java.util.HashMap;
 public class ResourceManager {
 
     private static final String[] textureNames = {
-            "repair-paste-fabricator/repair-paste-fabricator-caps",
-            "repair-paste-fabricator/repair-paste-fabricator-sides"
-            //"ai-remote-controller/ai-remote-controller-front",
+            "repair-paste-fabricator-caps",
+            "repair-paste-fabricator-sides",
+            "repair-paste-fabricator-icon"
     };
 
     private static final String[] spriteNames = {
@@ -28,18 +28,17 @@ public class ResourceManager {
     private static final HashMap<String, StarLoaderTexture> textureMap = new HashMap<>();
     private static final HashMap<String, Sprite> spriteMap = new HashMap<>();
 
-
     public static void loadResources(final BetterFleets instance) {
         StarLoaderTexture.runOnGraphicsThread(new Runnable() {
             @Override
             public void run() {
                 //Load Textures
-                for(String texturePath : textureNames) {
-                    String textureName = texturePath.substring(texturePath.lastIndexOf('/') + 1);
+                for(String textureName : textureNames) {
                     try {
-                        textureMap.put(textureName, StarLoaderTexture.newBlockTexture(instance.getJarBufferedImage("thederpgamer/betterfleets/resources/textures/" + texturePath + ".png")));
+                        if(textureName.endsWith("icon")) textureMap.put(textureName, StarLoaderTexture.newIconTexture(instance.getJarBufferedImage("thederpgamer/betterfleets/resources/textures/" + textureName + ".png")));
+                        else textureMap.put(textureName, StarLoaderTexture.newBlockTexture(instance.getJarBufferedImage("thederpgamer/betterfleets/resources/textures/" + textureName + ".png")));
                     } catch(Exception exception) {
-                        LogManager.logException("Failed to load texture \"" + texturePath + "\"", exception);
+                        LogManager.logException("Failed to load texture \"" + textureName + "\"", exception);
                     }
                 }
 

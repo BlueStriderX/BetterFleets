@@ -15,31 +15,47 @@ import thederpgamer.betterfleets.manager.ResourceManager;
  */
 public class CriticalIndicatorOverlay extends GUIAncor {
 
+	private final Sprite sprite;
 	private GUITextOverlay textOverlay;
-	private Sprite spriteOverlay;
 	private final double damage;
+	private float opacity;
 
 	public CriticalIndicatorOverlay(InputState inputState, double damage) {
 		super(inputState);
+		this.sprite = ResourceManager.getSprite("critical-overlay-sprite");
 		this.damage = damage;
+		this.opacity = 1.0f;
 	}
 
 	@Override
 	public void onInit() {
 		super.onInit();
-		(spriteOverlay = ResourceManager.getSprite("critical-overlay-sprite")).onInit();
-		attach(spriteOverlay);
+		attach(sprite);
 		(textOverlay = new GUITextOverlay(32, 32, FontLibrary.FontSize.BIG, getState())).onInit();
+		textOverlay.setTextSimple((int) damage);
 		attach(textOverlay);
+	}
+
+	@Override
+	public void draw() {
+		//getTransform().basis.set(Controller.getCamera().lookAt(false).basis);
+		//getTransform().basis.invert();
+		super.draw();
+		//textOverlay.draw();
+		//sprite.draw();
 	}
 
 	public double getDamage() {
 		return damage;
 	}
 
+	public float getOpacity() {
+		return opacity;
+	}
+
 	public void setOpacity(float opacity) {
-		opacity /= 100;
-		spriteOverlay.getTint().w = opacity;
+		this.opacity = opacity;
+		sprite.getTint().w = opacity;
 		textOverlay.getColor().a = opacity;
 	}
 }

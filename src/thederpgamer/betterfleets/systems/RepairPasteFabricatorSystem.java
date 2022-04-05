@@ -17,7 +17,7 @@ import thederpgamer.betterfleets.manager.ConfigManager;
  */
 public class RepairPasteFabricatorSystem extends SimpleDataStorageMCModule {
 
-    public static final float UPDATE_TIMER = 10.0f;
+    public static final float UPDATE_TIMER = 1000.0f;
     private float timer;
 
     public RepairPasteFabricatorSystem(SegmentController ship, ManagerContainer<?> managerContainer) {
@@ -28,23 +28,23 @@ public class RepairPasteFabricatorSystem extends SimpleDataStorageMCModule {
 
     @Override
     public void handle(Timer timer) {
+        super.handle(timer);
         if(this.timer <= 0) {
-            setRepairPasteCapacity(getRepairPasteCapacity() + (ConfigManager.getSystemConfig().getInt("repair-paste-regen-per-block") * getSize()));
+            updateSystemData();
             this.timer = UPDATE_TIMER;
-        } else this.timer -= timer.getDelta();
+        } else this.timer --;
     }
 
     @Override
-    public void handlePlace(long abs, byte orientation) {
-        super.handlePlace(abs, orientation);
-        setRepairPasteCapacityMax(getRepairPasteCapacityMax() + ConfigManager.getSystemConfig().getInt("repair-paste-capacity-per-block"));
+    public void handlePlace(long absIndex, byte orientation) {
+        super.handlePlace(absIndex, orientation);
+        updateSystemData();
     }
 
     @Override
-    public void handleRemove(long abs) {
-        super.handleRemove(abs);
-        setRepairPasteCapacityMax(getRepairPasteCapacityMax() - ConfigManager.getSystemConfig().getInt("repair-paste-capacity-per-block"));
-        if(getRepairPasteCapacityMax() < 0) setRepairPasteCapacityMax(0);
+    public void handleRemove(long absIndex) {
+       super.handleRemove(absIndex);
+       updateSystemData();
     }
 
     @Override
@@ -89,13 +89,19 @@ public class RepairPasteFabricatorSystem extends SimpleDataStorageMCModule {
         getSystemData().repairPasteCapacity = Math.min(repairPasteCapacity, getRepairPasteCapacityMax());
         try {
             BetterFleets.getInstance().repairPasteHudOverlay.updateText(segmentController, getRepairPasteCapacity(), getRepairPasteCapacityMax());
-        } catch(Exception ignored) { }
-        flagUpdatedData();
+        } catch(Exception exception) {
+            exception.printStackTrace();
+        }
     }
 
     public void setRepairPasteCapacityMax(float repairPasteCapacityMax) {
         if(getRepairPasteCapacity() > repairPasteCapacityMax) setRepairPasteCapacity(getRepairPasteCapacityMax());
         getSystemData().repairPasteCapacityMax = repairPasteCapacityMax;
+    }
+
+    public void updateSystemData() {
+        setRepairPasteCapacityMax(ConfigManager.getSystemConfig().getInt("repair-paste-capacity-per-block") * getSize());
+        setRepairPasteCapacity(getRepairPasteCapacity() + getRepairPasteRegen());
         flagUpdatedData();
     }
 }
