@@ -1,5 +1,10 @@
 package thederpgamer.betterfleets.data;
 
+import api.network.PacketReadBuffer;
+import api.network.PacketWriteBuffer;
+
+import java.io.IOException;
+
 /**
  * Base interface for persistent mod data.
  *
@@ -8,4 +13,6 @@ package thederpgamer.betterfleets.data;
  */
 public interface PersistentData {
 
+	void deserialize(PacketReadBuffer readBuffer) throws IOException;
+	void serialize(PacketWriteBuffer writeBuffer) throws IOException;
 }

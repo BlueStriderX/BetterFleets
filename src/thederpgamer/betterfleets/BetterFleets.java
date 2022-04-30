@@ -85,6 +85,7 @@ public class BetterFleets extends StarMod {
             "MapControllerManager",
             "MapToolsPanel",
             "RepairBeamHandler",
+            "FleetPanel",
             "FleetManager",
             "FleetFiniteStateMachine",
             "FleetState",
@@ -740,7 +741,7 @@ public class BetterFleets extends StarMod {
     }
 
     private void registerFastListeners() {
-        FastListenerCommon.cannonProjectileHitHandlerListeners.add(new CannonListener());
+        FastListenerCommon.cannonProjectileHitListeners.add(new CannonListener());
         FastListenerCommon.damageBeamHitListeners.add(new DamageBeamListener());
     }
 
