@@ -3,6 +3,7 @@ package thederpgamer.betterfleets.systems;
 import api.utils.game.module.util.SimpleDataStorageMCModule;
 import org.schema.game.common.controller.SegmentController;
 import org.schema.game.common.controller.elements.ManagerContainer;
+import org.schema.schine.graphicsengine.core.GraphicsContext;
 import org.schema.schine.graphicsengine.core.Timer;
 import thederpgamer.betterfleets.BetterFleets;
 import thederpgamer.betterfleets.data.system.RepairPasteSystemData;
@@ -87,10 +88,12 @@ public class RepairPasteFabricatorSystem extends SimpleDataStorageMCModule {
     public void setRepairPasteCapacity(float repairPasteCapacity) {
         if(repairPasteCapacity < 0) repairPasteCapacity = 0;
         getSystemData().repairPasteCapacity = Math.min(repairPasteCapacity, getRepairPasteCapacityMax());
-        try {
-            BetterFleets.getInstance().repairPasteHudOverlay.updateText(segmentController, getRepairPasteCapacity(), getRepairPasteCapacityMax());
-        } catch(Exception exception) {
-            exception.printStackTrace();
+        if(GraphicsContext.initialized) {
+            try {
+                BetterFleets.getInstance().repairPasteHudOverlay.updateText(segmentController, getRepairPasteCapacity(), getRepairPasteCapacityMax());
+            } catch(Exception ignored) {
+                //exception.printStackTrace();
+            }
         }
     }
 
