@@ -13,7 +13,6 @@ import api.listener.events.input.KeyPressEvent;
 import api.listener.events.input.MousePressEvent;
 import api.listener.events.register.ManagerContainerRegisterEvent;
 import api.listener.events.register.RegisterAddonsEvent;
-import api.listener.fastevents.FastListenerCommon;
 import api.mod.StarLoader;
 import api.mod.StarMod;
 import api.network.packets.PacketUtil;
@@ -42,13 +41,12 @@ import thederpgamer.betterfleets.element.blocks.systems.RepairPasteFabricator;
 import thederpgamer.betterfleets.gui.drawer.CriticalIndicatorDrawer;
 import thederpgamer.betterfleets.gui.hud.RepairPasteFabricatorHudOverlay;
 import thederpgamer.betterfleets.gui.tacticalmap.TacticalMapGUIDrawer;
-import thederpgamer.betterfleets.listener.CannonListener;
-import thederpgamer.betterfleets.listener.DamageBeamListener;
 import thederpgamer.betterfleets.manager.*;
-import thederpgamer.betterfleets.network.client.ClientRequestNearbyEntitiesPacket;
+import thederpgamer.betterfleets.network.client.RequestFleetDeploymentDataPacket;
 import thederpgamer.betterfleets.network.client.SendCommandPacket;
+import thederpgamer.betterfleets.network.client.SendFleetDeploymentDataPacket;
 import thederpgamer.betterfleets.network.server.SendCommandUpdatePacket;
-import thederpgamer.betterfleets.network.server.ServerSendNearbyEntitiesPacket;
+import thederpgamer.betterfleets.network.server.UpdateFleetDeploymentDataPacket;
 import thederpgamer.betterfleets.systems.RepairPasteFabricatorSystem;
 import thederpgamer.betterfleets.systems.remotecontrol.RemoteControlAddOn;
 import thederpgamer.betterfleets.utils.BlockIconUtils;
@@ -740,19 +738,15 @@ public class BetterFleets extends StarMod {
          */
     }
 
-    private void registerFastListeners() {
-        FastListenerCommon.cannonProjectileHitListeners.add(new CannonListener());
-        FastListenerCommon.damageBeamHitListeners.add(new DamageBeamListener());
-    }
-
     private void registerPackets() {
         //Client
         PacketUtil.registerPacket(SendCommandPacket.class);
-        PacketUtil.registerPacket(ClientRequestNearbyEntitiesPacket.class);
+        PacketUtil.registerPacket(SendFleetDeploymentDataPacket.class);
+        PacketUtil.registerPacket(RequestFleetDeploymentDataPacket.class);
 
         //Server
         PacketUtil.registerPacket(SendCommandUpdatePacket.class);
-        PacketUtil.registerPacket(ServerSendNearbyEntitiesPacket.class);
+        PacketUtil.registerPacket(UpdateFleetDeploymentDataPacket.class);
     }
 
     private byte[] overwriteClass(String className, byte[] byteCode) {

@@ -1,14 +1,11 @@
 package thederpgamer.betterfleets.gui.fleetmenu;
 
-import org.schema.game.client.view.gui.fleet.FleetPanel;
-import org.schema.schine.graphicsengine.forms.gui.GUIAncor;
-import org.schema.schine.graphicsengine.forms.gui.GUIElement;
-import org.schema.schine.graphicsengine.forms.gui.GUIElementList;
-import org.schema.schine.graphicsengine.forms.gui.GUIListElement;
+import org.schema.schine.graphicsengine.core.MouseEvent;
+import org.schema.schine.graphicsengine.forms.gui.*;
 import org.schema.schine.graphicsengine.forms.gui.newgui.*;
 import org.schema.schine.input.InputState;
 import thederpgamer.betterfleets.data.fleet.FleetDeploymentData;
-import thederpgamer.betterfleets.manager.ClientCacheManager;
+import thederpgamer.betterfleets.manager.FleetDeploymentManager;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -23,34 +20,86 @@ import java.util.Set;
 public class DeploymentsScrollableList extends ScrollableTableList<FleetDeploymentData> {
 
 	private final GUIElement anchor;
-	private final FleetPanel panel;
 	public AddDeploymentDialog input;
 
-	public DeploymentsScrollableList(InputState state, float width, float height, GUIElement anchor, FleetPanel panel) {
+	public DeploymentsScrollableList(InputState state, float width, float height, GUIElement anchor) {
 		super(state, width, height, anchor);
 		this.anchor = anchor;
-		this.panel = panel;
-		anchor.attach(this);
+		this.anchor.attach(this);
 	}
 
 	private GUIHorizontalButtonTablePane redrawButtonPane(final FleetDeploymentData deploymentData, GUIAncor anchor) {
 		GUIHorizontalButtonTablePane buttonPane = new GUIHorizontalButtonTablePane(getState(), 2, 1, anchor);
 		buttonPane.onInit();
+		buttonPane.addButton(0, 0, "ASSIGN FLEET", GUIHorizontalArea.HButtonColor.BLUE, new GUICallback() {
+			@Override
+			public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
+				if(mouseEvent.pressedLeftMouse() && getSelectedRow() != null && getSelectedRow().f != null) {
+					(new AssignFleetDialog(DeploymentsScrollableList.this, getSelectedRow().f)).activate();
+				}
+			}
 
+			@Override
+			public boolean isOccluded() {
+				return false;
+			}
+		}, new GUIActivationCallback() {
+			@Override
+			public boolean isVisible(InputState inputState) {
+				return true;
+			}
+
+			@Override
+			public boolean isActive(InputState inputState) {
+				return true;
+			}
+		});
+		buttonPane.addButton(1, 0, "UNASSIGN FLEET", GUIHorizontalArea.HButtonColor.ORANGE, new GUICallback() {
+			@Override
+			public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
+				if(mouseEvent.pressedLeftMouse() && getSelectedRow() != null && getSelectedRow().f != null) {
+					if(mouseEvent.pressedLeftMouse() && getSelectedRow() != null && getSelectedRow().f != null) {
+						(new UnAssignFleetDialog(DeploymentsScrollableList.this, getSelectedRow().f)).activate();
+					}
+				}
+			}
+
+			@Override
+			public boolean isOccluded() {
+				return false;
+			}
+		}, new GUIActivationCallback() {
+			@Override
+			public boolean isVisible(InputState inputState) {
+				return true;
+			}
+
+			@Override
+			public boolean isActive(InputState inputState) {
+				return true;
+			}
+		});
 		return buttonPane;
 	}
 
 	@Override
 	protected Collection<FleetDeploymentData> getElementList() {
-		return ClientCacheManager.getFleetDeployments();
+		return FleetDeploymentManager.getFleetDeployments();
 	}
 
 	@Override
 	public void initColumns() {
-		addColumn("Status", 15.0f, new Comparator<FleetDeploymentData>() {
+		addColumn("Status", 8.5f, new Comparator<FleetDeploymentData>() {
 			@Override
 			public int compare(FleetDeploymentData o1, FleetDeploymentData o2) {
 				return o1.getStatus().toString().compareTo(o2.getStatus().toString());
+			}
+		});
+
+		addColumn("Mission", 15.0f, new Comparator<FleetDeploymentData>() {
+			@Override
+			public int compare(FleetDeploymentData o1, FleetDeploymentData o2) {
+				return o1.getTaskType().compareTo(o2.getTaskType());
 			}
 		});
 
@@ -118,14 +167,17 @@ public class DeploymentsScrollableList extends ScrollableTableList<FleetDeployme
 		guiElementList.deleteObservers();
 		guiElementList.addObserver(this);
 		for(FleetDeploymentData deploymentData : set) {
-			/*
-			GUITextOverlayTable ownerTextElement;
-			(ownerTextElement = new GUITextOverlayTable(10, 10, this.getState())).setTextSimple(sectorData.ownerName + "'s Build Sector");
-			GUIClippedRow ownerRowElement;
-			(ownerRowElement = new GUIClippedRow(this.getState())).attach(ownerTextElement);
-			 */
+			GUITextOverlayTable statusTextElement;
+			(statusTextElement = new GUITextOverlayTable(10, 10, this.getState())).setTextSimple(deploymentData.getStatus().name());
+			GUIClippedRow statusRowElement;
+			(statusRowElement = new GUIClippedRow(this.getState())).attach(statusTextElement);
 
-			DeploymentsScrollableListRow listRow = new DeploymentsScrollableListRow(getState(), deploymentData);
+			GUITextOverlayTable missionTextElement;
+			(missionTextElement = new GUITextOverlayTable(10, 10, this.getState())).setTextSimple(deploymentData.getTaskType().name());
+			GUIClippedRow missionRowElement;
+			(missionRowElement = new GUIClippedRow(this.getState())).attach(missionTextElement);
+
+			DeploymentsScrollableListRow listRow = new DeploymentsScrollableListRow(getState(), deploymentData, statusRowElement, missionRowElement);
 			GUIAncor anchor = new GUIAncor(getState(), this.anchor.getWidth() - 28.0f, 28.0f);
 			anchor.attach(redrawButtonPane(deploymentData, anchor));
 			listRow.expanded = new GUIElementList(getState());

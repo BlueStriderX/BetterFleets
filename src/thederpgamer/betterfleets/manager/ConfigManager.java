@@ -18,7 +18,8 @@ public class ConfigManager {
             "max-world-logs: 5",
             "fleet-command-update-interval: 15",
             "tactical-map-toggle-key: ,",
-            "tactical-map-view-distance: 1.2"
+            "tactical-map-view-distance: 1.2",
+            "auto-save-timer: 15000"
     };
 
     //System Config

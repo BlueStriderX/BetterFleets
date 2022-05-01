@@ -13,6 +13,9 @@ import thederpgamer.betterfleets.data.PersistentData;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * <Description>
@@ -44,10 +47,11 @@ public class FleetDeploymentData implements PersistentData {
 		}
 	}
 
+	private String id;
 	private Vector3i homeSector;
 	private DeploymentStationData homeStation;
 	private int factionId;
-	private final ArrayList<Long> assignedFleets = new ArrayList<>();
+	private final ConcurrentHashMap<Long, FleetDeploymentSettings> assignedFleets = new ConcurrentHashMap<>();
 	private FleetDeploymentType taskType;
 	private FleetDeploymentStatus status;
 
@@ -55,6 +59,7 @@ public class FleetDeploymentData implements PersistentData {
 		this.homeSector = homeSector;
 		this.homeStation = homeStation;
 		this.factionId = faction.getIdFaction();
+		this.id = UUID.randomUUID().toString();
 	}
 
 	public FleetDeploymentData(PacketReadBuffer readBuffer) throws IOException {
@@ -63,6 +68,10 @@ public class FleetDeploymentData implements PersistentData {
 
 	public FleetDeploymentData(Vector3i homeSector, Faction faction) {
 		this(homeSector, getFactionHomebaseData(faction), faction);
+	}
+
+	public String getId() {
+		return id;
 	}
 
 	public Vector3i getHomeSector() {
@@ -87,8 +96,20 @@ public class FleetDeploymentData implements PersistentData {
 
 	public ArrayList<Fleet> getAssignedFleets() {
 		ArrayList<Fleet> fleets = new ArrayList<>();
-		for(long id : assignedFleets) fleets.add(GameServer.getServerState().getFleetManager().getByFleetDbId(id));
+		for(long id : assignedFleets.keySet()) fleets.add(GameServer.getServerState().getFleetManager().getByFleetDbId(id));
 		return fleets;
+	}
+
+	public FleetDeploymentSettings getSettings(Fleet fleet) {
+		return assignedFleets.get(fleet.dbid);
+	}
+
+	public void assignFleet(Fleet fleet) {
+		assignedFleets.put(fleet.dbid, new FleetDeploymentSettings());
+	}
+
+	public void unAssignFleet(Fleet fleet) {
+		assignedFleets.remove(fleet.dbid);
 	}
 
 	public FleetDeploymentType getTaskType() {
@@ -101,17 +122,21 @@ public class FleetDeploymentData implements PersistentData {
 
 	@Override
 	public void deserialize(PacketReadBuffer readBuffer) throws IOException {
+		id = readBuffer.readString();
 		factionId = readBuffer.readInt();
 		homeSector = readBuffer.readVector();
 		if(readBuffer.readBoolean()) homeStation = new DeploymentStationData(readBuffer);
 		int fleetCount = readBuffer.readInt();
-		if(fleetCount > 0) assignedFleets.addAll(readBuffer.readLongList());
+		if(fleetCount > 0) {
+			for(int i = 0; i < fleetCount; i ++) assignedFleets.put(readBuffer.readLong(), new FleetDeploymentSettings(readBuffer));
+		}
 		taskType = FleetDeploymentType.values()[readBuffer.readInt()];
 		status = FleetDeploymentStatus.values()[readBuffer.readInt()];
 	}
 
 	@Override
 	public void serialize(PacketWriteBuffer writeBuffer) throws IOException {
+		writeBuffer.writeString(id);
 		writeBuffer.writeInt(factionId);
 		writeBuffer.writeVector(homeSector);
 		if(homeStation != null) {
@@ -119,7 +144,12 @@ public class FleetDeploymentData implements PersistentData {
 			homeStation.serialize(writeBuffer);
 		} else writeBuffer.writeBoolean(false);
 		writeBuffer.writeInt(assignedFleets.size());
-		if(!assignedFleets.isEmpty()) writeBuffer.writeLongList(assignedFleets);
+		if(!assignedFleets.isEmpty()) {
+			for(Map.Entry<Long, FleetDeploymentSettings> entry : assignedFleets.entrySet()) {
+				writeBuffer.writeLong(entry.getKey());
+				entry.getValue().serialize(writeBuffer);
+			}
+		}
 		writeBuffer.writeInt(taskType.ordinal());
 		writeBuffer.writeInt(status.ordinal());
 	}

@@ -51,6 +51,10 @@ public class LogManager {
         }
     }
 
+    public static void logInfo(String message) {
+        logMessage(MessageType.INFO, message);
+    }
+
     public static void logWarning(String message, @Nullable Exception exception) {
         if(exception != null) logMessage(MessageType.WARNING, message + ":\n" + exception.getMessage());
         else logMessage(MessageType.WARNING, message);
