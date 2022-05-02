@@ -24,12 +24,12 @@ import java.util.Set;
  * @author Garret Reichenbach
  * @version 1.0 - [05/01/2022]
  */
-public class UnAssignFleetScrollableList extends ScrollableTableList<Fleet> {
+public class EditFleetScrollableList extends ScrollableTableList<Fleet> {
 
 	private final GUIElement anchor;
 	private final FleetDeploymentData deploymentData;
 
-	public UnAssignFleetScrollableList(InputState state, float width, float height, GUIElement anchor, FleetDeploymentData deploymentData) {
+	public EditFleetScrollableList(InputState state, float width, float height, GUIElement anchor, FleetDeploymentData deploymentData) {
 		super(state, width, height, anchor);
 		this.deploymentData = deploymentData;
 		this.anchor = anchor;
@@ -122,7 +122,7 @@ public class UnAssignFleetScrollableList extends ScrollableTableList<Fleet> {
 			GUIClippedRow statusRowElement;
 			(statusRowElement = new GUIClippedRow(this.getState())).attach(statusTextElement);
 
-			UnAssignFleetScrollableListRow listRow = new UnAssignFleetScrollableListRow(getState(), fleet, nameRowElement, healthRowElement, statusRowElement);
+			EditFleetScrollableListRow listRow = new EditFleetScrollableListRow(getState(), fleet, nameRowElement, healthRowElement, statusRowElement);
 			GUIAncor anchor = new GUIAncor(getState(), this.anchor.getWidth() - 28.0f, 28.0f);
 			anchor.attach(redrawButtonPane(fleet, anchor));
 			listRow.expanded = new GUIElementList(getState());
@@ -135,9 +135,33 @@ public class UnAssignFleetScrollableList extends ScrollableTableList<Fleet> {
 	}
 
 	private GUIHorizontalButtonTablePane redrawButtonPane(final Fleet fleet, GUIAncor anchor) {
-		GUIHorizontalButtonTablePane buttonPane = new GUIHorizontalButtonTablePane(getState(), 2, 1, anchor);
+		GUIHorizontalButtonTablePane buttonPane = new GUIHorizontalButtonTablePane(getState(), 4, 1, anchor);
 		buttonPane.onInit();
-		buttonPane.addButton(0, 0, "FORCE REPAIR", GUIHorizontalArea.HButtonColor.ORANGE, new GUICallback() {
+		buttonPane.addButton(0, 0, "UNASSIGN FLEET", GUIHorizontalArea.HButtonColor.ORANGE, new GUICallback() {
+			@Override
+			public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
+				if(mouseEvent.pressedLeftMouse() && getSelectedRow() != null && getSelectedRow().f != null) {
+					FleetDeploymentManager.unAssignFleet(deploymentData, getSelectedRow().f);
+					flagDirty();
+				}
+			}
+
+			@Override
+			public boolean isOccluded() {
+				return false;
+			}
+		}, new GUIActivationCallback() {
+			@Override
+			public boolean isVisible(InputState inputState) {
+				return true;
+			}
+
+			@Override
+			public boolean isActive(InputState inputState) {
+				return true;
+			}
+		});
+		buttonPane.addButton(1, 0, "FORCE REPAIR", GUIHorizontalArea.HButtonColor.GREEN, new GUICallback() {
 			@Override
 			public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
 				if(mouseEvent.pressedLeftMouse() && getSelectedRow() != null && getSelectedRow().f != null) {
@@ -178,7 +202,30 @@ public class UnAssignFleetScrollableList extends ScrollableTableList<Fleet> {
 			public boolean isChecked() {
 				return deploymentData.getSettings(fleet).autoRepair;
 			}
-		}), 1, 0);
+		}), 2, 0);
+		buttonPane.addButton(3, 0, "SET PERMISSIONS", GUIHorizontalArea.HButtonColor.BLUE, new GUICallback() {
+			@Override
+			public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
+				if(mouseEvent.pressedLeftMouse() && getSelectedRow() != null && getSelectedRow().f != null) {
+					//Todo: Set permissions dialog
+				}
+			}
+
+			@Override
+			public boolean isOccluded() {
+				return false;
+			}
+		}, new GUIActivationCallback() {
+			@Override
+			public boolean isVisible(InputState inputState) {
+				return true;
+			}
+
+			@Override
+			public boolean isActive(InputState inputState) {
+				return true;
+			}
+		});
 		return buttonPane;
 	}
 
@@ -192,9 +239,9 @@ public class UnAssignFleetScrollableList extends ScrollableTableList<Fleet> {
 		return fleet.getMissionName(); //Todo: Make this more specific
 	}
 
-	public class UnAssignFleetScrollableListRow extends ScrollableTableList<Fleet>.Row {
+	public class EditFleetScrollableListRow extends ScrollableTableList<Fleet>.Row {
 
-		public UnAssignFleetScrollableListRow(InputState state, Fleet fleet, GUIElement... elements) {
+		public EditFleetScrollableListRow(InputState state, Fleet fleet, GUIElement... elements) {
 			super(state, fleet, elements);
 			this.highlightSelect = true;
 			this.highlightSelectSimple = true;

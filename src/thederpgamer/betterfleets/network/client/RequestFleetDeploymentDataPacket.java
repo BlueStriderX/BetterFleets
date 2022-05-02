@@ -39,6 +39,6 @@ public class RequestFleetDeploymentDataPacket extends Packet {
 
 	@Override
 	public void processPacketOnServer(PlayerState playerState) {
-		PacketUtil.sendPacket(playerState, new UpdateFleetDeploymentDataPacket(FleetDeploymentManager.getPlayerDeployments(playerState)));
+		PacketUtil.sendPacket(playerState, new UpdateFleetDeploymentDataPacket(FleetDeploymentManager.getPlayerDeployments(playerState), FleetDeploymentManager.getDeploymentStations(playerState.getFactionId())));
 	}
 }

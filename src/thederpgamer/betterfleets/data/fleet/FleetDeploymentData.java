@@ -52,22 +52,23 @@ public class FleetDeploymentData implements PersistentData {
 	private DeploymentStationData homeStation;
 	private int factionId;
 	private final ConcurrentHashMap<Long, FleetDeploymentSettings> assignedFleets = new ConcurrentHashMap<>();
-	private FleetDeploymentType taskType;
+	private FleetDeploymentType deploymentType;
 	private FleetDeploymentStatus status;
 
-	public FleetDeploymentData(Vector3i homeSector, DeploymentStationData homeStation, Faction faction) {
+	public FleetDeploymentData(FleetDeploymentType deploymentType, Vector3i homeSector, DeploymentStationData homeStation, Faction faction) {
+		this.deploymentType = deploymentType;
 		this.homeSector = homeSector;
 		this.homeStation = homeStation;
 		this.factionId = faction.getIdFaction();
 		this.id = UUID.randomUUID().toString();
 	}
 
-	public FleetDeploymentData(PacketReadBuffer readBuffer) throws IOException {
-		deserialize(readBuffer);
+	public FleetDeploymentData(FleetDeploymentType deploymentType, Vector3i homeSector, Faction faction) {
+		this(deploymentType, homeSector, getFactionHomebaseData(faction), faction);
 	}
 
-	public FleetDeploymentData(Vector3i homeSector, Faction faction) {
-		this(homeSector, getFactionHomebaseData(faction), faction);
+	public FleetDeploymentData(PacketReadBuffer readBuffer) throws IOException {
+		deserialize(readBuffer);
 	}
 
 	public String getId() {
@@ -112,8 +113,8 @@ public class FleetDeploymentData implements PersistentData {
 		assignedFleets.remove(fleet.dbid);
 	}
 
-	public FleetDeploymentType getTaskType() {
-		return taskType;
+	public FleetDeploymentType getDeploymentType() {
+		return deploymentType;
 	}
 
 	public FleetDeploymentStatus getStatus() {
@@ -130,7 +131,7 @@ public class FleetDeploymentData implements PersistentData {
 		if(fleetCount > 0) {
 			for(int i = 0; i < fleetCount; i ++) assignedFleets.put(readBuffer.readLong(), new FleetDeploymentSettings(readBuffer));
 		}
-		taskType = FleetDeploymentType.values()[readBuffer.readInt()];
+		deploymentType = FleetDeploymentType.values()[readBuffer.readInt()];
 		status = FleetDeploymentStatus.values()[readBuffer.readInt()];
 	}
 
@@ -150,7 +151,7 @@ public class FleetDeploymentData implements PersistentData {
 				entry.getValue().serialize(writeBuffer);
 			}
 		}
-		writeBuffer.writeInt(taskType.ordinal());
+		writeBuffer.writeInt(deploymentType.ordinal());
 		writeBuffer.writeInt(status.ordinal());
 	}
 

@@ -41,7 +41,7 @@ public class DeploymentsScrollableList extends ScrollableTableList<FleetDeployme
 
 			@Override
 			public boolean isOccluded() {
-				return false;
+				return EditFleetDialog.homeStationDialog != null && EditFleetDialog.homeStationDialog.isActive();
 			}
 		}, new GUIActivationCallback() {
 			@Override
@@ -54,19 +54,19 @@ public class DeploymentsScrollableList extends ScrollableTableList<FleetDeployme
 				return true;
 			}
 		});
-		buttonPane.addButton(1, 0, "UNASSIGN FLEET", GUIHorizontalArea.HButtonColor.ORANGE, new GUICallback() {
+		buttonPane.addButton(1, 0, "EDIT FLEET", GUIHorizontalArea.HButtonColor.ORANGE, new GUICallback() {
 			@Override
 			public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
 				if(mouseEvent.pressedLeftMouse() && getSelectedRow() != null && getSelectedRow().f != null) {
 					if(mouseEvent.pressedLeftMouse() && getSelectedRow() != null && getSelectedRow().f != null) {
-						(new UnAssignFleetDialog(DeploymentsScrollableList.this, getSelectedRow().f)).activate();
+						(new EditFleetDialog(DeploymentsScrollableList.this, getSelectedRow().f)).activate();
 					}
 				}
 			}
 
 			@Override
 			public boolean isOccluded() {
-				return false;
+				return EditFleetDialog.homeStationDialog != null && EditFleetDialog.homeStationDialog.isActive();
 			}
 		}, new GUIActivationCallback() {
 			@Override
@@ -99,7 +99,7 @@ public class DeploymentsScrollableList extends ScrollableTableList<FleetDeployme
 		addColumn("Mission", 15.0f, new Comparator<FleetDeploymentData>() {
 			@Override
 			public int compare(FleetDeploymentData o1, FleetDeploymentData o2) {
-				return o1.getTaskType().compareTo(o2.getTaskType());
+				return o1.getDeploymentType().compareTo(o2.getDeploymentType());
 			}
 		});
 
@@ -135,7 +135,7 @@ public class DeploymentsScrollableList extends ScrollableTableList<FleetDeployme
 		addDropdownFilter(new GUIListFilterDropdown<FleetDeploymentData, FleetDeploymentData.FleetDeploymentType>(FleetDeploymentData.FleetDeploymentType.values()) {
 			@Override
 			public boolean isOk(FleetDeploymentData.FleetDeploymentType deploymentType, FleetDeploymentData deploymentData) {
-				return deploymentData.getTaskType().equals(deploymentType);
+				return deploymentData.getDeploymentType().equals(deploymentType);
 			}
 		}, new CreateGUIElementInterface<FleetDeploymentData.FleetDeploymentType>() {
 			@Override
@@ -173,7 +173,7 @@ public class DeploymentsScrollableList extends ScrollableTableList<FleetDeployme
 			(statusRowElement = new GUIClippedRow(this.getState())).attach(statusTextElement);
 
 			GUITextOverlayTable missionTextElement;
-			(missionTextElement = new GUITextOverlayTable(10, 10, this.getState())).setTextSimple(deploymentData.getTaskType().name());
+			(missionTextElement = new GUITextOverlayTable(10, 10, this.getState())).setTextSimple(deploymentData.getDeploymentType().name());
 			GUIClippedRow missionRowElement;
 			(missionRowElement = new GUIClippedRow(this.getState())).attach(missionTextElement);
 
@@ -212,7 +212,7 @@ public class DeploymentsScrollableList extends ScrollableTableList<FleetDeployme
 
 		@Override
 		public boolean isOccluded() {
-			return input != null && input.isActive();
+			return (input != null && input.isActive()) || (EditFleetDialog.homeStationDialog != null && EditFleetDialog.homeStationDialog.isActive());
 		}
 	}
 }

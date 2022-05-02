@@ -6,7 +6,6 @@ import org.schema.game.common.data.fleet.FleetMember;
 import org.schema.schine.graphicsengine.forms.gui.GUIAncor;
 import org.schema.schine.graphicsengine.forms.gui.GUIElement;
 import org.schema.schine.graphicsengine.forms.gui.GUIElementList;
-import org.schema.schine.graphicsengine.forms.gui.GUIListElement;
 import org.schema.schine.graphicsengine.forms.gui.newgui.*;
 import org.schema.schine.input.InputState;
 import thederpgamer.betterfleets.data.fleet.FleetDeploymentData;
@@ -121,10 +120,6 @@ public class AssignFleetScrollableList extends ScrollableTableList<Fleet> {
 			(statusRowElement = new GUIClippedRow(this.getState())).attach(statusTextElement);
 
 			AssignFleetScrollableListRow listRow = new AssignFleetScrollableListRow(getState(), fleet, nameRowElement, healthRowElement, statusRowElement);
-			GUIAncor anchor = new GUIAncor(getState(), this.anchor.getWidth() - 28.0f, 28.0f);
-			listRow.expanded = new GUIElementList(getState());
-			listRow.expanded.add(new GUIListElement(anchor, getState()));
-			listRow.expanded.attach(anchor);
 			listRow.onInit();
 			guiElementList.addWithoutUpdate(listRow);
 		}

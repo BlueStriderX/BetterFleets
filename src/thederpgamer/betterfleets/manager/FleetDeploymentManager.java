@@ -2,16 +2,23 @@ package thederpgamer.betterfleets.manager;
 
 import api.common.GameClient;
 import api.common.GameCommon;
+import api.common.GameServer;
 import api.mod.ModSkeleton;
 import api.mod.config.PersistentObjectUtil;
 import api.network.packets.PacketUtil;
+import org.schema.common.util.linAlg.Vector3i;
+import org.schema.game.common.controller.SpaceStation;
 import org.schema.game.common.data.fleet.Fleet;
 import org.schema.game.common.data.player.PlayerState;
+import org.schema.game.common.data.player.faction.Faction;
+import org.schema.game.common.data.world.SimpleTransformableSendableObject;
 import thederpgamer.betterfleets.BetterFleets;
+import thederpgamer.betterfleets.data.fleet.DeploymentStationData;
 import thederpgamer.betterfleets.data.fleet.FleetDeploymentData;
 import thederpgamer.betterfleets.network.client.RequestFleetDeploymentDataPacket;
 import thederpgamer.betterfleets.network.client.SendFleetDeploymentDataPacket;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -26,6 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class FleetDeploymentManager {
 
 	private static final ArrayList<FleetDeploymentData> fleetDeployments = new ArrayList<>();
+	private static final ArrayList<DeploymentStationData> availableStations = new ArrayList<>();
 
 	public static void initialize() {
 		if(GameCommon.isDedicatedServer() || GameCommon.isOnSinglePlayer()) {
@@ -44,6 +52,11 @@ public class FleetDeploymentManager {
 		return fleetDeployments;
 	}
 
+	public static void addNewDeployment(FleetDeploymentData.FleetDeploymentType deploymentType) {
+		Faction playerFaction = GameCommon.getGameState().getFactionManager().getFaction(GameClient.getClientPlayerState().getFactionId());
+		fleetDeployments.add(new FleetDeploymentData(deploymentType, playerFaction.getHomeSector(), playerFaction));
+	}
+
 	public static void assignFleet(FleetDeploymentData deploymentData, Fleet fleet) {
 		for(FleetDeploymentData data : fleetDeployments) {
 			if(!data.getAssignedFleets().contains(fleet) || data.getStatus().equals(FleetDeploymentData.FleetDeploymentStatus.FINISHED)) data.getAssignedFleets().remove(fleet);
@@ -55,6 +68,11 @@ public class FleetDeploymentManager {
 	public static void unAssignFleet(FleetDeploymentData deploymentData, Fleet fleet) {
 		deploymentData.unAssignFleet(fleet);
 		updateToServer(deploymentData);
+	}
+
+	public static ArrayList<DeploymentStationData> getAvailableStations() {
+		PacketUtil.sendPacketToServer(new RequestFleetDeploymentDataPacket());
+		return availableStations;
 	}
 
 	public static ArrayList<Fleet> getAvailableFleets() {
@@ -81,6 +99,13 @@ public class FleetDeploymentManager {
 			}
 		}
 		return deployments;
+	}
+
+	public static FleetDeploymentData getById(String id) {
+		for(FleetDeploymentData data : getFleetDeployments()) {
+			if(data.getId().equals(id)) return data;
+		}
+		return null;
 	}
 
 	public static void updateToServer(FleetDeploymentData deploymentData) {
@@ -112,5 +137,26 @@ public class FleetDeploymentManager {
 		}
 		if(oldData != null) fleetDeployments.remove(oldData);
 		fleetDeployments.add(deploymentData);
+	}
+
+	public static void updateAllFromServer(ConcurrentHashMap<FleetDeploymentData, FleetDeploymentData.FleetDeploymentStatus> map, ArrayList<DeploymentStationData> stations) {
+		for(FleetDeploymentData deploymentData : map.keySet()) updateFromServer(deploymentData);
+		availableStations.clear();
+		availableStations.addAll(stations);
+	}
+
+	public static ArrayList<DeploymentStationData> getDeploymentStations(int factionId) {
+		ArrayList<DeploymentStationData> stationData = new ArrayList<>();
+		Faction faction = GameCommon.getGameState().getFactionManager().getFaction(factionId);
+		try {
+			for(Vector3i sector : faction.lastSystemSectors) {
+				for(SimpleTransformableSendableObject<?> object : GameServer.getServerState().getUniverse().getSector(sector).getEntities()) {
+					if(object.getType().equals(SimpleTransformableSendableObject.EntityType.SPACE_STATION) && object.getFactionId() == factionId) stationData.add(new DeploymentStationData((SpaceStation) object));
+				}
+			}
+		} catch(IOException exception) {
+			LogManager.logException("Failed to get deployable stations", exception);
+		}
+		return stationData;
 	}
 }
