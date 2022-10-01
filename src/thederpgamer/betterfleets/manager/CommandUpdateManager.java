@@ -165,7 +165,6 @@ public class CommandUpdateManager {
     }
 
     private static void holdPosition(ShipAIEntity aiEntity) {
-        LogManager.logDebug(aiEntity.getEntity().getRealName() + " holding position");
         RigidBody body = (RigidBody) aiEntity.getEntity().getPhysicsDataContainer().getObject();
         Vector3f linearVelocity = body.getLinearVelocity(new Vector3f());
         linearVelocity.scale(0.3f);

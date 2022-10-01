@@ -50,10 +50,15 @@ import thederpgamer.betterfleets.network.server.UpdateFleetDeploymentDataPacket;
 import thederpgamer.betterfleets.systems.RepairPasteFabricatorSystem;
 import thederpgamer.betterfleets.systems.remotecontrol.RemoteControlAddOn;
 import thederpgamer.betterfleets.utils.BlockIconUtils;
+import thederpgamer.betterfleets.utils.DataUtils;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.logging.FileHandler;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -61,7 +66,6 @@ import java.util.zip.ZipInputStream;
  * BetterFleets mod main class.
  *
  * @author TheDerpGamer
- * @since 06/14/2021
  */
 public class BetterFleets extends StarMod {
 
@@ -93,6 +97,7 @@ public class BetterFleets extends StarMod {
             "HudContextHelpManager",
             "ShipAIEntity"
     };
+    public static Logger log;
 
     //GUI
     public char mapKey;
@@ -106,13 +111,12 @@ public class BetterFleets extends StarMod {
     public void onEnable() {
         instance = this;
         ConfigManager.initialize(this);
-        LogManager.initialize();
+        initLogger();
         ResourceManager.loadResources(this);
         registerListeners();
         //registerFastListeners();
         registerPackets();
         CommandUpdateManager.initialize();
-        LogManager.logMessage(MessageType.INFO, "Successfully loaded mod data.");
     }
 
     @Override
@@ -133,6 +137,42 @@ public class BetterFleets extends StarMod {
     @Override
     public void onUniversalRegistryLoad() {
         UniversalRegistry.registerURV(UniversalRegistry.RegistryType.PLAYER_USABLE_ID, getSkeleton(), RemoteControlAddOn.UID);
+    }
+
+    private void initLogger() {
+        String logFolderPath = DataUtils.getWorldDataPath() + "/logs";
+        File logsFolder = new File(logFolderPath);
+        if(!logsFolder.exists()) logsFolder.mkdirs();
+        else {
+            if(logsFolder.listFiles() != null && logsFolder.listFiles().length > 0) {
+                File[] logFiles = new File[logsFolder.listFiles().length];
+                int j = logFiles.length - 1;
+                for(int i = 0; i < logFiles.length && j >= 0; i++) {
+                    logFiles[i] = logsFolder.listFiles()[j];
+                    j--;
+                }
+
+                for(File logFile : logFiles) {
+                    String fileName = logFile.getName().replace(".txt", "");
+                    int logNumber = Integer.parseInt(fileName.substring(fileName.indexOf("log") + 3)) + 1;
+                    String newName = logFolderPath + "/log" + logNumber + ".txt";
+                    if(logNumber < ConfigManager.getMainConfig().getInt("max-world-logs") - 1) logFile.renameTo(new File(newName));
+                    else logFile.delete();
+                }
+            }
+        }
+        try {
+            File newLogFile = new File(logFolderPath + "/log0.txt");
+            if(newLogFile.exists()) newLogFile.delete();
+            newLogFile.createNewFile();
+            log = Logger.getLogger(newLogFile.getPath());
+            FileHandler handler = new FileHandler(newLogFile.getPath());
+            log.addHandler(handler);
+            SimpleFormatter formatter = new SimpleFormatter();
+            handler.setFormatter(formatter);
+        } catch(IOException exception) {
+            exception.printStackTrace();
+        }
     }
 
     private void registerListeners() {
@@ -208,7 +248,6 @@ public class BetterFleets extends StarMod {
                                 builder.append(FleetGUIManager.selectedFleets.get(i));
                                 if(i < FleetGUIManager.selectedFleets.size() - 1) builder.append(", ");
                             }
-                            LogManager.logDebug("Client right-clicked on fleet map GUI with the following fleets selected:\n" + builder.toString());
 
                             if(!FleetGUIManager.selectedFleets.isEmpty()) {
                                 FleetGUIManager.getPanel().fleetActionsList.onInit();
@@ -736,6 +775,7 @@ public class BetterFleets extends StarMod {
             }
         }, this);
          */
+        log.info("Registered listeners");
     }
 
     private void registerPackets() {
@@ -747,6 +787,7 @@ public class BetterFleets extends StarMod {
         //Server
         PacketUtil.registerPacket(SendCommandUpdatePacket.class);
         PacketUtil.registerPacket(UpdateFleetDeploymentDataPacket.class);
+        log.info("Registered packets");
     }
 
     private byte[] overwriteClass(String className, byte[] byteCode) {

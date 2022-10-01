@@ -19,9 +19,6 @@ import java.util.Arrays;
 
 /**
  * Modified version of FleetCommandTypes.
- *
- * @author Schema, TheDerpGamer
- * @since 07/06/2021
  */
 public enum FleetCommandTypes {
     IDLE(new Translatable() {
@@ -237,12 +234,12 @@ public enum FleetCommandTypes {
     }, new Translatable() {
         @Override
         public String getName(Enum en) {
-            return "Fleet will use support beams on nearby friendly targets while attempting to stay away from enemies.";
+            return "Fleet will use support systems on nearby friendly targets while attempting to stay away from enemies.";
         }
     }, new FleetCommandDialog() {
         @Override
         public void clientSend(final Fleet fleet) {
-            if(FleetUtils.hasRepairBeams(fleet)) fleet.sendFleetCommand(SUPPORT);
+            if(FleetUtils.canSupport(fleet)) fleet.sendFleetCommand(SUPPORT);
             else fleet.sendFleetCommand(IDLE);
         }
     }, Transition.FLEET_SUPPORT),

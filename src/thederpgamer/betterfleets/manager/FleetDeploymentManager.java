@@ -9,31 +9,44 @@ import api.network.packets.PacketUtil;
 import org.schema.common.util.linAlg.Vector3i;
 import org.schema.game.common.controller.SpaceStation;
 import org.schema.game.common.data.fleet.Fleet;
+import org.schema.game.common.data.fleet.FleetCommandTypes;
+import org.schema.game.common.data.fleet.FleetMember;
 import org.schema.game.common.data.player.PlayerState;
 import org.schema.game.common.data.player.faction.Faction;
+import org.schema.game.common.data.world.Sector;
 import org.schema.game.common.data.world.SimpleTransformableSendableObject;
+import org.schema.game.server.ai.ShipAIEntity;
+import org.schema.game.server.ai.program.common.TargetProgram;
+import org.schema.game.server.data.PlayerNotFountException;
 import thederpgamer.betterfleets.BetterFleets;
 import thederpgamer.betterfleets.data.fleet.DeploymentStationData;
 import thederpgamer.betterfleets.data.fleet.FleetDeploymentData;
+import thederpgamer.betterfleets.data.fleet.StatusQueueEntry;
+import thederpgamer.betterfleets.data.misc.ItemStack;
+import thederpgamer.betterfleets.data.shipyard.ShipyardData;
 import thederpgamer.betterfleets.network.client.RequestFleetDeploymentDataPacket;
 import thederpgamer.betterfleets.network.client.SendFleetDeploymentDataPacket;
+import thederpgamer.betterfleets.network.server.FleetStatusUpdatePacket;
+import thederpgamer.betterfleets.utils.FleetUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 
 /**
  * <Description>
  *
- * @author Garret Reichenbach
- * @version 1.0 - [04/30/2022]
+ * @author TheDerpGamer (MrGoose#0027)
  */
 public class FleetDeploymentManager {
 
 	private static final ArrayList<FleetDeploymentData> fleetDeployments = new ArrayList<>();
 	private static final ArrayList<DeploymentStationData> availableStations = new ArrayList<>();
+	private static final ConcurrentHashMap<Fleet, StatusQueueEntry> statusQueue = new ConcurrentHashMap<>();
 
 	public static void initialize() {
 		if(GameCommon.isDedicatedServer() || GameCommon.isOnSinglePlayer()) {
@@ -155,8 +168,145 @@ public class FleetDeploymentManager {
 				}
 			}
 		} catch(IOException exception) {
-			LogManager.logException("Failed to get deployable stations", exception);
+			BetterFleets.log.log(Level.WARNING, "Failed to get deployable stations", exception);
 		}
 		return stationData;
+	}
+
+	/**
+	 * Runs through the fleet status queue and applies any changes / updates.
+	 */
+	public static void runQueue() {
+		for(Map.Entry<Fleet, StatusQueueEntry> entry : statusQueue.entrySet()) {
+			Vector3i sector = Vector3i.parseVector3i(entry.getKey().getFlagShipSector());
+			boolean updateClient = false;
+			switch(entry.getValue().getStatus()) {
+				case IDLE:
+					statusQueue.remove(entry.getKey());
+					updateClient = true;
+					break;
+				case MOVING:
+					if(entry.getKey().getCurrentMoveTarget() == null || entry.getKey().getCurrentMoveTarget().equals(sector)) {
+						entry.getValue().setStatus(StatusQueueEntry.Status.IDLE);
+						statusQueue.remove(entry.getKey());
+						updateClient = true;
+					}
+					break;
+				case ENGAGING:
+					FleetCommandTypes command = FleetUtils.getCurrentCommand(entry.getKey());
+					switch(command) {
+						case SENTRY:
+						case SUPPORT:
+						case FLEET_ATTACK:
+						case FLEET_DEFEND:
+						case ARTILLERY:
+						case SENTRY_FORMATION:
+						case INTERCEPT:
+						case PATROL_FLEET:
+							try {
+								Sector s = GameServer.getServerState().getUniverse().getSector(sector);
+								//Check for enemies in sector
+								for(SimpleTransformableSendableObject<?> object : s.getEntities()) {
+									if(object.getFactionId() != entry.getKey().getFlagShip().getFactionId() && object.getFactionId() != 0) {
+										Faction factionA = GameServer.getServerState().getFactionManager().getFaction(entry.getKey().getFlagShip().getFactionId());
+										Faction factionB = GameServer.getServerState().getFactionManager().getFaction(object.getFactionId());
+										if(factionA.getEnemies().contains(factionB)) {
+											entry.getValue().setStatus(StatusQueueEntry.Status.ENGAGING);
+											statusQueue.remove(entry.getKey());
+											updateClient = true;
+											break;
+										}
+									}
+								}
+
+								//Check ai targets
+								for(FleetMember member : entry.getKey().getMembers()) {
+									if(member.getLoaded() != null) {
+										ShipAIEntity aiEntity = (ShipAIEntity) CommandUpdateManager.getAIEntity(member.getLoaded());
+										if(aiEntity != null) {
+											TargetProgram<?> targetProgram = (TargetProgram<?>) aiEntity.getCurrentProgram();
+											if(targetProgram.getTarget() != null) {
+												entry.getValue().setStatus(StatusQueueEntry.Status.ENGAGING);
+												statusQueue.remove(entry.getKey());
+												updateClient = true;
+												break;
+											}
+										}
+									}
+								}
+							} catch(IOException exception) {
+								BetterFleets.log.log(Level.WARNING, "Failed to get sector", exception);
+							}
+							break;
+						default:
+							break;
+					}
+					break;
+				case
+			}
+			if(updateClient) {
+				//Send update packet to fleet owner
+				try {
+					PacketUtil.sendPacket(GameServer.getServerState().getPlayerFromName(entry.getKey().getOwner()), new FleetStatusUpdatePacket(entry.getValue()));
+				} catch(PlayerNotFountException ignored) {
+					BetterFleets.log.info("Player \"" + entry.getKey().getOwner() + "\" not online, skipping update");
+				}
+			}
+		}
+	}
+
+	/**
+	 * Attempts to reinforce a fleet using the nearest available shipyard.
+	 * <p>The shipyard will attempt to build the specified ships, and will order the required resources to be delivered.</p>
+	 * <p>If the resources are not available, will return a list of what's needed.</p>
+	 *
+	 * @param deploymentData The deployment data to reinforce
+	 * @param fleet The fleet to reinforce
+	 * @return A list of resources needed to reinforce the fleet, or an empty list if no additional resources were needed
+	 */
+	public static ArrayList<ItemStack> reinforceFleet(FleetDeploymentData deploymentData, Fleet fleet) {
+		ArrayList<ItemStack> resourcesNeeded = new ArrayList<>();
+		//Get the nearest shipyard
+		ShipyardData nearestShipyard = getNearestShipyard(fleet, false); //Todo: Some sort of permissions system for allied shipyards
+		if(nearestShipyard != null) {
+			//If fleet is not at the shipyard, move it there
+			Vector3i fleetPosition = Vector3i.parseVector3i(fleet.getFlagShipSector());
+			if(!fleetPosition.equals(nearestShipyard.getSector())) {
+				fleet.setCurrentMoveTarget(nearestShipyard.getSector());
+				//Add to queue that checks if the fleet has arrived. Once it has, run this method again
+				statusQueue.put(fleet, new StatusQueueEntry(StatusQueueEntry.Status.MOVING_TO_SHIPYARD, fleet));
+			}
+			//If fleet is at the shipyard, repair it
+			//If no repairs are needed, reinforce it
+			//If no reinforcements are needed, return
+		}
+		return resourcesNeeded;
+	}
+
+	/**
+	 * Attempts to fetch the first shipyard nearest to the specified fleet.
+	 * <p>If no shipyard is found, will return null.</p>
+	 *
+	 * @param fleet The fleet to find a shipyard for
+	 * @param includeAllied If allied shipyards should be included in the search
+	 * @return The nearest shipyard, or null if none were found
+	 */
+	public static ShipyardData getNearestShipyard(Fleet fleet, boolean includeAllied) {
+		try {
+			Sector sector = GameServer.getServerState().getUniverse().getSector(Vector3i.parseVector3i(fleet.getFlagShipSector()));
+			for(SimpleTransformableSendableObject<?> object : sector.getEntities()) {
+				if(object.getType().equals(SimpleTransformableSendableObject.EntityType.SPACE_STATION)) {
+					SpaceStation station = (SpaceStation) object;
+					if(station.getManagerContainer().getShipyard() != null) {
+						Faction fleetFaction = GameServer.getServerState().getFactionManager().getFaction(fleet.getFlagShip().getFactionId());
+						Faction stationFaction = GameServer.getServerState().getFactionManager().getFaction(station.getFactionId());
+						if(stationFaction.equals(fleetFaction) || (includeAllied && fleetFaction.getFriends().contains(stationFaction))) return new ShipyardData(station.getManagerContainer().getShipyard());
+					}
+				}
+			}
+		} catch(Exception exception) {
+			BetterFleets.log.log(Level.WARNING, "Failed to get nearest shipyard", exception);
+		}
+		return null;
 	}
 }

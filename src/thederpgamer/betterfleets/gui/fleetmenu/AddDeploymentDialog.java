@@ -11,7 +11,6 @@ import org.schema.schine.graphicsengine.forms.gui.newgui.GUITilePane;
 import org.schema.schine.input.InputState;
 import thederpgamer.betterfleets.data.fleet.FleetDeploymentData;
 import thederpgamer.betterfleets.manager.FleetDeploymentManager;
-import thederpgamer.betterfleets.manager.LogManager;
 
 /**
  * <Description>
@@ -61,7 +60,6 @@ public class AddDeploymentDialog extends GUIInputDialog {
 		@Override
 		public void onInit() {
 			super.onInit();
-			LogManager.logDebug(getName() + " WIDTH: " + getWidth() + " HEIGHT: " + getHeight());
 			(tilePane = new GUITilePane<>(getState(), getContent(), 200, 300)).onInit();
 			for(final FleetDeploymentData.FleetDeploymentType type : FleetDeploymentData.FleetDeploymentType.values()) {
 				tilePane.addButtonTile(type.display, type.description, GUIHorizontalArea.HButtonColor.BLUE, new GUICallback() {

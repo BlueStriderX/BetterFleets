@@ -9,11 +9,13 @@ import org.schema.schine.graphicsengine.forms.gui.*;
 import org.schema.schine.graphicsengine.forms.gui.newgui.*;
 import org.schema.schine.graphicsengine.forms.gui.newgui.settingsnew.GUICheckBoxTextPairNew;
 import org.schema.schine.input.InputState;
+import thederpgamer.betterfleets.BetterFleets;
 import thederpgamer.betterfleets.data.fleet.FleetDeploymentData;
+import thederpgamer.betterfleets.data.misc.ItemStack;
 import thederpgamer.betterfleets.gui.element.GUIHorizontalCheckBoxArea;
 import thederpgamer.betterfleets.manager.FleetDeploymentManager;
-import thederpgamer.betterfleets.manager.LogManager;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Set;
@@ -166,7 +168,11 @@ public class EditFleetScrollableList extends ScrollableTableList<Fleet> {
 			public void callback(GUIElement guiElement, MouseEvent mouseEvent) {
 				if(mouseEvent.pressedLeftMouse() && getSelectedRow() != null && getSelectedRow().f != null) {
 					//Todo: Order fleet to retreat to nearest shipyard and repair
-					LogManager.logInfo("Forcing fleet \"" + getSelectedRow().f.getName() + "\" to repair.");
+					ArrayList<ItemStack> needed = new ArrayList<>();
+					for(Fleet fleet : deploymentData.getAssignedFleets()) needed.addAll(FleetDeploymentManager.reinforceFleet(deploymentData, fleet));
+					if(!needed.isEmpty()) (new FleetReinforcementDialog(deploymentData, needed)).activate();
+					BetterFleets.log.info("Forcing fleet \"" + getSelectedRow().f.getName() + "\" to repair.");
+					flagDirty();
 				}
 			}
 

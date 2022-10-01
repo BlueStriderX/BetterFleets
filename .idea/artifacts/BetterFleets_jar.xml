@@ -1,6 +1,6 @@
 <component name="ArtifactManager">
   <artifact name="BetterFleets:jar">
-    <output-path>$PROJECT_DIR$/../../../../../../Program Files (x86)/Steam/steamapps/common/StarMade/StarMade/mods</output-path>
+    <output-path>D:/Game Files/Steam/steamapps/common/StarMade/StarMade/mods</output-path>
     <root id="root">
       <element id="archive" name="BetterFleets.jar">
         <element id="module-output" name="BetterFleets" />

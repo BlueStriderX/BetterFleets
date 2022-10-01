@@ -113,7 +113,6 @@ public class AssignFleetScrollableList extends ScrollableTableList<Fleet> {
 			GUIClippedRow healthRowElement;
 			(healthRowElement = new GUIClippedRow(this.getState())).attach(healthTextElement);
 
-
 			GUITextOverlayTable statusTextElement;
 			(statusTextElement = new GUITextOverlayTable(10, 10, this.getState())).setTextSimple(getStatus(fleet));
 			GUIClippedRow statusRowElement;

@@ -1,6 +1,7 @@
 package thederpgamer.betterfleets.utils;
 
 import org.schema.game.common.controller.Ship;
+import org.schema.game.common.controller.elements.ManagerModule;
 import org.schema.game.common.controller.elements.ShipManagerContainer;
 import org.schema.game.common.controller.elements.beam.damageBeam.DamageBeamCollectionManager;
 import org.schema.game.common.controller.elements.missile.MissileCollectionManager;
@@ -57,12 +58,29 @@ public class FleetUtils {
         return FleetCommandTypes.IDLE;
     }
 
-    public static boolean hasRepairBeams(Fleet fleet) {
+    public static boolean canSupport(Fleet fleet) {
+        short auraDisruptorId = -1;
         for(FleetMember member : fleet.getMembers()) {
             try {
                 ShipManagerContainer managerContainer = ((Ship) member.getLoaded()).getManagerContainer();
+                if(ModUtils.checkForBetterChambers()) {
+                    if(auraDisruptorId == -1) auraDisruptorId = ModUtils.getBCID("Aura Disruptor Computer");
+                    ManagerModule<?, ?, ?> next = managerContainer.getWeapon().getNext();
+                    while(next != null) {
+                        if(next.getElementID() == auraDisruptorId) return true;
+                        next = next.getNext();
+                    }
+                }
+            } catch(Exception exception) {
+                exception.printStackTrace();
+            }
+
+            try {
+                ShipManagerContainer managerContainer = ((Ship) member.getLoaded()).getManagerContainer();
                 if(managerContainer.getRepair() != null && managerContainer.getRepair().hasAtLeastOneCoreUnit()) return true;
-            } catch(Exception ignored) { }
+            } catch(Exception exception) {
+                exception.printStackTrace();
+            }
         }
         return false;
     }
